@@ -53,4 +53,9 @@ htmlrest.classes.form.prototype.submit = function (form) {
     });
 };
 
+htmlrest.classes.form.prototype.submitHandler = function (evt) {
+    htmlrest.form.submit($(this));
+    return false;
+}
+
 htmlrest.form = new htmlrest.classes.form();
