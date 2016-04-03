@@ -6,8 +6,8 @@ htmlrest.classes.output = function() {
     
 };
 
-htmlrest.classes.output.prototype.successFailResult = function (outputElement, success, data) {
-    outputElement.html(data.message);
+htmlrest.classes.output.prototype.httpResult = function (outputElement, jqXHR) {
+    //outputElement.html(data.message);
 
     var errorClass = outputElement.attr('data-class-error');
     if (errorClass) {
@@ -30,6 +30,8 @@ htmlrest.classes.output.prototype.successFailResult = function (outputElement, s
     }
 };
 
+htmlrest.classes.output.prototype.httpResultSuccessHandler = 
+
 htmlrest.output = new htmlrest.classes.output();
 
 //Form Functions
@@ -45,10 +47,10 @@ htmlrest.classes.form.prototype.submit = function (form) {
         url: form.attr('action'),
         data: form.serialize(),
         success: function (data, textStatus, jqXHR) {
-            htmlrest.output.successFailResult(outputElement, true, data);
+            htmlrest.output.httpResult(outputElement, jqXHR);
         },
         error: function (jqXHR, textStatus, errorThrown) {
-            htmlrest.output.successFailResult(outputElement, false, jqXHR.responseJSON);
+            htmlrest.output.httpResult(outputElement, jqXHR);
         }
     });
 };
