@@ -1,15 +1,17 @@
-﻿var htmlrest = htmlrest || {};
+﻿htmlrest_cls = function () {
 
-//Primary runner class
-htmlrest.event = function (functions, returnVal) {
-    if (returnVal === undefined) {
-        returnVal = false;
-    }
-
-    return new htmlrest.event.prototype.runner(functions, returnVal);
 }
 
-htmlrest.event.prototype.runner = function (functions, returnVal) {
+htmlrest_cls.prototype.event = function (functions, returnVal) {
+        if (returnVal === undefined) {
+            returnVal = false;
+        }
+
+        return new htmlrest.event.prototype.runner(functions, returnVal);
+    }
+
+//Defining classes on event's prototype
+htmlrest_cls.prototype.event.prototype.runner = function (functions, returnVal) {
     var self = this;
     var functions = functions;
     var returnVal = returnVal;

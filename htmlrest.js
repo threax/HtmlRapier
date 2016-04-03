@@ -1,0 +1,1 @@
+﻿htmlrest = new htmlrest_cls();
