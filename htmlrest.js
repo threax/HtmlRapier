@@ -2,7 +2,7 @@
 htmlrest.classes = htmlrest.classes || {};
 htmlrest.runners = htmlrest.runners || {};
 
-htmlrest.er = function (returnVal, functions)
+htmlrest.classes.runner = function (functions, returnVal)
 {
     var self = this;
     var functions = functions;
@@ -18,13 +18,22 @@ htmlrest.er = function (returnVal, functions)
         }
     }
 
-    this.eventHandler = function (evt) {
+    return function (evt) {
         currentFunc = 0;
         sender = $(this);
         event = evt;
         self.next(null);
         return returnVal;
     }
+}
+
+htmlrest.event = function (functions, returnVal) {
+    if(returnVal === undefined)
+    {
+        returnVal = false;
+    }
+
+    return new htmlrest.classes.runner(functions, returnVal);
 }
 
 //Output Function
