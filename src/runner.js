@@ -13,19 +13,18 @@ htmlrest.event.prototype.runner = function (functions, returnVal) {
     var self = this;
     var functions = functions;
     var returnVal = returnVal;
-    var currentFunc = 0;
+    var currentFunc = -1;
     var sender = null;
     var event = null;
 
     this.next = function (previousResult) {
-        if (currentFunc < functions.length) {
+        if (++currentFunc < functions.length) {
             functions[currentFunc](event, sender, previousResult, self);
-            currentFunc++;
         }
     }
 
     return function (evt) {
-        currentFunc = 0;
+        currentFunc = -1;
         sender = $(this);
         event = evt;
         self.next(null);

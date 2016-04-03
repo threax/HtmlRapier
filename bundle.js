@@ -13,19 +13,18 @@ htmlrest.event.prototype.runner = function (functions, returnVal) {
     var self = this;
     var functions = functions;
     var returnVal = returnVal;
-    var currentFunc = 0;
+    var currentFunc = -1;
     var sender = null;
     var event = null;
 
     this.next = function (previousResult) {
-        if (currentFunc < functions.length) {
+        if (++currentFunc < functions.length) {
             functions[currentFunc](event, sender, previousResult, self);
-            currentFunc++;
         }
     }
 
     return function (evt) {
-        currentFunc = 0;
+        currentFunc = -1;
         sender = $(this);
         event = evt;
         self.next(null);
@@ -34,6 +33,22 @@ htmlrest.event.prototype.runner = function (functions, returnVal) {
 }
 //Form Functions
 htmlrest.event.prototype.form = function () { }
+
+htmlrest.event.prototype.form.prototype.serialize = function (form) {
+    return function (evt, sender, previousResult, runner) {
+        htmlrest.event.prototype.form.prototype.serialize.prototype.serializeRunner(form, evt, sender, previousResult, runner);
+    }
+}
+
+htmlrest.event.prototype.form.prototype.serializeSelf = function () {
+    return function (evt, sender, previousResult, runner) {
+        htmlrest.event.prototype.form.prototype.serialize.prototype.serializeRunner(sender, evt, sender, previousResult, runner);
+    }
+}
+
+htmlrest.event.prototype.form.prototype.serialize.prototype.serializeRunner = function (form, evt, sender, previousResult, runner) {
+    runner.next(form.serialize());
+}
 
 htmlrest.event.prototype.form.prototype.submit = function (form) {
     return function (evt, sender, previousResult, runner) {
@@ -51,7 +66,7 @@ htmlrest.event.prototype.form.prototype.submit.prototype.runner = function (form
     $.ajax({
         method: form.attr('method'),
         url: form.attr('action'),
-        data: form.serialize(),
+        data: previousResult,
         success: function (data, textStatus, jqXHR) {
             runner.next(jqXHR);
         },
@@ -73,7 +88,7 @@ htmlrest.event.prototype.output.prototype.httpResult = function (element) {
 
 //stick the class in the public method prototype
 htmlrest.event.prototype.output.prototype.httpResult.prototype.httpResultRunner = function (element, evt, sender, previousResult, runner) {
-    element.html('did something');
+    element.html(previousResult);
 
     var errorClass = element.attr('data-class-error');
     if (errorClass) {
@@ -94,6 +109,29 @@ htmlrest.event.prototype.output.prototype.httpResult.prototype.httpResultRunner 
             element.removeClass(successClass);
         }
     }
+
+    runner.next();
 };
 
+htmlrest.event.prototype.output.prototype.format = function (formatter) {
+    return function (evt, sender, previousResult, runner) {
+        runner.next(formatter(previousResult));
+    };
+}
+
 htmlrest.output = new htmlrest.event.prototype.output();
+//Output Function
+htmlrest.event.prototype.transform = function () { }
+
+htmlrest.event.prototype.transform.prototype.store = function (storage) {
+    return function (evt, sender, previousResult, runner) {
+        var result = storage(previousResult);
+        if (!result)
+        {
+            result = previousResult;
+        }
+        runner.next(result);
+    };
+}
+
+htmlrest.transform = new htmlrest.event.prototype.transform();
