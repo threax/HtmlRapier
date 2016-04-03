@@ -1,36 +1,56 @@
 ﻿var htmlrest = htmlrest || {};
 htmlrest.classes = htmlrest.classes || {};
-//Output Functions
+htmlrest.runners = htmlrest.runners || {};
 
+htmlrest.er = function (returnVal, functions)
+{
+    var self = this;
+    var functions = functions;
+    var returnVal = returnVal;
+    var currentFunc = 0;
+    var sender = null;
+    var event = null;
+
+    this.next = function (previousResult) {
+        var i = functions[currentFunc++](event, sender, previousResult, self);
+    }
+
+    this.eventHandler = function (evt) {
+        sender = $(this);
+        event = evt;
+        self.next(null);
+        return returnVal;
+    }
+}
+
+//Output Function
 htmlrest.classes.output = function() {
     
 };
 
-htmlrest.classes.output.prototype.httpResult = function (outputElement, jqXHR) {
-    //outputElement.html(data.message);
+htmlrest.classes.output.prototype.httpResult = function (target, evt, sender, previousResult, runner) {
+    target.html('did something');
 
-    var errorClass = outputElement.attr('data-class-error');
+    var errorClass = target.attr('data-class-error');
     if (errorClass) {
         if (success) {
-            outputElement.removeClass(errorClass);
+            target.removeClass(errorClass);
         }
         else {
-            outputElement.addClass(errorClass);
+            target.addClass(errorClass);
         }
     }
 
-    var successClass = outputElement.attr('data-class-success');
+    var successClass = target.attr('data-class-success');
     if (successClass) {
         if (success) {
-            outputElement.addClass(successClass);
+            target.addClass(successClass);
         }
         else {
-            outputElement.removeClass(successClass);
+            target.removeClass(successClass);
         }
     }
 };
-
-htmlrest.classes.output.prototype.httpResultSuccessHandler = 
 
 htmlrest.output = new htmlrest.classes.output();
 
@@ -40,24 +60,47 @@ htmlrest.classes.form = function () {
     
 };
 
-htmlrest.classes.form.prototype.submit = function (form) {
-    var outputElement = $(form.attr('data-output'));
+htmlrest.runners.form = function () {
+
+
+};
+
+//Form Functions
+htmlrest.runners.form = function () {
+
+
+};
+
+htmlrest.classes.form.prototype.submit = function(form)
+{
+    return function (evt, sender, previousResult, runner) {
+        htmlrest.runners.form.submit(form, evt, sender, previousResult, runner);
+    }
+}
+
+htmlrest.classes.form.prototype.submitEvent = function () {
+    return function (evt, sender, previousResult, runner) {
+        htmlrest.runners.form.submit(sender, evt, sender, previousResult, runner);
+    }
+}
+
+htmlrest.runners.form.prototype.submit = function (form, evt, sender, previousResult, runner) {
     $.ajax({
         method: form.attr('method'),
         url: form.attr('action'),
         data: form.serialize(),
         success: function (data, textStatus, jqXHR) {
-            htmlrest.output.httpResult(outputElement, jqXHR);
+            runner.next(jqXHR);
         },
         error: function (jqXHR, textStatus, errorThrown) {
-            htmlrest.output.httpResult(outputElement, jqXHR);
+            runner.next(jqXHR);
         }
     });
 };
 
-htmlrest.classes.form.prototype.submitHandler = function (evt) {
-    htmlrest.form.submit($(this));
-    return false;
-}
+//htmlrest.classes.form.prototype.submitHandler = function (evt) {
+//    htmlrest.form.submit($(this));
+//    return false;
+//}
 
 htmlrest.form = new htmlrest.classes.form();
