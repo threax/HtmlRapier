@@ -1,8 +1,6 @@
-﻿htmlrest_cls = function () {
+﻿var htmlrest = htmlrest || {};
 
-}
-
-htmlrest_cls.prototype.event = function (functions, returnVal) {
+htmlrest.event = function (functions, returnVal) {
         if (returnVal === undefined) {
             returnVal = false;
         }
@@ -11,7 +9,7 @@ htmlrest_cls.prototype.event = function (functions, returnVal) {
     }
 
 //Defining classes on event's prototype
-htmlrest_cls.prototype.event.prototype.runner = function (functions, returnVal) {
+htmlrest.event.prototype.runner = function (functions, returnVal) {
     var self = this;
     var functions = functions;
     var returnVal = returnVal;

@@ -1,14 +1,14 @@
 ﻿//Output Function
-htmlrest_cls.prototype.event.prototype.output = function () { }
+htmlrest.event.prototype.output = function () { }
 
-htmlrest_cls.prototype.event.prototype.output.prototype.httpResult = function (element) {
+htmlrest.event.prototype.output.prototype.httpResult = function (element) {
     return function (evt, sender, previousResult, runner) {
         htmlrest.event.prototype.output.prototype.httpResult.prototype.httpResultRunner(element, evt, sender, previousResult, runner);
     };
 }
 
 //stick the class in the public method prototype
-htmlrest_cls.prototype.event.prototype.output.prototype.httpResult.prototype.httpResultRunner = function (element, evt, sender, previousResult, runner) {
+htmlrest.event.prototype.output.prototype.httpResult.prototype.httpResultRunner = function (element, evt, sender, previousResult, runner) {
     element.html('did something');
 
     var errorClass = element.attr('data-class-error');
@@ -32,4 +32,4 @@ htmlrest_cls.prototype.event.prototype.output.prototype.httpResult.prototype.htt
     }
 };
 
-htmlrest_cls.prototype.output = new htmlrest_cls.prototype.event.prototype.output();
+htmlrest.output = new htmlrest.event.prototype.output();
