@@ -34,10 +34,4 @@ htmlrest.event.prototype.output.prototype.httpResult.prototype.httpResultRunner 
     runner.next();
 };
 
-htmlrest.event.prototype.output.prototype.format = function (formatter) {
-    return function (evt, sender, previousResult, runner) {
-        runner.next(formatter(previousResult));
-    };
-}
-
 htmlrest.output = new htmlrest.event.prototype.output();

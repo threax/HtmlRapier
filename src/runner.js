@@ -6,7 +6,17 @@ htmlrest.event = function (functions, returnVal) {
         }
 
         return new htmlrest.event.prototype.runner(functions, returnVal);
-    }
+}
+
+htmlrest.func = function (func) {
+    return function (evt, sender, previousResult, runner) {
+        var result = func(previousResult);
+        if (!result) {
+            result = previousResult;
+        }
+        runner.next(result);
+    };
+}
 
 //Defining classes on event's prototype
 htmlrest.event.prototype.runner = function (functions, returnVal) {

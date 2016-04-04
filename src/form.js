@@ -33,12 +33,12 @@ htmlrest.event.prototype.form.prototype.submit.prototype.runner = function (form
     $.ajax({
         method: form.attr('method'),
         url: form.attr('action'),
-        data: previousResult,
+        data: form.serialize(),
         success: function (data, textStatus, jqXHR) {
-            runner.next({ data: data, jqHHR: jqXHR });
+            runner.next({ data: data, jqXHR: jqXHR, success:true });
         },
         error: function (jqXHR, textStatus, errorThrown) {
-            runner.next({ data: jqXHR.data, jqHHR: jqXHR });
+            runner.next({ data: jqXHR.data, jqXHR: jqXHR, success: false });
         }
     });
 }

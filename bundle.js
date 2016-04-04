@@ -6,7 +6,17 @@ htmlrest.event = function (functions, returnVal) {
         }
 
         return new htmlrest.event.prototype.runner(functions, returnVal);
-    }
+}
+
+htmlrest.func = function (func) {
+    return function (evt, sender, previousResult, runner) {
+        var result = func(previousResult);
+        if (!result) {
+            result = previousResult;
+        }
+        runner.next(result);
+    };
+}
 
 //Defining classes on event's prototype
 htmlrest.event.prototype.runner = function (functions, returnVal) {
@@ -66,12 +76,12 @@ htmlrest.event.prototype.form.prototype.submit.prototype.runner = function (form
     $.ajax({
         method: form.attr('method'),
         url: form.attr('action'),
-        data: previousResult,
+        data: form.serialize(),
         success: function (data, textStatus, jqXHR) {
-            runner.next({ data: data, jqHHR: jqXHR });
+            runner.next({ data: data, jqXHR: jqXHR, success:true });
         },
         error: function (jqXHR, textStatus, errorThrown) {
-            runner.next({ data: jqXHR.data, jqHHR: jqXHR });
+            runner.next({ data: jqXHR.data, jqXHR: jqXHR, success: false });
         }
     });
 }
@@ -113,25 +123,4 @@ htmlrest.event.prototype.output.prototype.httpResult.prototype.httpResultRunner 
     runner.next();
 };
 
-htmlrest.event.prototype.output.prototype.format = function (formatter) {
-    return function (evt, sender, previousResult, runner) {
-        runner.next(formatter(previousResult));
-    };
-}
-
 htmlrest.output = new htmlrest.event.prototype.output();
-//Output Function
-htmlrest.event.prototype.transform = function () { }
-
-htmlrest.event.prototype.transform.prototype.store = function (storage) {
-    return function (evt, sender, previousResult, runner) {
-        var result = storage(previousResult);
-        if (!result)
-        {
-            result = previousResult;
-        }
-        runner.next(result);
-    };
-}
-
-htmlrest.transform = new htmlrest.event.prototype.transform();
