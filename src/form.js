@@ -35,10 +35,10 @@ htmlrest.event.prototype.form.prototype.submit.prototype.runner = function (form
         url: form.attr('action'),
         data: previousResult,
         success: function (data, textStatus, jqXHR) {
-            runner.next(jqXHR);
+            runner.next({ data: data, jqHHR: jqXHR });
         },
         error: function (jqXHR, textStatus, errorThrown) {
-            runner.next(jqXHR);
+            runner.next({ data: jqXHR.data, jqHHR: jqXHR });
         }
     });
 }
