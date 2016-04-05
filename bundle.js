@@ -99,7 +99,7 @@ htmlrest.formatText = function (text, args) {
     var textStart = 0;
     var bracketStart = 0;
     var bracketEnd = 0;
-    for (i = 0; i < text.length; ++i) {
+    for (var i = 0; i < text.length; ++i) {
         switch (text[i]) {
             case '{':
                 if (text[i + 1] != '{') {
