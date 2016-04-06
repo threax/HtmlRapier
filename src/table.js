@@ -19,11 +19,28 @@ htmlrest.event.prototype.table.prototype.populate.prototype.runner = function (t
         data = previousResult.data;
     }
 
-    //table.find('[name]').each(function () {
-    //    $(this).val(data[$(this).attr('name')]);
-    //});
+    //Clone the first row
+    var tbody = table.find('tbody');
+    var rowHtml = tbody.children().get(0).outerHTML;
+    tbody.html('');
+
+    var length = data.length;
+    for (var i = 0; i < length; ++i) {
+        var item = data[i];
+        $(rowHtml).appendTo(tbody).each(function () {
+            $(this).children().each(function () {
+                var name = $(this).attr('data-name');
+                var output = '';
+                if (name !== undefined) {
+                    output = item[name];
+                }
+
+                $(this).html(output);
+            });
+        });
+    }
 
     runner.next(previousResult);
 }
 
-htmlrest.form = new htmlrest.event.prototype.form();
+htmlrest.table = new htmlrest.event.prototype.table();
