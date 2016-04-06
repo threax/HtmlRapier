@@ -34,10 +34,12 @@ htmlrest.event.prototype.form.prototype.populate.prototype.runner = function (fo
     if (previousResult.success !== undefined){
         data = previousResult.data;
     }
+
     form.find('[name]').each(function () {
         $(this).val(data[$(this).attr('name')]);
     });
-    runner.next(form.serialize());
+
+    runner.next(previousResult);
 }
 
 htmlrest.form = new htmlrest.event.prototype.form();

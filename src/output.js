@@ -83,20 +83,10 @@ htmlrest.event.prototype.output.prototype.format = function (element, formatStri
     };
 }
 
-htmlrest.event.prototype.output.prototype.format.prototype.showRunner = function (element, formatString, evt, sender, previousResult, runner) {
-    element.html(htmlrest.formatText(formatString, previousResult));
-    runner.next(previousResult);
-}
-
 htmlrest.event.prototype.output.prototype.write = function (element, formatString) {
     return function (evt, sender, previousResult, runner) {
         htmlrest.event.prototype.output.prototype.write.prototype.httpResultRunner(element, formatString, evt, sender, previousResult, runner);
     };
-}
-
-htmlrest.event.prototype.output.prototype.write.prototype.showRunner = function (element, formatString, evt, sender, previousResult, runner) {
-    element.html(previousResult);
-    runner.next(previousResult);
 }
 
 htmlrest.output = new htmlrest.event.prototype.output();
