@@ -19,25 +19,18 @@ htmlrest.event.prototype.table.prototype.populate.prototype.runner = function (t
         data = previousResult.data;
     }
 
-    //Clone the first row
+    //Clone the first row if needed
     var tbody = table.find('tbody');
-    var rowHtml = tbody.children().get(0).outerHTML;
+    var realBody = tbody.get(0);
+    if (realBody.rowHtml === undefined) {
+        //Store our original html string in the table body's actual object
+        realBody.rowHtml = tbody.children().get(0).outerHTML;
+    }
     tbody.html('');
 
     var length = data.length;
     for (var i = 0; i < length; ++i) {
-        var item = data[i];
-        $(rowHtml).appendTo(tbody).each(function () {
-            $(this).children().each(function () {
-                var name = $(this).attr('data-name');
-                var output = '';
-                if (name !== undefined) {
-                    output = item[name];
-                }
-
-                $(this).html(output);
-            });
-        });
+        tbody.append(htmlrest.formatText(realBody.rowHtml, data[i]));
     }
 
     runner.next(previousResult);
