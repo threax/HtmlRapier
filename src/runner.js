@@ -5,7 +5,12 @@ htmlrest.event = function (functions, returnVal) {
             returnVal = false;
         }
 
-        return new htmlrest.event.prototype.runner(functions, returnVal);
+        return new htmlrest.event.prototype.runner(functions, returnVal, null);
+}
+
+htmlrest.run = function (source, functions) {
+    var runner = new htmlrest.event.prototype.runner(functions, false, source);
+    runner();
 }
 
 htmlrest.func = function (func) {
@@ -19,12 +24,12 @@ htmlrest.func = function (func) {
 }
 
 //Defining classes on event's prototype
-htmlrest.event.prototype.runner = function (functions, returnVal) {
+htmlrest.event.prototype.runner = function (functions, returnVal, sender) {
     var self = this;
     var functions = functions;
     var returnVal = returnVal;
     var currentFunc = -1;
-    var sender = null;
+    var sender = sender;
     var event = null;
 
     this.next = function (previousResult) {
@@ -35,7 +40,9 @@ htmlrest.event.prototype.runner = function (functions, returnVal) {
 
     return function (evt) {
         currentFunc = -1;
-        sender = $(this);
+        if (!sender) {
+            sender = $(this);
+        }
         event = evt;
         self.next(null);
         return returnVal;

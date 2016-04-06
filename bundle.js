@@ -5,7 +5,12 @@ htmlrest.event = function (functions, returnVal) {
             returnVal = false;
         }
 
-        return new htmlrest.event.prototype.runner(functions, returnVal);
+        return new htmlrest.event.prototype.runner(functions, returnVal, null);
+}
+
+htmlrest.run = function (source, functions) {
+    var runner = new htmlrest.event.prototype.runner(functions, false, source);
+    runner();
 }
 
 htmlrest.func = function (func) {
@@ -19,12 +24,12 @@ htmlrest.func = function (func) {
 }
 
 //Defining classes on event's prototype
-htmlrest.event.prototype.runner = function (functions, returnVal) {
+htmlrest.event.prototype.runner = function (functions, returnVal, sender) {
     var self = this;
     var functions = functions;
     var returnVal = returnVal;
     var currentFunc = -1;
-    var sender = null;
+    var sender = sender;
     var event = null;
 
     this.next = function (previousResult) {
@@ -35,7 +40,9 @@ htmlrest.event.prototype.runner = function (functions, returnVal) {
 
     return function (evt) {
         currentFunc = -1;
-        sender = $(this);
+        if (!sender) {
+            sender = $(this);
+        }
         event = evt;
         self.next(null);
         return returnVal;
@@ -129,13 +136,13 @@ htmlrest.event.prototype.form = function () { }
 
 htmlrest.event.prototype.form.prototype.serialize = function (form) {
     return function (evt, sender, previousResult, runner) {
-        htmlrest.event.prototype.form.prototype.serialize.prototype.runner(form, evt, sender, previousResult, runner);
-    }
-}
-
-htmlrest.event.prototype.form.prototype.serializeSelf = function () {
-    return function (evt, sender, previousResult, runner) {
-        htmlrest.event.prototype.form.prototype.serialize.prototype.runner(sender, evt, sender, previousResult, runner);
+        if (form === undefined) {
+            var toSend = sender;
+        }
+        else {
+            toSend = form;
+        }
+        htmlrest.event.prototype.form.prototype.serialize.prototype.runner(toSend, evt, sender, previousResult, runner);
     }
 }
 
@@ -143,50 +150,27 @@ htmlrest.event.prototype.form.prototype.serialize.prototype.runner = function (f
     runner.next(form.serialize());
 }
 
-htmlrest.event.prototype.form.prototype.submit = function (form, data) {
-    return function (evt, sender, previousResult, runner) {
-        htmlrest.event.prototype.form.prototype.submit.prototype.runner(form, data, evt, sender, previousResult, runner);
-    }
-}
-
-htmlrest.event.prototype.form.prototype.submitSelf = function (data) {
-    return function (evt, sender, previousResult, runner) {
-        htmlrest.event.prototype.form.prototype.submit.prototype.runner(sender, data, evt, sender, previousResult, runner);
-    }
-}
-
-htmlrest.event.prototype.form.prototype.submit.prototype.runner = function (form, data, evt, sender, previousResult, runner) {
-    $.ajax({
-        method: form.attr('method'),
-        url: form.attr('action'),
-        data: form.serialize(),
-        success: function (data, textStatus, jqXHR) {
-            runner.next({ data: data, jqXHR: jqXHR, success:true });
-        },
-        error: function (jqXHR, textStatus, errorThrown) {
-            runner.next({ data: jqXHR.data, jqXHR: jqXHR, success: false });
-        }
-    });
-}
-
-htmlrest.event.prototype.form.prototype.populateSelf = function () {
-    return function (evt, sender, previousResult, runner) {
-        var hiddenRunner = new htmlrest.event.prototype.runner([function (evt, sender, previousResult, hiddenRunner) {
-            alert('got to populate');
-            runner.next(evt, sender, previousResult, runner);
-        }], false);
-        htmlrest.event.prototype.rest.prototype.get.prototype.runner(sender.attr('data-source'), evt, sender, previousResult, hiddenRunner);
-    }
-}
-
 htmlrest.event.prototype.form.prototype.populate = function (form) {
     return function (evt, sender, previousResult, runner) {
-        var hiddenRunner = new htmlrest.event.prototype.runner([function (evt, sender, previousResult, hiddenRunner) {
-            alert('got to populate');
-            runner.next(evt, sender, previousResult, runner);
-        }], false);
-        htmlrest.event.prototype.rest.prototype.get.prototype.runner(form.attr('data-source'), evt, sender, previousResult, hiddenRunner);
+        if (form === undefined){
+            var toSend = sender;
+        }
+        else {
+            toSend = form;
+        }
+        htmlrest.event.prototype.form.prototype.populate.prototype.runner(toSend, evt, sender, previousResult, runner);
     }
+}
+
+htmlrest.event.prototype.form.prototype.populate.prototype.runner = function (form, evt, sender, previousResult, runner) {
+    var data = previousResult;
+    if (previousResult.success !== undefined){
+        data = previousResult.data;
+    }
+    form.find('[name]').each(function () {
+        $(this).val(data[$(this).attr('name')]);
+    });
+    runner.next(form.serialize());
 }
 
 htmlrest.form = new htmlrest.event.prototype.form();
