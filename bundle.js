@@ -89,7 +89,7 @@ htmlrest.event.prototype.rest.prototype.ajax = function (url, method) {
 }
 
 htmlrest.event.prototype.rest.prototype.ajax.prototype.runner = function (url, method, evt, sender, previousResult, runner) {
-    $.ajax({
+    var request = {
         method: method,
         url: url,
         data: previousResult,
@@ -99,7 +99,17 @@ htmlrest.event.prototype.rest.prototype.ajax.prototype.runner = function (url, m
         error: function (jqXHR, textStatus, errorThrown) {
             runner.next({ data: jqXHR.data, jqXHR: jqXHR, success: false });
         }
-    });
+    };
+
+    if (method.toLowerCase() === 'put')
+    {
+        request.headers = {
+            'X-HTTP-Method-Override': 'PUT'
+        };
+        request.method = 'POST';
+    }
+
+    $.ajax(request);
 }
 
 htmlrest.rest = new htmlrest.event.prototype.rest();
