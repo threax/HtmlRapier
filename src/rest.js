@@ -13,6 +13,12 @@ htmlrest.event.prototype.rest.prototype.put = function (url) {
     }
 }
 
+htmlrest.event.prototype.rest.prototype.delete = function (url) {
+    return function (evt, sender, previousResult, runner) {
+        htmlrest.event.prototype.rest.prototype.ajax.prototype.runner(url, 'delete', evt, sender, previousResult, runner);
+    }
+}
+
 htmlrest.event.prototype.rest.prototype.get = function (url) {
     return function (evt, sender, previousResult, runner) {
         htmlrest.event.prototype.rest.prototype.get.prototype.runner(url, evt, sender, previousResult, runner);
@@ -51,12 +57,20 @@ htmlrest.event.prototype.rest.prototype.ajax.prototype.runner = function (url, m
         }
     };
 
-    if (method.toLowerCase() === 'put')
+    switch(method.toLowerCase())
     {
-        request.headers = {
-            'X-HTTP-Method-Override': 'PUT'
-        };
-        request.method = 'POST';
+        case 'put':
+            request.headers = {
+                'X-HTTP-Method-Override': 'PUT'
+            };
+            request.method = 'POST';
+            break;
+        case 'delete':
+            request.headers = {
+                'X-HTTP-Method-Override': 'DELETE'
+            };
+            request.method = 'POST';
+            break;        
     }
 
     $.ajax(request);

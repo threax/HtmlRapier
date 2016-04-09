@@ -63,6 +63,12 @@ htmlrest.event.prototype.rest.prototype.put = function (url) {
     }
 }
 
+htmlrest.event.prototype.rest.prototype.delete = function (url) {
+    return function (evt, sender, previousResult, runner) {
+        htmlrest.event.prototype.rest.prototype.ajax.prototype.runner(url, 'delete', evt, sender, previousResult, runner);
+    }
+}
+
 htmlrest.event.prototype.rest.prototype.get = function (url) {
     return function (evt, sender, previousResult, runner) {
         htmlrest.event.prototype.rest.prototype.get.prototype.runner(url, evt, sender, previousResult, runner);
@@ -101,12 +107,20 @@ htmlrest.event.prototype.rest.prototype.ajax.prototype.runner = function (url, m
         }
     };
 
-    if (method.toLowerCase() === 'put')
+    switch(method.toLowerCase())
     {
-        request.headers = {
-            'X-HTTP-Method-Override': 'PUT'
-        };
-        request.method = 'POST';
+        case 'put':
+            request.headers = {
+                'X-HTTP-Method-Override': 'PUT'
+            };
+            request.method = 'POST';
+            break;
+        case 'delete':
+            request.headers = {
+                'X-HTTP-Method-Override': 'DELETE'
+            };
+            request.method = 'POST';
+            break;        
     }
 
     $.ajax(request);
@@ -161,7 +175,7 @@ htmlrest.form = new htmlrest.event.prototype.form();
 //Table Functions
 htmlrest.event.prototype.table = function () { }
 
-htmlrest.event.prototype.table.prototype.populate = function (table) {
+htmlrest.event.prototype.table.prototype.populate = function (rowCreatedCallback, table) {
     return function (evt, sender, previousResult, runner) {
         if (table === undefined) {
             var toSend = sender;
@@ -169,11 +183,16 @@ htmlrest.event.prototype.table.prototype.populate = function (table) {
         else {
             toSend = table;
         }
-        htmlrest.event.prototype.table.prototype.populate.prototype.runner(toSend, evt, sender, previousResult, runner);
+
+        if (rowCreatedCallback === undefined) {
+            rowCreatedCallback = function (row, rowData) { };
+        }
+
+        htmlrest.event.prototype.table.prototype.populate.prototype.runner(rowCreatedCallback, toSend, evt, sender, previousResult, runner);
     }
 }
 
-htmlrest.event.prototype.table.prototype.populate.prototype.runner = function (table, evt, sender, previousResult, runner) {
+htmlrest.event.prototype.table.prototype.populate.prototype.runner = function (rowCreatedCallback, table, evt, sender, previousResult, runner) {
     var data = previousResult;
     if (previousResult.success !== undefined){
         data = previousResult.data;
@@ -190,7 +209,10 @@ htmlrest.event.prototype.table.prototype.populate.prototype.runner = function (t
 
     var length = data.length;
     for (var i = 0; i < length; ++i) {
-        tbody.append(htmlrest.formatText(realBody.rowHtml, data[i]));
+        var rowData = data[i];
+        var rowMarkup = $(htmlrest.formatText(realBody.rowHtml, rowData));
+        rowMarkup.appendTo(tbody);
+        rowCreatedCallback(rowMarkup, rowData);
     }
 
     runner.next(previousResult);
