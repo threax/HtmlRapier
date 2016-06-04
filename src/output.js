@@ -23,7 +23,7 @@ htmlrest.formatText = function (text, args) {
 
                     if (bracketStart < bracketEnd - 1) {
                         output += text.substring(textStart, bracketStart);
-                        output += args[text.substring(bracketStart + 1, bracketEnd)];
+                        output += htmlrest.safetyEscape(args[text.substring(bracketStart + 1, bracketEnd)]);
                         textStart = i + 1;
                     }
                 }
@@ -36,6 +36,49 @@ htmlrest.formatText = function (text, args) {
     }
 
     return output;
+}
+
+htmlrest.safetyEscape = function (text)
+{
+    text = String(text);
+
+    var status =
+    {
+        textStart: 0,
+        bracketStart: 0,
+        output: ""
+    }
+    for (var i = 0; i < text.length; ++i)
+    {
+        switch (text[i])
+        {
+            case '<':
+                htmlrest.safetyEscape.prototype.outputEncoded(i, text, status, '&lt;');
+                break;
+            case '>':
+                htmlrest.safetyEscape.prototype.outputEncoded(i, text, status, '&gt;');
+                break;
+            case '"':
+                htmlrest.safetyEscape.prototype.outputEncoded(i, text, status, '&quot;');
+                break;
+            default:
+                break;
+        }
+    }
+
+    if (status.textStart < text.length)
+    {
+        status.output += text.substring(status.textStart, text.length);
+    }
+
+    return status.output;
+}
+
+htmlrest.safetyEscape.prototype.outputEncoded = function (i, text, status, replacement)
+{
+    status.bracketStart = i;
+    status.output += text.substring(status.textStart, status.bracketStart) + replacement;
+    status.textStart = i + 1;
 }
 
 htmlrest.event.prototype.output.prototype.httpResult = function (element, formatSuccess, formatDanger) {
