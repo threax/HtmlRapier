@@ -48,7 +48,8 @@ htmlrest.event.prototype.rest.prototype.ajax.prototype.runner = function (url, m
     var request = {
         method: method,
         url: url,
-        data: previousResult,
+        contentType: 'application/json; charset=UTF-8',
+        data: JSON.stringify(previousResult),
         success: function (data, textStatus, jqXHR) {
             runner.next({ data: data, jqXHR: jqXHR, success: true });
         },
@@ -57,21 +58,21 @@ htmlrest.event.prototype.rest.prototype.ajax.prototype.runner = function (url, m
         }
     };
 
-    switch(method.toLowerCase())
-    {
-        case 'put':
-            request.headers = {
-                'X-HTTP-Method-Override': 'PUT'
-            };
-            request.method = 'POST';
-            break;
-        case 'delete':
-            request.headers = {
-                'X-HTTP-Method-Override': 'DELETE'
-            };
-            request.method = 'POST';
-            break;        
-    }
+    //switch(method.toLowerCase())
+    //{
+    //    case 'put':
+    //        request.headers = {
+    //            'X-HTTP-Method-Override': 'PUT'
+    //        };
+    //        request.method = 'POST';
+    //        break;
+    //    case 'delete':
+    //        request.headers = {
+    //            'X-HTTP-Method-Override': 'DELETE'
+    //        };
+    //        request.method = 'POST';
+    //        break;        
+    //}
 
     $.ajax(request);
 }

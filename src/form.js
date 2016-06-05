@@ -13,8 +13,11 @@ htmlrest.event.prototype.form.prototype.serialize = function (form) {
     }
 }
 
-htmlrest.event.prototype.form.prototype.serialize.prototype.runner = function (form, evt, sender, previousResult, runner) {
-    runner.next(form.serialize());
+htmlrest.event.prototype.form.prototype.serialize.prototype.runner = function (form, evt, sender, previousResult, runner)
+{
+    var data = {};
+    form.serializeArray().map(function (x) { data[x.name] = x.value; });
+    runner.next(data);
 }
 
 htmlrest.event.prototype.form.prototype.populate = function (form) {
