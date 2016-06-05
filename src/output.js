@@ -61,6 +61,9 @@ htmlrest.safetyEscape = function (text)
             case '"':
                 htmlrest.safetyEscape.prototype.outputEncoded(i, text, status, '&quot;');
                 break;
+            case '\'':
+                htmlrest.safetyEscape.prototype.outputEncoded(i, text, status, '&#39;');
+                break;
             default:
                 break;
         }
