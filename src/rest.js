@@ -29,6 +29,7 @@ htmlrest.event.prototype.rest.prototype.get.prototype.runner = function (url, ev
     $.ajax({
         method: 'get',
         url: url,
+        cache: false,
         success: function (data, textStatus, jqXHR) {
             runner.next({ data: data, jqXHR: jqXHR, success: true });
         },
