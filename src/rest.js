@@ -59,21 +59,32 @@ htmlrest.event.prototype.rest.prototype.ajax.prototype.runner = function (url, m
         }
     };
 
-    //switch(method.toLowerCase())
-    //{
-    //    case 'put':
-    //        request.headers = {
-    //            'X-HTTP-Method-Override': 'PUT'
-    //        };
-    //        request.method = 'POST';
-    //        break;
-    //    case 'delete':
-    //        request.headers = {
-    //            'X-HTTP-Method-Override': 'DELETE'
-    //        };
-    //        request.method = 'POST';
-    //        break;        
-    //}
+    $.ajax(request);
+}
+
+htmlrest.event.prototype.rest.prototype.upload = function (url) {
+    return function (evt, sender, previousResult, runner) {
+        htmlrest.event.prototype.rest.prototype.upload.prototype.runner(url, evt, sender, previousResult, runner);
+    }
+}
+
+htmlrest.event.prototype.rest.prototype.upload.prototype.runner = function (url, evt, sender, previousResult, runner) {
+    var formData = new FormData();
+    formData.append('file', previousResult);
+
+    var request = {
+        method: 'post',
+        url: url,
+        contentType: false,
+        processData: false,
+        data: formData,
+        success: function (data, textStatus, jqXHR) {
+            runner.next({ data: data, jqXHR: jqXHR, success: true });
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+            runner.next({ data: jqXHR.data, jqXHR: jqXHR, success: false });
+        }
+    };
 
     $.ajax(request);
 }

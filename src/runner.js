@@ -50,13 +50,13 @@ htmlrest.event.prototype.runner = function (functionCreator, returnVal, sender)
 
     return function (evt)
     {
-        functions = functionCreator();
         currentFunc = -1;
         if (!sender)
         {
             sender = $(this);
         }
         event = evt;
+        functions = functionCreator(sender, event);
         self.next(null);
         return returnVal;
     }
