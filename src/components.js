@@ -17,8 +17,9 @@ htmlrest.registerComponent = function (name, createFunc) {
 
 htmlrest.createComponent.prototype.factory = {};
 
-//Repeater
 htmlrest.event.prototype.component = function () { }
+
+//Repeater
 htmlrest.event.prototype.component.prototype.repeat = function (name, parentComponent) {
     return function (evt, sender, previousResult, runner) {
         htmlrest.event.prototype.component.prototype.repeat.prototype.runner(name, parentComponent, evt, sender, previousResult, runner);
@@ -35,6 +36,17 @@ htmlrest.event.prototype.component.prototype.repeat.prototype.runner = function 
     $(previousResult).each(function (index, value) {
         htmlrest.createComponent(name, value, parentComponent);
     });
+};
+
+//Empty component
+htmlrest.event.prototype.component.prototype.empty = function (parentComponent) {
+    return function (evt, sender, previousResult, runner) {
+        htmlrest.event.prototype.component.prototype.empty.prototype.runner(parentComponent, evt, sender, previousResult, runner);
+    };
+}
+
+htmlrest.event.prototype.component.prototype.empty.prototype.runner = function (parentComponent, evt, sender, previousResult, runner) {
+    $(parentComponent).empty();
 };
 
 //Auto find components on the page
