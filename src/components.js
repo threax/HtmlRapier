@@ -39,6 +39,8 @@ htmlrest.event.prototype.component.prototype.repeat.prototype.runner = function 
     $(previousResult).each(function (index, value) {
         htmlrest.createComponent(name, value, parentComponent);
     });
+
+    runner.next(previousResult);
 };
 
 //Empty component
@@ -50,6 +52,7 @@ htmlrest.event.prototype.component.prototype.empty = function (parentComponent) 
 
 htmlrest.event.prototype.component.prototype.empty.prototype.runner = function (parentComponent, evt, sender, previousResult, runner) {
     $(parentComponent).empty();
+    runner.next(previousResult);
 };
 
 //Auto find components on the page
