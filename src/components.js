@@ -54,15 +54,16 @@ htmlrest.event.prototype.component.prototype.empty.prototype.runner = function (
 
 //Auto find components on the page
 (function ($, h) {
-    var query = "[data-htmlrest-component]";
-    var componentElements = $(query);
+    var query = "data-htmlrest-component";
+    var componentElements = $('[' + query + ']');
 
     //Read components backward, removing children from parents along the way.
     for (var i = componentElements.length - 1; i >= 0; --i) {
         (function () {
             var element = componentElements[i];
             var jQueryElement = $(element);
-            var componentName = jQueryElement.attr('data-htmlrest-component');
+            var componentName = jQueryElement.attr(query);
+            element.removeAttribute(query);
             var componentString = element.outerHTML;
             jQueryElement.remove();
 
