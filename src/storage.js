@@ -1,9 +1,15 @@
 ﻿htmlrest.storage =
 {
     startupData: {},
-    getSessionStorageJson: function(name, defaultValue){
+    /**
+    * @description Get the sesssion data, can specify a default value.
+    * @param {string} name
+    * @param {object} defaultValue, if not supplied is null
+    * @return {object}
+    */
+    getSessionJson: function(name, defaultValue){
         if (defaultValue === undefined) {
-            defaultValue = {};
+            defaultValue = null;
         }
 
         var recovered = sessionStorage.getItem(name);
@@ -14,5 +20,14 @@
             recovered = defaultValue;
         }
         return recovered;
+    },
+    /**
+    * @description Get the sesssion data, can specify a default value.
+    * @param {string} name
+    * @param {object} value, if not supplied is null
+    * @return {object}
+    */
+    storeJsonInSession:function (name, value){
+        sessionStorage.setItem(name, JSON.stringify(value));
     }
 };
