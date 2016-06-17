@@ -1,6 +1,5 @@
-﻿htmlrest.createComponent = function (name, data, parentComponent, createdCallback)
-{
-    if (typeof(parentComponent) === 'string'){
+﻿htmlrest.createComponent = function (name, data, parentComponent, createdCallback) {
+    if (typeof (parentComponent) === 'string') {
         parentComponent = $(parentComponent);
     }
     if (parentComponent instanceof jQuery) {
@@ -8,8 +7,7 @@
     }
     if (htmlrest.createComponent.prototype.factory.hasOwnProperty(name)) {
         var created = htmlrest.createComponent.prototype.factory[name](data, parentComponent);
-        if(createdCallback !== undefined)
-        {
+        if (createdCallback !== undefined) {
             createdCallback(created, data);
         }
         return created;
@@ -22,37 +20,22 @@ htmlrest.registerComponent = function (name, createFunc) {
 
 htmlrest.createComponent.prototype.factory = {};
 
-htmlrest.event.prototype.component = function () { }
+htmlrest.component = htmlrest.component || {
+    //Repeater
+    repeat: function (name, parentComponent, previousResult) {
+        if (previousResult.hasOwnProperty('jqXHR')) {
+            previousResult = previousResult.data;
+        }
 
-//Repeater
-htmlrest.event.prototype.component.prototype.repeat = function (name, parentComponent) {
-    return function (evt, sender, previousResult, runner) {
-        htmlrest.event.prototype.component.prototype.repeat.prototype.runner(name, parentComponent, evt, sender, previousResult, runner);
-    };
-}
+        $(previousResult).each(function (index, value) {
+            htmlrest.createComponent(name, value, parentComponent);
+        });
+    },
 
-htmlrest.event.prototype.component.prototype.repeat.prototype.runner = function (name, parentComponent, evt, sender, previousResult, runner) {
-    if (previousResult.hasOwnProperty('jqXHR')) {
-        previousResult = previousResult.data;
+    //Empty component
+    empty: function (parentComponent) {
+        $(parentComponent).empty();
     }
-
-    $(previousResult).each(function (index, value) {
-        htmlrest.createComponent(name, value, parentComponent);
-    });
-
-    runner.next(previousResult);
-};
-
-//Empty component
-htmlrest.event.prototype.component.prototype.empty = function (parentComponent) {
-    return function (evt, sender, previousResult, runner) {
-        htmlrest.event.prototype.component.prototype.empty.prototype.runner(parentComponent, evt, sender, previousResult, runner);
-    };
-}
-
-htmlrest.event.prototype.component.prototype.empty.prototype.runner = function (parentComponent, evt, sender, previousResult, runner) {
-    $(parentComponent).empty();
-    runner.next(previousResult);
 };
 
 //Auto find components on the page
@@ -81,5 +64,3 @@ htmlrest.event.prototype.component.prototype.empty.prototype.runner = function (
         })();
     };
 })(jQuery, htmlrest);
-
-htmlrest.component = new htmlrest.event.prototype.component();

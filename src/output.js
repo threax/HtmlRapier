@@ -1,6 +1,4 @@
 ﻿//Output Function
-htmlrest.event.prototype.output = function () { }
-
 htmlrest.formatText = function (text, args) {
     if (!text || !args) {
         return text;
@@ -83,56 +81,3 @@ htmlrest.safetyEscape.prototype.outputEncoded = function (i, text, status, repla
     status.output += text.substring(status.textStart, status.bracketStart) + replacement;
     status.textStart = i + 1;
 }
-
-htmlrest.event.prototype.output.prototype.httpResult = function (element, formatSuccess, formatDanger) {
-    return function (evt, sender, previousResult, runner) {
-        htmlrest.event.prototype.output.prototype.httpResult.prototype.httpResultRunner(element, formatSuccess, formatDanger, evt, sender, previousResult, runner);
-    };
-}
-
-//stick the class in the public method prototype
-htmlrest.event.prototype.output.prototype.httpResult.prototype.httpResultRunner = function (element, formatSuccess, formatDanger, evt, sender, previousResult, runner) {
-
-    if (previousResult.success) {
-        element.html(htmlrest.formatText(formatSuccess, previousResult.data));
-    }
-    else {
-        element.html(htmlrest.formatText(formatDanger, previousResult.data));
-    }
-
-    var dangerClass = element.attr('data-class-danger');
-    if (dangerClass) {
-        if (previousResult.success) {
-            element.removeClass(dangerClass);
-        }
-        else {
-            element.addClass(dangerClass);
-        }
-    }
-
-    var successClass = element.attr('data-class-success');
-    if (successClass) {
-        if (previousResult.success) {
-            element.addClass(successClass);
-        }
-        else {
-            element.removeClass(successClass);
-        }
-    }
-
-    runner.next(previousResult);
-};
-
-htmlrest.event.prototype.output.prototype.format = function (element, formatString) {
-    return function (evt, sender, previousResult, runner) {
-        htmlrest.event.prototype.output.prototype.format.prototype.httpResultRunner(element, formatString, evt, sender, previousResult, runner);
-    };
-}
-
-htmlrest.event.prototype.output.prototype.write = function (element, formatString) {
-    return function (evt, sender, previousResult, runner) {
-        htmlrest.event.prototype.output.prototype.write.prototype.httpResultRunner(element, formatString, evt, sender, previousResult, runner);
-    };
-}
-
-htmlrest.output = new htmlrest.event.prototype.output();

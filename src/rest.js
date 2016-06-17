@@ -1,76 +1,62 @@
 ﻿//Rest Functions
-htmlrest.event.prototype.rest = function () { }
+htmlrest.rest = htmlrest.rest || {
 
-htmlrest.event.prototype.rest.prototype.post = function (url) {
-    return function (evt, sender, previousResult, runner) {
-        htmlrest.event.prototype.rest.prototype.ajax.prototype.runner(url, 'post', evt, sender, previousResult, runner);
-    }
 }
 
-htmlrest.event.prototype.rest.prototype.put = function (url) {
-    return function (evt, sender, previousResult, runner) {
-        htmlrest.event.prototype.rest.prototype.ajax.prototype.runner(url, 'put', evt, sender, previousResult, runner);
-    }
+htmlrest.rest.post = function (url, data, success, fail) {
+    htmlrest.rest.ajax(url, 'post', data, success, fail);
 }
 
-htmlrest.event.prototype.rest.prototype.delete = function (url) {
-    return function (evt, sender, previousResult, runner) {
-        htmlrest.event.prototype.rest.prototype.ajax.prototype.runner(url, 'delete', evt, sender, previousResult, runner);
-    }
+htmlrest.rest.put = function (url, data, success, fail) {
+    htmlrest.rest.ajax(url, 'put', data, success, fail);
 }
 
-htmlrest.event.prototype.rest.prototype.get = function (url) {
-    return function (evt, sender, previousResult, runner) {
-        htmlrest.event.prototype.rest.prototype.get.prototype.runner(url, evt, sender, previousResult, runner);
-    }
+htmlrest.rest.delete = function (url, data, success, fail) {
+    htmlrest.rest.ajax(url, 'delete', data, success, fail);
 }
 
-htmlrest.event.prototype.rest.prototype.get.prototype.runner = function (url, evt, sender, previousResult, runner) {
+htmlrest.rest.get = function (url, success, fail) {
     $.ajax({
         method: 'get',
         url: url,
         cache: false,
-        success: function (data, textStatus, jqXHR) {
-            runner.next({ data: data, jqXHR: jqXHR, success: true });
+        success: function (resultData, textStatus, jqXHR) {
+            if (success !== undefined) {
+                success(resultData);
+            }
         },
         error: function (jqXHR, textStatus, errorThrown) {
-            runner.next({ data: jqXHR.data, jqXHR: jqXHR, success: false });
+            if (fail !== undefined) {
+                fail(jqXHR.data);
+            }
         }
     });
 }
 
-htmlrest.event.prototype.rest.prototype.ajax = function (url, method) {
-    return function (evt, sender, previousResult, runner) {
-        htmlrest.event.prototype.rest.prototype.ajax.prototype.runner(url, method, evt, sender, previousResult, runner);
-    }
-}
-
-htmlrest.event.prototype.rest.prototype.ajax.prototype.runner = function (url, method, evt, sender, previousResult, runner) {
+htmlrest.rest.ajax = function (url, method, data, success, fail) {
     var request = {
         method: method,
         url: url,
         contentType: 'application/json; charset=UTF-8',
-        data: JSON.stringify(previousResult),
-        success: function (data, textStatus, jqXHR) {
-            runner.next({ data: data, jqXHR: jqXHR, success: true });
+        data: JSON.stringify(data),
+        success: function (resultData, textStatus, jqXHR) {
+            if (success !== undefined) {
+                success(resultData);
+            }
         },
         error: function (jqXHR, textStatus, errorThrown) {
-            runner.next({ data: jqXHR.data, jqXHR: jqXHR, success: false });
+            if (fail !== undefined) {
+                fail(jqXHR.data);
+            }
         }
     };
 
     $.ajax(request);
 }
 
-htmlrest.event.prototype.rest.prototype.upload = function (url) {
-    return function (evt, sender, previousResult, runner) {
-        htmlrest.event.prototype.rest.prototype.upload.prototype.runner(url, evt, sender, previousResult, runner);
-    }
-}
-
-htmlrest.event.prototype.rest.prototype.upload.prototype.runner = function (url, evt, sender, previousResult, runner) {
+htmlrest.rest.upload = function (url, data, success, fail) {
     var formData = new FormData();
-    formData.append('file', previousResult);
+    formData.append('file', data);
 
     var request = {
         method: 'post',
@@ -78,15 +64,17 @@ htmlrest.event.prototype.rest.prototype.upload.prototype.runner = function (url,
         contentType: false,
         processData: false,
         data: formData,
-        success: function (data, textStatus, jqXHR) {
-            runner.next({ data: data, jqXHR: jqXHR, success: true });
+        success: function (resultData, textStatus, jqXHR) {
+            if (success !== undefined) {
+                success(resultData);
+            }
         },
         error: function (jqXHR, textStatus, errorThrown) {
-            runner.next({ data: jqXHR.data, jqXHR: jqXHR, success: false });
+            if (fail !== undefined) {
+                fail(jqXHR.data);
+            }
         }
     };
 
     $.ajax(request);
 }
-
-htmlrest.rest = new htmlrest.event.prototype.rest();
