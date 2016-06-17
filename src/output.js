@@ -1,6 +1,8 @@
 ﻿//Output Function
-htmlrest.formatText = function (text, args) {
-    if (!text || !args) {
+htmlrest.formatText = function (text, args)
+{
+    if (!text || !args)
+    {
         return text;
     }
 
@@ -8,18 +10,23 @@ htmlrest.formatText = function (text, args) {
     var textStart = 0;
     var bracketStart = 0;
     var bracketEnd = 0;
-    for (var i = 0; i < text.length; ++i) {
-        switch (text[i]) {
+    for (var i = 0; i < text.length; ++i)
+    {
+        switch (text[i])
+        {
             case '{':
-                if (text[i + 1] != '{') {
+                if (text[i + 1] != '{')
+                {
                     bracketStart = i;
                 }
                 break;
             case '}':
-                if (i + 1 == text.length || text[i + 1] != '}') {
+                if (i + 1 == text.length || text[i + 1] != '}')
+                {
                     bracketEnd = i;
 
-                    if (bracketStart < bracketEnd - 1) {
+                    if (bracketStart < bracketEnd - 1)
+                    {
                         output += text.substring(textStart, bracketStart);
                         output += htmlrest.safetyEscape(args[text.substring(bracketStart + 1, bracketEnd)]);
                         textStart = i + 1;
@@ -29,7 +36,8 @@ htmlrest.formatText = function (text, args) {
         }
     }
 
-    if (textStart < text.length) {
+    if (textStart < text.length)
+    {
         output += text.substring(textStart, text.length);
     }
 

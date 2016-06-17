@@ -1,20 +1,26 @@
-﻿htmlrest.createComponent = function (name, data, parentComponent, createdCallback) {
-    if (typeof (parentComponent) === 'string') {
+﻿htmlrest.createComponent = function (name, data, parentComponent, createdCallback)
+{
+    if (typeof (parentComponent) === 'string')
+    {
         parentComponent = $(parentComponent);
     }
-    if (parentComponent instanceof jQuery) {
+    if (parentComponent instanceof jQuery)
+    {
         parentComponent = parentComponent[0];
     }
-    if (htmlrest.createComponent.prototype.factory.hasOwnProperty(name)) {
+    if (htmlrest.createComponent.prototype.factory.hasOwnProperty(name))
+    {
         var created = htmlrest.createComponent.prototype.factory[name](data, parentComponent);
-        if (createdCallback !== undefined) {
+        if (createdCallback !== undefined)
+        {
             createdCallback(created, data);
         }
         return created;
     }
 }
 
-htmlrest.registerComponent = function (name, createFunc) {
+htmlrest.registerComponent = function (name, createFunc)
+{
     htmlrest.createComponent.prototype.factory[name] = createFunc;
 }
 
@@ -22,30 +28,37 @@ htmlrest.createComponent.prototype.factory = {};
 
 htmlrest.component = htmlrest.component || {
     //Repeater
-    repeat: function (name, parentComponent, previousResult) {
-        if (previousResult.hasOwnProperty('jqXHR')) {
+    repeat: function (name, parentComponent, previousResult)
+    {
+        if (previousResult.hasOwnProperty('jqXHR'))
+        {
             previousResult = previousResult.data;
         }
 
-        $(previousResult).each(function (index, value) {
+        $(previousResult).each(function (index, value)
+        {
             htmlrest.createComponent(name, value, parentComponent);
         });
     },
 
     //Empty component
-    empty: function (parentComponent) {
+    empty: function (parentComponent)
+    {
         $(parentComponent).empty();
     }
 };
 
 //Auto find components on the page
-(function ($, h) {
+(function ($, h)
+{
     var query = "data-htmlrest-component";
     var componentElements = $('[' + query + ']');
 
     //Read components backward, removing children from parents along the way.
-    for (var i = componentElements.length - 1; i >= 0; --i) {
-        (function () {
+    for (var i = componentElements.length - 1; i >= 0; --i)
+    {
+        (function ()
+        {
             var element = componentElements[i];
             var jQueryElement = $(element);
             var componentName = jQueryElement.attr(query);
@@ -53,7 +66,8 @@ htmlrest.component = htmlrest.component || {
             var componentString = element.outerHTML;
             jQueryElement.remove();
 
-            h.registerComponent(componentName, function (data, parentComponent) {
+            h.registerComponent(componentName, function (data, parentComponent)
+            {
                 var itemMarkup = h.formatText(componentString, data);
                 var appendItem = $(parentComponent);
                 var newItem = $(itemMarkup);

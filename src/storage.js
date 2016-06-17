@@ -7,16 +7,20 @@
     * @param {object} defaultValue, if not supplied is null
     * @return {object}
     */
-    getSessionJson: function(name, defaultValue){
-        if (defaultValue === undefined) {
+    getSessionJson: function (name, defaultValue)
+    {
+        if (defaultValue === undefined)
+        {
             defaultValue = null;
         }
 
         var recovered = sessionStorage.getItem(name);
-        if (recovered !== null) {
+        if (recovered !== null)
+        {
             recovered = JSON.parse(recovered);
         }
-        else {
+        else
+        {
             recovered = defaultValue;
         }
         return recovered;
@@ -27,7 +31,8 @@
     * @param {object} value, if not supplied is null
     * @return {object}
     */
-    storeJsonInSession:function (name, value){
+    storeJsonInSession: function (name, value)
+    {
         sessionStorage.setItem(name, JSON.stringify(value));
     }
 };
