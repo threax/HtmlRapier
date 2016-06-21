@@ -28,16 +28,11 @@ htmlrest.createComponent.prototype.factory = {};
 
 htmlrest.component = htmlrest.component || {
     //Repeater
-    repeat: function (name, parentComponent, previousResult)
+    repeat: function (name, parentComponent, previousResult, createdCallback)
     {
-        if (previousResult.hasOwnProperty('jqXHR'))
-        {
-            previousResult = previousResult.data;
-        }
-
         $(previousResult).each(function (index, value)
         {
-            htmlrest.createComponent(name, value, parentComponent);
+            htmlrest.createComponent(name, value, parentComponent, createdCallback);
         });
     },
 
