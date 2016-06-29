@@ -1,0 +1,8 @@
+{
+  "name": "htmlrest",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "jquery": "~3.0.0"
+  }
+}
