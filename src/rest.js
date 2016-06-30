@@ -77,16 +77,20 @@ htmlrest.rest.ajax = function (url, method, data, success, fail)
     $.ajax(request);
 }
 
-htmlrest.rest.upload = function (url, data, success, fail)
-{
-    //This does sound strange
-    if (fail === undefined)
-    {
+htmlrest.rest.upload = function (url, data, success, fail) {
+    if (fail === undefined) {
         fail = success;
     }
 
-    var formData = new FormData();
-    formData.append('file', data);
+    var formData = null;
+
+    if (data instanceof FormData) {
+        formData = data;
+    }
+    else {
+        formData = new FormData();
+        formData.append('file', data);
+    }
 
     var request = {
         method: 'post',
@@ -94,17 +98,13 @@ htmlrest.rest.upload = function (url, data, success, fail)
         contentType: false,
         processData: false,
         data: formData,
-        success: function (resultData, textStatus, jqXHR)
-        {
-            if (success !== undefined)
-            {
+        success: function (resultData, textStatus, jqXHR) {
+            if (success !== undefined) {
                 success(resultData, true);
             }
         },
-        error: function (jqXHR, textStatus, errorThrown)
-        {
-            if (fail !== undefined && fail !== null)
-            {
+        error: function (jqXHR, textStatus, errorThrown) {
+            if (fail !== undefined && fail !== null) {
                 fail(jqXHR.responseJSON, false);
             }
         }
