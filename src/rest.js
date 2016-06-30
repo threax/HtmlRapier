@@ -40,7 +40,7 @@ htmlrest.rest.get = function (url, success, fail)
         {
             if (fail !== undefined && fail !== null)
             {
-                fail(jqXHR.data);
+                fail(jqXHR.responseJSON);
             }
         }
     });
@@ -69,7 +69,7 @@ htmlrest.rest.ajax = function (url, method, data, success, fail)
         {
             if (fail !== undefined && fail !== null)
             {
-                fail(jqXHR.data);
+                fail(jqXHR.responseJSON);
             }
         }
     };
@@ -105,7 +105,7 @@ htmlrest.rest.upload = function (url, data, success, fail)
         {
             if (fail !== undefined && fail !== null)
             {
-                fail(jqXHR.data, false);
+                fail(jqXHR.responseJSON, false);
             }
         }
     };
