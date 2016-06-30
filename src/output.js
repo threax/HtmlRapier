@@ -28,7 +28,14 @@ htmlrest.formatText = function (text, args)
                     if (bracketStart < bracketEnd - 1)
                     {
                         output += text.substring(textStart, bracketStart);
-                        output += htmlrest.safetyEscape(args[text.substring(bracketStart + 1, bracketEnd)]);
+                        var variableName = text.substring(bracketStart + 1, bracketEnd);
+                        if (variableName == "this")
+                        {
+                            output += htmlrest.safetyEscape(args);
+                        }
+                        else {
+                            output += htmlrest.safetyEscape(args[variableName]);
+                        }
                         textStart = i + 1;
                     }
                 }
