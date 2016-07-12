@@ -15,13 +15,13 @@ htmlrest.formatText = function (text, args)
         switch (text[i])
         {
             case '{':
-                if (text[i + 1] != '{')
+                if (text[i + 1] !== '{')
                 {
                     bracketStart = i;
                 }
                 break;
             case '}':
-                if (i + 1 == text.length || text[i + 1] != '}')
+                if (i + 1 === text.length || text[i + 1] !== '}')
                 {
                     bracketEnd = i;
 
@@ -29,7 +29,7 @@ htmlrest.formatText = function (text, args)
                     {
                         output += text.substring(textStart, bracketStart);
                         var variableName = text.substring(bracketStart + 1, bracketEnd);
-                        if (variableName == "this")
+                        if (variableName === "this")
                         {
                             output += htmlrest.safetyEscape(args);
                         }

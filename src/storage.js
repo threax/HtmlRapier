@@ -3,9 +3,9 @@
     startupData: {},
     /**
     * @description Get the sesssion data, can specify a default value.
-    * @param {string} name
+    * @param {string} name The name of the data to recover
     * @param {object} defaultValue, if not supplied is null
-    * @return {object}
+    * @return {object} The recovered object
     */
     getSessionJson: function (name, defaultValue)
     {
@@ -27,9 +27,8 @@
     },
     /**
     * @description Get the sesssion data, can specify a default value.
-    * @param {string} name
+    * @param {string} name The name of the data to store
     * @param {object} value, if not supplied is null
-    * @return {object}
     */
     storeJsonInSession: function (name, value)
     {
