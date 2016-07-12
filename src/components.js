@@ -1,26 +1,15 @@
-﻿htmlrest.createComponent = function (name, data, parentComponent, createdCallback)
-{
-    if (typeof (parentComponent) === 'string')
-    {
-        parentComponent = $(parentComponent);
-    }
-    if (parentComponent instanceof jQuery)
-    {
-        parentComponent = parentComponent[0];
-    }
-    if (htmlrest.createComponent.prototype.factory.hasOwnProperty(name))
-    {
+﻿htmlrest.createComponent = function (name, data, parentComponent, createdCallback) {
+    parentComponent = htmlrest.component.getPlainElement(parentComponent);
+    if (htmlrest.createComponent.prototype.factory.hasOwnProperty(name)) {
         var created = htmlrest.createComponent.prototype.factory[name](data, parentComponent);
-        if (createdCallback !== undefined)
-        {
+        if (createdCallback !== undefined) {
             createdCallback(created, data);
         }
         return created;
     }
 }
 
-htmlrest.registerComponent = function (name, createFunc)
-{
+htmlrest.registerComponent = function (name, createFunc) {
     htmlrest.createComponent.prototype.factory[name] = createFunc;
 }
 
@@ -28,32 +17,37 @@ htmlrest.createComponent.prototype.factory = {};
 
 htmlrest.component = htmlrest.component || {
     //Repeater
-    repeat: function (name, parentComponent, previousResult, createdCallback)
-    {
-        $(previousResult).each(function (index, value)
-        {
+    repeat: function (name, parentComponent, previousResult, createdCallback) {
+        $(previousResult).each(function (index, value) {
             htmlrest.createComponent(name, value, parentComponent, createdCallback);
         });
     },
 
     //Empty component
-    empty: function (parentComponent)
-    {
+    empty: function (parentComponent) {
         $(parentComponent).empty();
+    },
+
+    //Get Plain Javascript Element
+    getPlainElement: function (element) {
+        if (typeof (element) === 'string') {
+            element = $(element);
+        }
+        if (element instanceof jQuery) {
+            element = element[0];
+        }
+        return element;
     }
 };
 
 //Auto find components on the page
-(function ($, h)
-{
+(function ($, h) {
     var query = "data-htmlrest-component";
     var componentElements = $('[' + query + ']');
 
     //Read components backward, removing children from parents along the way.
-    for (var i = componentElements.length - 1; i >= 0; --i)
-    {
-        (function ()
-        {
+    for (var i = componentElements.length - 1; i >= 0; --i) {
+        (function () {
             var element = componentElements[i];
             var jQueryElement = $(element);
             var componentName = jQueryElement.attr(query);
@@ -61,8 +55,7 @@ htmlrest.component = htmlrest.component || {
             var componentString = element.outerHTML;
             jQueryElement.remove();
 
-            h.registerComponent(componentName, function (data, parentComponent)
-            {
+            h.registerComponent(componentName, function (data, parentComponent) {
                 var itemMarkup = h.formatText(componentString, data);
                 var appendItem = $(parentComponent);
                 var newItem = $(itemMarkup);
