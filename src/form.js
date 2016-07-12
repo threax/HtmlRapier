@@ -1,4 +1,6 @@
-﻿(function (Sizzle) {
+﻿"use strict";
+
+(function (Sizzle) {
     //Form Functions
     htmlrest.form = htmlrest.form || {
         serialize: function (form) {
