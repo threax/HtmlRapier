@@ -17,10 +17,20 @@ htmlrest.createComponent.prototype.factory = {};
 
 htmlrest.component = htmlrest.component || {
     //Repeater
-    repeat: function (name, parentComponent, previousResult, createdCallback) {
-        $(previousResult).each(function (index, value) {
+    repeat: function (name, parentComponent, data, createdCallback) {
+        if (Array.isArray(data)) {
+            for (var i = 0; i < data.length; ++i) {
+                htmlrest.createComponent(name, data[i], parentComponent, createdCallback);
+            }
+        }
+        else if (typeof data === 'object') {
+            for (var key in data) {
+                htmlrest.createComponent(name, data[key], parentComponent, createdCallback);
+            }
+        }
+        else {
             htmlrest.createComponent(name, value, parentComponent, createdCallback);
-        });
+        }
     },
 
     //Empty component
