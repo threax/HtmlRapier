@@ -20,6 +20,7 @@
     window.CustomEvent = CustomEvent;
 })();
 
+//isArray polyfill
 (function () {
     //only implement if no native implementation is available
     if (typeof Array.isArray === 'undefined') {
