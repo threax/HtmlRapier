@@ -38,9 +38,18 @@
         htmlrest.rest.ajax(url, 'DELETE', data, success, fail);
     }
 
-    htmlrest.rest.get = function (url, success, fail) {
+    htmlrest.rest.get = function (url, success, fail, cache) {
         if (fail === undefined) {
             fail = success;
+        }
+        if (cache === undefined || cache === false) {
+            if (url.indexOf('?') > -1) {
+                url += '&';
+            }
+            else {
+                url += '?';
+            }
+            url += 'noCache=' + new Date().getTime();
         }
 
         var xhr = new XMLHttpRequest();
