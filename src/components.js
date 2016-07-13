@@ -66,16 +66,24 @@
         //  eventName2: function(){},
         //  etc
         //}
-        bind: function(element, bindings) {
-            for(var key in bindings){
-                var child = Sizzle('[data-htmlrest-binding=' + key + ']', element)[0];
+        bind: function (element, bindings) {
+            for (var key in bindings) {
+                var query = '[data-htmlrest-binding=' + key + ']';
+                var child = null;
+                if (Sizzle.matchesSelector(element, query)) {
+                    child = element;
+                }
+                else {
+                    child = Sizzle(query, element)[0];
+                }
+
                 if (child) {
                     var elementBindings = bindings[key];
                     for(var name in elementBindings){
                         child.addEventListener(name, elementBindings[name]);
                     }
                 }
-            };
+            }
         }
     };
 
