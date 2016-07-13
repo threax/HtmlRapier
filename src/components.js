@@ -57,45 +57,105 @@
             return element;
         },
 
-        //Bind events to items in an element. The bindings should be in the form
-        //name is the data-htmlrest-binding name of the element
-        //eventNameX is the name of the event you want to bind to (click, submit etc)
-        //{
-        //name:{
-        //  eventName: function(){},
-        //  eventName2: function(){},
-        //  etc
-        //}
-        bind: function (element, bindings) {
-            for (var key in bindings) {
-                var query = '[data-htmlrest-binding=' + key + ']';
-                var child = null;
-                if (Sizzle.matchesSelector(element, query)) {
-                    child = element;
-                }
-                else {
-                    child = Sizzle(query, element)[0];
-                }
+        BindingCollection: function (elements) {
+            this.first = function (bindingName) {
+                return lookupNodeInArray(bindingName, elements);
+            }
 
-                if (child) {
-                    var elementBindings = bindings[key];
-                    for(var name in elementBindings){
-                        child.addEventListener(name, elementBindings[name]);
+            this.all = function (bindingName, callback) {
+                return iterateNodeArray(bindingName, elements, callback);
+            }
+
+            //Bind events to items in an element. elements is an array of elements to bind to.
+            //This is the same format they are returned from the create functions with.
+            //The bindings should be in the form
+            //name is the data-htmlrest-binding name of the element
+            //eventNameX is the name of the event you want to bind to (click, submit etc)
+            //{
+            //name:{
+            //  eventName: function(){},
+            //  eventName2: function(){},
+            //  etc
+            //}
+            this.bind = function(bindings){
+                for (var key in bindings) {
+                    var query = '[data-htmlrest-binding=' + key + ']';
+                    for (var eIx = 0; eIx < elements.length; ++eIx) {
+                        var element = elements[eIx];
+                        var child = null;
+                        if (Sizzle.matchesSelector(element, query)) {
+                            child = element;
+                        }
+                        else {
+                            child = Sizzle(query, element)[0];
+                        }
+
+                        if (child) {
+                            var elementBindings = bindings[key];
+                            for (var name in elementBindings) {
+                                child.addEventListener(name, elementBindings[name]);
+                            }
+                        }
                     }
                 }
             }
         }
     };
 
+    function lookupNodeInArray(bindingName, elements) {
+        var query = '[data-htmlrest-binding=' + bindingName + ']';
+        for (var eIx = 0; eIx < elements.length; ++eIx) {
+            var element = elements[eIx];
+            var child = null;
+            if (Sizzle.matchesSelector(element, query)) {
+                child = element;
+            }
+            else {
+                child = Sizzle(query, element)[0];
+            }
+
+            if (child) {
+                return child;
+            }
+            else {
+                return null;
+            }
+        }
+    }
+
+    function iterateNodeArray(bindingName, elements, callback) {
+        var query = '[data-htmlrest-binding=' + bindingName + ']';
+        for (var eIx = 0; eIx < elements.length; ++eIx) {
+            var element = elements[eIx];
+            var child = null;
+            if (Sizzle.matchesSelector(element, query)) {
+                child = element;
+            }
+            else {
+                child = Sizzle(query, element)[0];
+            }
+
+            if (child) {
+                callback(child);
+            }
+        }
+    }
+
     //Auto find components on the page and build them as components
     (function (s, h) {
         //Component creation function
         function createItem(data, componentString, parentComponent) {
             var itemMarkup = h.formatText(componentString, data);
-            var newItem = str2DOMElement(itemMarkup);
-            parentComponent.appendChild(newItem);
+            var newItems = str2DOMElement(itemMarkup);
+            var arrayedItems = [];
 
-            return newItem;
+            for (var i = 0; i < newItems.length; ++i) {
+                var newItem = newItems[i];
+                parentComponent.appendChild(newItem);
+                arrayedItems.push(newItem);
+            }
+
+            return new h.component.BindingCollection(arrayedItems);
         }
 
         var attrName = "data-htmlrest-component";
@@ -132,8 +192,10 @@
 
     })(Sizzle, htmlrest);
 
-    //From jQuery and the discussion on http://krasimirtsonev.com/blog/article/Revealing-the-magic-how-to-properly-convert-HTML-string-to-a-DOM-element
     var str2DOMElement = function (html) {
+        //From jQuery and the discussion on http://krasimirtsonev.com/blog/article/Revealing-the-magic-how-to-properly-convert-HTML-string-to-a-DOM-element
+        //Modified, does not support body tags and returns collections of children
+
         var wrapMap = {
             option: [1, "<select multiple='multiple'>", "</select>"],
             legend: [1, "<fieldset>", "</fieldset>"],
@@ -153,31 +215,18 @@
         var element = document.createElement('div');
         if (match != null) {
             var tag = match[0].replace(/</g, '').replace(/>/g, '').split(' ')[0];
-            if (tag.toLowerCase() === 'body') {
-                var dom = document.implementation.createDocument('http://www.w3.org/1999/xhtml', 'html', null);
-                var body = document.createElement("body");
-                // keeping the attributes
-                element.innerHTML = html.replace(/<body/g, '<div').replace(/<\/body>/g, '</div>');
-                var attrs = element.firstChild.attributes;
-                body.innerHTML = html;
-                for (var i = 0; i < attrs.length; i++) {
-                    body.setAttribute(attrs[i].name, attrs[i].value);
-                }
-                return body;
-            } else {
-                var map = wrapMap[tag] || wrapMap._default, element;
-                html = map[1] + html + map[2];
-                element.innerHTML = html;
-                // Descend through wrappers to the right content
-                var j = map[0] + 1;
-                while (j--) {
-                    element = element.lastChild;
-                }
+            var map = wrapMap[tag] || wrapMap._default, element;
+            html = map[1] + html + map[2];
+            element.innerHTML = html;
+            // Descend through wrappers to the right content
+            var j = map[0];
+            while (j--) {
+                element = element.lastChild;
             }
         } else {
             element.innerHTML = html;
-            element = element.lastChild;
         }
-        return element;
+
+        return element.childNodes;
     }
 })();
