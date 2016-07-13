@@ -71,7 +71,6 @@
 
         var attrName = "data-htmlrest-component";
         var componentElements = s('[' + attrName + ']');
-        document.get
         //Read components backward, removing children from parents along the way.
         for (var i = componentElements.length - 1; i >= 0; --i) {
             (function () {

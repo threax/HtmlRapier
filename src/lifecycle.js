@@ -1,56 +1,64 @@
 ﻿"use strict";
 
-(function () {
+(function (s) {
     htmlrest.lifecycle = htmlrest.lifecycle || {
         ajaxLoad: function (settings) {
+            var animations = undefined;
+            if (settings.animations) {
+                animations = settings.animations;
+            }
+            else {
+                animations = new htmlrest.animate.NoAnimations();
+            }
+
             var mainDisplay = undefined;
             if (settings.mainDisplayQuery) {
-                mainDisplay = $(settings.mainDisplayQuery);
+                mainDisplay = s(settings.mainDisplayQuery)[0];
             }
 
             var loadingFailDisplay = undefined;
             if (settings.loadingFailDisplayQuery) {
-                loadingFailDisplay = $(settings.loadingFailDisplayQuery);
+                loadingFailDisplay = s(settings.loadingFailDisplayQuery)[0];
             }
 
             var loadingDisplay = undefined;
             if (settings.loadingDisplayQuery) {
-                loadingDisplay = $(settings.loadingDisplayQuery);
+                loadingDisplay = s(settings.loadingDisplayQuery)[0];
             }
 
             //Display Functions
             this.loading = function () {
                 hideAll();
                 if (loadingDisplay) {
-                    loadingDisplay.show();
+                    animations.show(loadingDisplay);
                 }
             }
 
             this.failed = function () {
                 hideAll();
                 if (loadingFailDisplay) {
-                    loadingFailDisplay.show();
+                    animations.show(loadingFailDisplay);
                 }
             }
 
             this.succeeded = function () {
                 hideAll();
                 if (mainDisplay) {
-                    mainDisplay.show();
+                    animations.show(mainDisplay);
                 }
             }
 
             function hideAll() {
                 if (mainDisplay) {
-                    mainDisplay.hide();
+                    animations.hide(mainDisplay);
                 }
                 if (loadingFailDisplay) {
-                    loadingFailDisplay.hide();
+                    animations.hide(loadingFailDisplay);
                 }
                 if (loadingDisplay) {
-                    loadingDisplay.hide();
+                    animations.hide(loadingDisplay);
                 }
             }
         }
     }
-})();
+})(Sizzle);

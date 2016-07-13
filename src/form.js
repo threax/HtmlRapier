@@ -78,7 +78,15 @@
         },
 
         ajaxLifecycle: function (settings) {
-            var form = $(settings.formQuery); //form is required
+            var form = Sizzle(settings.formQuery)[0]; //form is required
+
+            var animations = undefined;
+            if (settings.animations) {
+                animations = settings.animations;
+            }
+            else {
+                animations = new htmlrest.animate.NoAnimations();
+            }
 
             var mainDisplay = undefined;
             if (settings.mainDisplayQuery) {
@@ -98,7 +106,7 @@
             //Populate
             this.populateData = function () {
                 loading();
-                var url = form.attr('action');
+                var url = form.getAttribute('action');
                 htmlrest.rest.get(url, getSuccess, getFail);
             }
 
@@ -106,37 +114,37 @@
                 hideAll();
                 htmlrest.form.populate(form, data);
                 if (mainDisplay) {
-                    mainDisplay.show();
+                    animations.show(mainDisplay);
                 }
             }
 
             function getFail(data) {
                 hideAll();
                 if (populateFailDisplay) {
-                    populateFailDisplay.show();
+                    animations.show(populateFailDisplay);
                 }
             }
 
             //Submit
-            form.submit(function () {
+            form.addEventListener('submit', function (evt) {
+                evt.preventDefault();
                 loading();
-                var url = form.attr('action');
+                var url = form.getAttribute('action');
                 var data = htmlrest.form.serialize(form);
                 htmlrest.rest.post(url, data, postSuccess, postFail);
-                return false;
             });
 
             function postSuccess(data) {
                 hideAll();
                 if (mainDisplay) {
-                    mainDisplay.show();
+                    animations.show(mainDisplay);
                 }
             }
 
             function postFail(data) {
                 hideAll();
                 if (mainDisplay) {
-                    mainDisplay.show();
+                    animations.show(mainDisplay);
                 }
                 alert(data.message); //temp
             }
@@ -145,19 +153,19 @@
             function loading() {
                 hideAll();
                 if (loadingDisplay) {
-                    loadingDisplay.show();
+                    animations.show(loadingDisplay);
                 }
             }
 
             function hideAll() {
                 if (mainDisplay) {
-                    mainDisplay.hide();
+                    animations.hide(mainDisplay);
                 }
                 if (populateFailDisplay) {
-                    populateFailDisplay.hide();
+                    animations.hide(populateFailDisplay);
                 }
                 if (loadingDisplay) {
-                    loadingDisplay.hide();
+                    animations.hide(loadingDisplay);
                 }
             }
         }
