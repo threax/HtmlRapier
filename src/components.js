@@ -49,7 +49,7 @@
         //Get Plain Javascript Element
         getPlainElement: function (element) {
             if (typeof (element) === 'string') {
-                element = s(element)[0];
+                element = Sizzle(element)[0];
             }
             if (element instanceof jQuery) {
                 element = element[0];
