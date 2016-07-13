@@ -55,6 +55,27 @@
                 element = element[0];
             }
             return element;
+        },
+
+        //Bind events to items in an element. The bindings should be in the form
+        //name is the data-htmlrest-binding name of the element
+        //eventNameX is the name of the event you want to bind to (click, submit etc)
+        //{
+        //name:{
+        //  eventName: function(){},
+        //  eventName2: function(){},
+        //  etc
+        //}
+        bind: function(element, bindings) {
+            for(var key in bindings){
+                var child = Sizzle('[data-htmlrest-binding=' + key + ']', element)[0];
+                if (child) {
+                    var elementBindings = bindings[key];
+                    for(var name in elementBindings){
+                        child.addEventListener(name, elementBindings[name]);
+                    }
+                }
+            };
         }
     };
 
