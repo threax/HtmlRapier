@@ -28,6 +28,20 @@
     };
 })();
 
+/**
+ * Determine if a variable is a string.
+ * @param {object} test - The object to test
+ * @returns {boolean} - True if a string, false if not
+ */
 htmlrest.isString = function (test) {
-    return typeof (test) == 'string';
+    return typeof (test) === 'string';
+}
+
+/**
+ * Determine if a variable is a function.
+ * @param {object} test - The object to test
+ * @returns {boolean} - True if a function, false if not
+ */
+htmlrest.isFunction = function (test) {
+    return typeof (test) === 'function';
 }

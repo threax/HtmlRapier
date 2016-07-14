@@ -6,10 +6,10 @@
     }
 
     htmlrest.animate.NoAnimations.prototype.show = function (element) {
-        $(element).show();
+        element.style.display = "";
     }
 
     htmlrest.animate.NoAnimations.prototype.hide = function (element) {
-        $(element).hide();
+        element.style.display = "none";
     }
 })();

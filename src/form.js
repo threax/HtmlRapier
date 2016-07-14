@@ -76,59 +76,78 @@
                 element.value = data[element.getAttribute('name')];
             }
         },
+
+        /**
+         * Settings for the form ajax lifecycle.
+         * @constructor
+         */
+        AjaxLifecycleSettings: function(){
+            this.form = "form";
+            this.mainDisplay = "main";
+            this.loadDisplay = "load";
+            this.failDisplay = "fail";
+            this.animations = null;
+            var self = this;
+
+            this.getAnimations = function () {
+                if (self.animations) {
+                    return self.animations;
+                }
+                return new htmlrest.animate.NoAnimations();
+            }
+
+            this.getForm = function (bindings) {
+                if (htmlrest.isString(self.form)) {
+                    return bindings.first(self.form);
+                }
+                return self.form;
+            }
+
+            this.getMainDisplay = function (bindings) {
+                if (htmlrest.isString(self.mainDisplay)) {
+                    return bindings.first(self.mainDisplay);
+                }
+                return self.mainDisplay;
+            }
+
+            this.getLoadDisplay = function (bindings) {
+                if (htmlrest.isString(self.loadDisplay)) {
+                    return bindings.first(self.loadDisplay);
+                }
+                return self.loadDisplay;
+            }
+
+            this.getFailDisplay = function (bindings) {
+                if (htmlrest.isString(self.failDisplay)) {
+                    return bindings.first(self.failDisplay);
+                }
+                return self.failDisplay;
+            }
+        },
         
         /**
          * Create a simple ajax lifecyle for the form. This will show a loading screen
          * when fetching data and provides provisions to handle a data connection failure.
-         * This will look for 4 bindings
-         * form - the form to bind to.
-         * main - the main display, can be different from the form itself, if this is not found the form will be used instead.
-         * load - the element to display when loading
-         * fail - The element to display if the form fails to load
          * @constructor
+         * @param {htmlrest.component.BindingCollection} bindings
+         * @param {htmlrest.form.AjaxLifecycleSettings} [settings]
          */
         ajaxLifecycle: function (bindings, settings) {
-            var form = null;
-            if (!settings || settings.form === undefined) {
-                form = bindings.first("form");
-            }
-            else if (htmlrest.isString(settings.form)) {
-                form = bindings.first(settings.form);
-            }
-            else {
-                form = settings.form;
+            if (settings === undefined) {
+                settings = new htmlrest.form.AjaxLifecycleSettings();
             }
 
-            var animations = undefined;
-            if (settings && settings.animations) {
-                animations = settings.animations;
-            }
-            else {
-                animations = new htmlrest.animate.NoAnimations();
-            }
+            var form = settings.getForm(bindings);
+            var mainDisplay = settings.getMainDisplay(bindings);
+            var populateFailDisplay = settings.getFailDisplay(bindings);
+            var loadingDisplay = settings.getLoadDisplay(bindings);
 
-            var mainDisplayQuery = "main";
-            if (settings && settings.mainDisplayQuery) {
-                mainDisplayQuery = settings.mainDisplayQuery;
-            }
-            var mainDisplay = bindings.first(mainDisplayQuery);
+            var animations = settings.getAnimations();
 
             //If no main dispaly is found use the form
             if (!mainDisplay) {
                 mainDisplay = form;
             }
-
-            var populateFailQuery = "fail";
-            if (settings && settings.populateFailQuery) {
-                populateFailQuery = settings.populateFailQuery;
-            }
-            var populateFailDisplay = bindings.first(populateFailQuery);
-
-            var loadingDisplayQuery = "load";
-            if (settings && settings.loadingDisplayQuery) {
-                loadingDisplayQuery = settings.loadingDisplayQuery;
-            }
-            var loadingDisplay = bindings.first(loadingDisplayQuery);
 
             //Populate
             this.populateData = function () {

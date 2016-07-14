@@ -2,29 +2,63 @@
 
 (function (s) {
     htmlrest.lifecycle = htmlrest.lifecycle || {
-        ajaxLoad: function (settings) {
-            var animations = undefined;
-            if (settings.animations) {
-                animations = settings.animations;
-            }
-            else {
-                animations = new htmlrest.animate.NoAnimations();
+
+        /**
+         * Settings for a Load Display Fail lifecycle.
+         * @constructor
+         */
+        LoadDisplayFailSettings: function(){
+            this.mainDisplay = "main";
+            this.failDisplay = "fail";
+            this.loadDisplay = "load";
+            this.animations = null;
+            var self = this;
+
+            this.getMainDisplay = function(bindings){
+                if (htmlrest.isString(self.mainDisplay)) {
+                    return bindings.first(self.mainDisplay);
+                }
+                return self.mainDisplay;
             }
 
-            var mainDisplay = undefined;
-            if (settings.mainDisplayQuery) {
-                mainDisplay = s(settings.mainDisplayQuery)[0];
+            this.getLoadDisplay = function(bindings){
+                if (htmlrest.isString(self.loadDisplay)) {
+                    return bindings.first(self.loadDisplay);
+                }
+                return self.loadDisplay;
             }
 
-            var loadingFailDisplay = undefined;
-            if (settings.loadingFailDisplayQuery) {
-                loadingFailDisplay = s(settings.loadingFailDisplayQuery)[0];
+            this.getFailDisplay = function(bindings){
+                if (htmlrest.isString(self.failDisplay)) {
+                    return bindings.first(self.failDisplay);
+                }
+                return self.failDisplay;
             }
 
-            var loadingDisplay = undefined;
-            if (settings.loadingDisplayQuery) {
-                loadingDisplay = s(settings.loadingDisplayQuery)[0];
+            this.getAnimations = function () {
+                if (self.animations) {
+                    return self.animations;
+                }
+                return new htmlrest.animate.NoAnimations();
             }
+        },
+
+        /**
+         * Create a lifecycle that shows a main display, loading display and fail message if loading fails.
+         * @constructor
+         * @param {htmlrest.component.BindingCollection} bindings
+         * @param {htmlrest.component.LoadDisplayFailSettings} [settings]
+         */
+        LoadDisplayFail: function (bindings, settings) {
+            if(settings === undefined){
+                settings = new htmlrest.component.LoadDisplayFailSettings();
+            }
+
+            var animations = settings.getAnimations();
+
+            var mainDisplay = settings.getMainDisplay(bindings);
+            var loadingFailDisplay = settings.getFailDisplay(bindings);
+            var loadingDisplay = settings.getLoadDisplay(bindings);
 
             //Display Functions
             this.loading = function () {
