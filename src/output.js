@@ -1,7 +1,12 @@
 ﻿"use strict";
 
 (function () {
-    //Output Function
+    /**
+     * Format text and populate its variables with the items defined in args.
+     * @param {string} text - The text to format, replace {varName} blocks with the data from args.
+     * @param {object} args - The data to fill out in text.
+     * @returns {string} - Text formatted with args.
+     */
     htmlrest.formatText = function (text, args) {
         if (!text || !args) {
             return text;
@@ -45,6 +50,13 @@
         return output;
     }
 
+    /**
+     * Escape text to prevent html characters from being output. Helps prevent xss, called automatically
+     * by formatText. If you manually write user data consider using this function to escape it, but it is
+     * not needed using other htmlrest functions like repeat, createComponent or formatText.
+     * @param {string} text - the text to escape.
+     * @returns {type} - The escaped version of text.
+     */
     htmlrest.safetyEscape = function (text) {
         text = String(text);
 
@@ -80,6 +92,7 @@
         return status.output;
     }
 
+    //Helper function for escaping
     htmlrest.safetyEscape.prototype.outputEncoded = function (i, text, status, replacement) {
         status.bracketStart = i;
         status.output += text.substring(status.textStart, status.bracketStart) + replacement;

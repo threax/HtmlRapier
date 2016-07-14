@@ -1,6 +1,8 @@
 ﻿var htmlrest = htmlrest || {};
 
-//isArray polyfill
+/**
+ * Array.isArray polyfill
+ */
 (function () {
     //only implement if no native implementation is available
     if (typeof Array.isArray === 'undefined') {

@@ -2,10 +2,29 @@
 
 (function () {
 
+    var factory = {};
+
+    /**
+     * This callback is called when a component is created
+     * @callback htmlrest.createComponent~callback
+     * @param {htmlrest.component.BindingCollection} created
+     * @param {object} data
+     */
+
+    /**
+     * Create a new component specified by name with the data in data attached to parentComponent. You can also
+     * get a callback whenever a component is created by passing a createdCallback.
+     * @param {string} name - The name of the component to create. These are specified on the page with a data-htmlrest-component
+     * attribute or can be manually specified.
+     * @param {object} data - The data to bind to the component.
+     * @param {HTMLElement} parentComponent - The html element to attach the component to.
+     * @param {htmlrest.createComponent~callback} createdCallback - The callback called when the component is created.
+     * @returns {htmlrest.component.BindingCollection} 
+     */
     htmlrest.createComponent = function (name, data, parentComponent, createdCallback) {
         parentComponent = htmlrest.component.getPlainElement(parentComponent);
-        if (htmlrest.createComponent.prototype.factory.hasOwnProperty(name)) {
-            var created = htmlrest.createComponent.prototype.factory[name](data, parentComponent);
+        if (factory.hasOwnProperty(name)) {
+            var created = factory[name](data, parentComponent);
             if (createdCallback !== undefined) {
                 createdCallback(created, data);
             }
@@ -13,14 +32,31 @@
         }
     }
 
+    /**
+     * This callback is used to create components when they are requested.
+     * @callback htmlrest.registerComponent~callback
+     * @param {htmlrest.component.BindingCollection} created
+     * @param {object} data
+     * @returns {htmlrest.component.BindingCollection} 
+     */
+
+    /**
+     * Register a function with the component system.
+     * @param {string} name - The name of the component
+     * @param {htmlrest.registerComponent~callback} createFunc - The function that creates the new component.
+     */
     htmlrest.registerComponent = function (name, createFunc) {
-        htmlrest.createComponent.prototype.factory[name] = createFunc;
+        factory[name] = createFunc;
     }
 
-    htmlrest.createComponent.prototype.factory = {};
-
     htmlrest.component = htmlrest.component || {
-        //Repeater
+        /**
+         * Create a component for each element in data using that element as the data for the component.
+         * @param {string} name - The name of the component to create. These are specified on the page with a data-htmlrest-component
+         * @param {HTMLElement} parentComponent - The html element to attach the component to.
+         * @param {array|object} data - The data to repeat and bind, must be an array or object so it can be iterated.
+         * @param {htmlrest.createComponent~callback} createdCallback
+         */
         repeat: function (name, parentComponent, data, createdCallback) {
             if (Array.isArray(data)) {
                 for (var i = 0; i < data.length; ++i) {
@@ -32,12 +68,12 @@
                     htmlrest.createComponent(name, data[key], parentComponent, createdCallback);
                 }
             }
-            else {
-                htmlrest.createComponent(name, value, parentComponent, createdCallback);
-            }
         },
 
-        //Empty component
+        /**
+         * Remove all children from an html element.
+         * @param {HTMLElement} parentComponent - The component to remove all children from
+         */
         empty: function (parentComponent) {
             parentComponent = htmlrest.component.getPlainElement(parentComponent);
 
@@ -46,7 +82,11 @@
             }
         },
 
-        //Get Plain Javascript Element
+        /**
+         * Derive the plain javascript element from a passed element
+         * @param {string|HTMLElement} element - the element to detect
+         * @returns {HTMLElement} - The located html element.
+         */
         getPlainElement: function (element) {
             if (typeof (element) === 'string') {
                 element = Sizzle(element)[0];
@@ -58,7 +98,7 @@
         },
 
         /**
-         * @param {string|array} elements the elements to use for this collection.
+         * @param {string|array} elements - the elements to use for this collection.
          */
         BindingCollection: function (elements) {
             if (htmlrest.isString(elements)) {
@@ -70,25 +110,38 @@
                 elements = [elements];
             }
 
+            /**
+             * Find the first binding that matches bindingName
+             * @param {string} bindingName - The name of the binding to look up.
+             * @returns {HTMLElement} - The found element
+             */
             this.first = function (bindingName) {
                 return lookupNodeInArray(bindingName, elements);
             }
 
+            /**
+             * Call callback for each item that matches bindingName
+             * @param {type} bindingName - The name of the binding to look up.
+             * @param {type} callback - The callback to call for each discovered binding
+             */
             this.all = function (bindingName, callback) {
-                return iterateNodeArray(bindingName, elements, callback);
+                iterateNodeArray(bindingName, elements, callback);
             }
 
-            //Bind events to items in an element. elements is an array of elements to bind to.
-            //This is the same format they are returned from the create functions with.
-            //The bindings should be in the form
-            //name is the data-htmlrest-binding name of the element
-            //eventNameX is the name of the event you want to bind to (click, submit etc)
-            //{
-            //name:{
-            //  eventName: function(){},
-            //  eventName2: function(){},
-            //  etc
-            //}
+            /**
+             * Bind events to items in an element. elements is an array of elements to bind to.
+             * This is the same format they are returned from the create functions with.
+             * The bindings should be in the following form
+             * name is the data-htmlrest-binding name of the element
+             * eventNameX is the name of the event you want to bind to (click, submit etc)
+             * {
+             * name:{
+             * eventName: function(){},
+             * eventName2: function(){},
+             * etc
+             * }
+             * @param {type} bindings - The bindings to bind
+             */
             this.bind = function(bindings){
                 bindNodes(bindings, elements);
             }

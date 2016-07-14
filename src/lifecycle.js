@@ -5,6 +5,10 @@
 
         /**
          * Settings for a Load Display Fail lifecycle.
+         * Default binding names:
+         * Main Display - "main"
+         * Load Display - "load"
+         * Fail Display - "fail"
          * @constructor
          */
         LoadDisplayFailSettings: function(){
@@ -45,9 +49,10 @@
 
         /**
          * Create a lifecycle that shows a main display, loading display and fail message if loading fails.
+         * If the defaults are acceptable you do not need to pass settings.
          * @constructor
-         * @param {htmlrest.component.BindingCollection} bindings
-         * @param {htmlrest.component.LoadDisplayFailSettings} [settings]
+         * @param {htmlrest.component.BindingCollection} bindings - The bindings to lookup elements from.
+         * @param {htmlrest.component.LoadDisplayFailSettings} [settings] - The settings for the lifecycle, optional.
          */
         LoadDisplayFail: function (bindings, settings) {
             if(settings === undefined){
@@ -60,7 +65,9 @@
             var loadingFailDisplay = settings.getFailDisplay(bindings);
             var loadingDisplay = settings.getLoadDisplay(bindings);
 
-            //Display Functions
+            /**
+             * Set the lifecycle to loading.
+             */
             this.loading = function () {
                 hideAll();
                 if (loadingDisplay) {
@@ -68,6 +75,9 @@
                 }
             }
 
+            /**
+             * Set the lifecycle to failed.
+             */
             this.failed = function () {
                 hideAll();
                 if (loadingFailDisplay) {
@@ -75,6 +85,9 @@
                 }
             }
 
+            /**
+             * Set the lifecycle to succeeded.
+             */
             this.succeeded = function () {
                 hideAll();
                 if (mainDisplay) {
@@ -82,6 +95,9 @@
                 }
             }
 
+            /**
+             * Hide all form elements.
+             */
             function hideAll() {
                 if (mainDisplay) {
                     animations.hide(mainDisplay);

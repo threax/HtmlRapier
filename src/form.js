@@ -3,6 +3,11 @@
 (function (Sizzle) {
     //Form Functions
     htmlrest.form = htmlrest.form || {
+        /**
+         * Serialze a form to a javascript object
+         * @param {HTMLElement|string} form - A selector or form element for the form to serialize.
+         * @returns {object} - The object that represents the form contents as an object.
+         */
         serialize: function (form) {
             //This is from https://code.google.com/archive/p/form-serialize/downloads
             //Modified to return an object instead of a query string
@@ -68,6 +73,11 @@
             return q;
         },
 
+        /**
+         * Populate a form with data.
+         * @param {HTMLElement|string} form - The form to populate or a query string for the form.
+         * @param {object} data - The data to bind to the form, form name attributes will be mapped to the keys in the object.
+         */
         populate: function (form, data) {
             form = htmlrest.component.getPlainElement(form);
             var nameAttrs = Sizzle('[name]', form);
@@ -78,7 +88,11 @@
         },
 
         /**
-         * Settings for the form ajax lifecycle.
+         * Settings for the form ajax lifecycle. This provides default binding names for the ajaxLifecycle.
+         * Default binding names:
+         * Main Display - "main"
+         * Load Display - "load"
+         * Fail Display - "fail"
          * @constructor
          */
         AjaxLifecycleSettings: function(){
@@ -128,9 +142,10 @@
         /**
          * Create a simple ajax lifecyle for the form. This will show a loading screen
          * when fetching data and provides provisions to handle a data connection failure.
+         * If your html uses the default bindings you don't need to pass settings.
          * @constructor
-         * @param {htmlrest.component.BindingCollection} bindings
-         * @param {htmlrest.form.AjaxLifecycleSettings} [settings]
+         * @param {htmlrest.component.BindingCollection} bindings - The bindings to use to lookup elements
+         * @param {htmlrest.form.AjaxLifecycleSettings} [settings] - The settings for the form, optional
          */
         ajaxLifecycle: function (bindings, settings) {
             if (settings === undefined) {
