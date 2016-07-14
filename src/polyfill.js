@@ -27,3 +27,7 @@
         }
     };
 })();
+
+htmlrest.isString = function (test) {
+    return typeof (test) == 'string';
+}

@@ -57,7 +57,19 @@
             return element;
         },
 
+        /**
+         * @param {string|array} elements the elements to use for this collection.
+         */
         BindingCollection: function (elements) {
+            if (htmlrest.isString(elements)) {
+                var query = elements;
+                elements = [];
+                Sizzle(query, document, elements);
+            }
+            else if (!Array.isArray(elements)) {
+                elements = [elements];
+            }
+
             this.first = function (bindingName) {
                 return lookupNodeInArray(bindingName, elements);
             }
@@ -78,29 +90,33 @@
             //  etc
             //}
             this.bind = function(bindings){
-                for (var key in bindings) {
-                    var query = '[data-htmlrest-binding=' + key + ']';
-                    for (var eIx = 0; eIx < elements.length; ++eIx) {
-                        var element = elements[eIx];
-                        var child = null;
-                        if (Sizzle.matchesSelector(element, query)) {
-                            child = element;
-                        }
-                        else {
-                            child = Sizzle(query, element)[0];
-                        }
+                bindNodes(bindings, elements);
+            }
+        },
+    };
 
-                        if (child) {
-                            var elementBindings = bindings[key];
-                            for (var name in elementBindings) {
-                                child.addEventListener(name, elementBindings[name]);
-                            }
-                        }
+    function bindNodes(bindings, elements) {
+        for (var key in bindings) {
+            var query = '[data-htmlrest-binding=' + key + ']';
+            for (var eIx = 0; eIx < elements.length; ++eIx) {
+                var element = elements[eIx];
+                var child = null;
+                if (Sizzle.matchesSelector(element, query)) {
+                    child = element;
+                }
+                else {
+                    child = Sizzle(query, element)[0];
+                }
+
+                if (child) {
+                    var elementBindings = bindings[key];
+                    for (var name in elementBindings) {
+                        child.addEventListener(name, elementBindings[name]);
                     }
                 }
             }
         }
-    };
+    }
 
     function lookupNodeInArray(bindingName, elements) {
         var query = '[data-htmlrest-binding=' + bindingName + ']';
