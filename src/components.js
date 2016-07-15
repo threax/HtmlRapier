@@ -145,6 +145,15 @@
             this.bind = function(bindings){
                 bindNodes(bindings, elements);
             }
+
+            /**
+             * Use the bindings to output data. The inner html of all the matching bindings will be replaced
+             * with the values provided by data. The output will be escaped for xss.
+             * @param {type} data
+             */
+            this.output = function (data) {
+                bindData(data, elements);
+            }
         },
     };
 
@@ -166,6 +175,26 @@
                     for (var name in elementBindings) {
                         child.addEventListener(name, elementBindings[name]);
                     }
+                }
+            }
+        }
+    }
+
+    function bindData(data, elements) {
+        for (var key in data) {
+            var query = '[data-htmlrest-binding=' + key + ']';
+            for (var eIx = 0; eIx < elements.length; ++eIx) {
+                var element = elements[eIx];
+                var child = null;
+                if (Sizzle.matchesSelector(element, query)) {
+                    child = element;
+                }
+                else {
+                    child = Sizzle(query, element)[0];
+                }
+
+                if (child) {
+                    child.innerHTML = htmlrest.safetyEscape(data[key]);
                 }
             }
         }
