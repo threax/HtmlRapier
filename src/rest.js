@@ -7,7 +7,9 @@
                 try {
                     data = JSON.parse(xhr.response);
                 }
-                catch (err) { }
+                catch (err) {
+                    data = xhr.response;
+                }
                 success(data);
             }
         }
@@ -16,7 +18,9 @@
                 try {
                     data = JSON.parse(xhr.response);
                 }
-                catch (err) { }
+                catch (err) {
+                    data = xhr.response;
+                }
                 fail(data);
             }
         }
