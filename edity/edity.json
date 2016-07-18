@@ -1,0 +1,17 @@
+﻿{
+  "$schema": "https://raw.githubusercontent.com/threax/EdityMcEditface/master/SchemaGenerator/Schema/EdityProject.json",
+  "vars": {
+    
+  },
+  "contentMap": {
+    
+  },
+  "additionalContent": [],
+  "compilers": [
+    {
+      "type": "Html",
+      "template": "default.html",
+      "extension": ".html"
+    }
+  ]
+}
