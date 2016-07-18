@@ -4,7 +4,20 @@
     
   },
   "contentMap": {
-    
+    "htmlrest": {
+      "js": [
+        { "file": "/src/polyfill.js" },
+        { "file": "/src/output.js" },
+        { "file": "/src/animate.js" },
+        { "file": "/src/rest.js" },
+        { "file": "/src/storage.js" },
+        { "file": "/src/form.js" },
+        { "file": "/src/components.js" },
+        { "file": "/src/lifecycle.js" },
+        { "file": "/src/events.js" }
+      ],
+      "dependencies": [ "jquery", "sizzle" ]
+    }
   },
   "additionalContent": [],
   "compilers": [
