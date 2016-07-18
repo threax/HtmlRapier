@@ -56,7 +56,7 @@
          */
         LoadDisplayFail: function (bindings, settings) {
             if(settings === undefined){
-                settings = new htmlrest.component.LoadDisplayFailSettings();
+                settings = new htmlrest.lifecycle.LoadDisplayFailSettings();
             }
 
             var animations = settings.getAnimations();
