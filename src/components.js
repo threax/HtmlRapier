@@ -4,6 +4,17 @@
 
     var factory = {};
 
+    function doCreateComponent(name, data, parentComponent, insertBeforeSibling, createdCallback) {
+        parentComponent = htmlrest.component.getPlainElement(parentComponent);
+        if (factory.hasOwnProperty(name)) {
+            var created = factory[name](data, parentComponent, insertBeforeSibling);
+            if (createdCallback !== undefined) {
+                createdCallback(created, data);
+            }
+            return created;
+        }
+    }
+
     /**
      * This callback is called when a component is created
      * @callback htmlrest.createComponent~callback
@@ -19,17 +30,11 @@
      * @param {object} data - The data to bind to the component.
      * @param {HTMLElement} parentComponent - The html element to attach the component to.
      * @param {htmlrest.createComponent~callback} createdCallback - The callback called when the component is created.
+     * @param {HTMLElement} insertBeforeSibling - The sibling to insert the new component before.
      * @returns {htmlrest.component.BindingCollection} 
      */
     htmlrest.createComponent = function (name, data, parentComponent, createdCallback) {
-        parentComponent = htmlrest.component.getPlainElement(parentComponent);
-        if (factory.hasOwnProperty(name)) {
-            var created = factory[name](data, parentComponent);
-            if (createdCallback !== undefined) {
-                createdCallback(created, data);
-            }
-            return created;
-        }
+        return doCreateComponent(name, data, parentComponent, null, createdCallback);
     }
 
     /**
@@ -54,18 +59,34 @@
          * Create a component for each element in data using that element as the data for the component.
          * @param {string} name - The name of the component to create. These are specified on the page with a data-htmlrest-component
          * @param {HTMLElement} parentComponent - The html element to attach the component to.
-         * @param {array|object} data - The data to repeat and bind, must be an array or object so it can be iterated.
+         * @param {array|object|function} data - The data to repeat and bind, must be an array, object or function so it can be iterated.
+         * If it is a function return the data and then return null to stop iteration.
          * @param {htmlrest.createComponent~callback} createdCallback
          */
         repeat: function (name, parentComponent, data, createdCallback) {
+            //Look for an insertion point
+            var insertBefore = null;
+            var insertBefore = parentComponent.firstElementChild;
+            while (insertBefore != null && !insertBefore.hasAttribute('data-htmlrest-insert')) {
+                insertBefore = insertBefore.nextElementSibling;
+            }
+
+            //Output
             if (Array.isArray(data)) {
                 for (var i = 0; i < data.length; ++i) {
-                    htmlrest.createComponent(name, data[i], parentComponent, createdCallback);
+                    doCreateComponent(name, data[i], parentComponent, insertBefore, createdCallback);
                 }
             }
-            else if (typeof data === 'object') {
+            else if (htmlrest.isFunction(data)) {
+                var current = data();
+                while (current != null) {
+                    doCreateComponent(name, current, parentComponent, insertBefore, createdCallback);
+                    current = data();
+                }
+            }
+            else if (htmlrest.isObject(data)) {
                 for (var key in data) {
-                    htmlrest.createComponent(name, data[key], parentComponent, createdCallback);
+                    doCreateComponent(name, data[key], parentComponent, insertBefore, createdCallback);
                 }
             }
         },
@@ -76,9 +97,16 @@
          */
         empty: function (parentComponent) {
             parentComponent = htmlrest.component.getPlainElement(parentComponent);
+            var currentNode = parentComponent.firstChild;
+            var nextNode = null;
 
-            while (parentComponent.firstChild) {
-                parentComponent.removeChild(parentComponent.firstChild);
+            //Walk the nodes and remove any non keepers
+            while (currentNode != null) {
+                nextNode = currentNode.nextSibling;
+                if (!currentNode.hasAttributes() || !currentNode.hasAttribute('data-htmlrest-keep')) {
+                    parentComponent.removeChild(currentNode);
+                }
+                currentNode = nextNode;
             }
         },
 
@@ -117,6 +145,19 @@
              */
             this.first = function (bindingName) {
                 return lookupNodeInArray(bindingName, elements);
+            }
+
+            /**
+             * Get the binding that matches input if it is a string.
+             * Otherwise just returns input, ideally because you put an htmlelement in there already
+             * @param {string|HTMLElement} input
+             * @returns {HTMLElement} 
+             */
+            this.firstOrInput = function (input) {
+                if (htmlrest.isString(input)) {
+                    return lookupNodeInArray(input, elements);
+                }
+                return input;
             }
 
             /**
@@ -242,14 +283,14 @@
     //Auto find components on the page and build them as components
     (function (s, h) {
         //Component creation function
-        function createItem(data, componentString, parentComponent) {
+        function createItem(data, componentString, parentComponent, insertBeforeSibling) {
             var itemMarkup = h.formatText(componentString, data);
             var newItems = str2DOMElement(itemMarkup);
             var arrayedItems = [];
 
             for (var i = 0; i < newItems.length; ++i) {
                 var newItem = newItems[i];
-                parentComponent.appendChild(newItem);
+                parentComponent.insertBefore(newItem, insertBeforeSibling);
                 arrayedItems.push(newItem);
             }
 
@@ -267,8 +308,8 @@
                 var componentString = element.outerHTML;
                 element.parentNode.removeChild(element);
 
-                h.registerComponent(componentName, function (data, parentComponent) {
-                    return createItem(data, componentString, parentComponent);
+                h.registerComponent(componentName, function (data, parentComponent, insertBeforeSibling) {
+                    return createItem(data, componentString, parentComponent, insertBeforeSibling);
                 });
             })();
         };
@@ -282,8 +323,8 @@
                 var componentString = element.innerHTML.trim();
                 element.parentNode.removeChild(element);
 
-                h.registerComponent(componentName, function (data, parentComponent) {
-                    return createItem(data, componentString, parentComponent);
+                h.registerComponent(componentName, function (data, parentComponent, insertBeforeSibling) {
+                    return createItem(data, componentString, parentComponent, insertBeforeSibling);
                 });
             })();
         }

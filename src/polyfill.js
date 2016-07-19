@@ -14,7 +14,7 @@
 
 /**
  * Determine if a variable is a string.
- * @param {object} test - The object to test
+ * @param test - The object to test
  * @returns {boolean} - True if a string, false if not
  */
 htmlrest.isString = function (test) {
@@ -23,9 +23,18 @@ htmlrest.isString = function (test) {
 
 /**
  * Determine if a variable is a function.
- * @param {object} test - The object to test
+ * @param test - The object to test
  * @returns {boolean} - True if a function, false if not
  */
 htmlrest.isFunction = function (test) {
     return typeof (test) === 'function';
+}
+
+/**
+ * Determine if a variable is an object.
+ * @param test - The object to test
+ * @returns {boolean} - True if an object, false if not
+ */
+htmlrest.isObject = function (test) {
+    return typeof data === 'object';
 }
