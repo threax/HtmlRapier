@@ -3,20 +3,14 @@
 jsns.define("htmlrest.bindingcollection", function (using) {
     var escape = using("htmlrest.escape");
     var typeId = using("htmlrest.typeidentifiers");
+    var domQuery = using("htmlrest.domquery");
 
     function bindNodes(bindings, elements) {
         for (var key in bindings) {
             var query = '[data-htmlrest-binding=' + key + ']';
             for (var eIx = 0; eIx < elements.length; ++eIx) {
                 var element = elements[eIx];
-                var child = null;
-                if (Sizzle.matchesSelector(element, query)) {
-                    child = element;
-                }
-                else {
-                    child = Sizzle(query, element)[0];
-                }
-
+                var child = domQuery.first(query, element);
                 if (child) {
                     var elementBindings = bindings[key];
                     for (var name in elementBindings) {
@@ -32,14 +26,7 @@ jsns.define("htmlrest.bindingcollection", function (using) {
             var query = '[data-htmlrest-binding=' + key + ']';
             for (var eIx = 0; eIx < elements.length; ++eIx) {
                 var element = elements[eIx];
-                var child = null;
-                if (Sizzle.matchesSelector(element, query)) {
-                    child = element;
-                }
-                else {
-                    child = Sizzle(query, element)[0];
-                }
-
+                var child = domQuery.first(query, element);
                 if (child) {
                     child.innerHTML = escape(data[key]);
                 }
@@ -51,14 +38,7 @@ jsns.define("htmlrest.bindingcollection", function (using) {
         var query = '[data-htmlrest-binding=' + bindingName + ']';
         for (var eIx = 0; eIx < elements.length; ++eIx) {
             var element = elements[eIx];
-            var child = null;
-            if (Sizzle.matchesSelector(element, query)) {
-                child = element;
-            }
-            else {
-                child = Sizzle(query, element)[0];
-            }
-
+            var child = domQuery.first(query, element);
             if (child) {
                 return child;
             }
@@ -73,11 +53,7 @@ jsns.define("htmlrest.bindingcollection", function (using) {
         for (var eIx = 0; eIx < elements.length; ++eIx) {
             var element = elements[eIx];
 
-            if (Sizzle.matchesSelector(element, query)) {
-                callback(element);
-            }
-
-            var matchingChildren = Sizzle(query, element);
+            var matchingChildren = domQuery.all(query, element);
             for (var i = 0; i < matchingChildren.length; ++i) {
                 callback(matchingChildren[i]);
             }
@@ -89,10 +65,7 @@ jsns.define("htmlrest.bindingcollection", function (using) {
         var query = '[data-htmlrest-binding=' + bindingName + ']';
         for (var eIx = 0; eIx < elements.length; ++eIx) {
             var element = elements[eIx];
-            if (Sizzle.matchesSelector(element, query)) {
-                results.push(element);
-            }
-            Sizzle(query, element, results);
+            domQuery.all(query, element, results);
         }
         return results;
     }
@@ -118,8 +91,7 @@ jsns.define("htmlrest.bindingcollection", function (using) {
     return function (elements) {
         if (typeId.isString(elements)) {
             var query = elements;
-            elements = [];
-            Sizzle(query, document, elements);
+            elements = domQuery.all(query);
         }
         else if (!Array.isArray(elements)) {
             elements = [elements];

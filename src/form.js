@@ -82,7 +82,7 @@ jsns.define("htmlrest.form", function (using) {
          */
         populate: function (form, data) {
             form = domQuery.first(form);
-            var nameAttrs = Sizzle('[name]', form);
+            var nameAttrs = domQuery.all('[name]', form);
             for (var i = 0; i < nameAttrs.length; ++i) {
                 var element = nameAttrs[i];
                 element.value = data[element.getAttribute('name')];
