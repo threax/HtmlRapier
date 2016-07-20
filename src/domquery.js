@@ -18,9 +18,6 @@ jsns.define("htmlrest.domquery", function (using) {
                     element = Sizzle(element, context)[0];
                 }
             }
-            if (element instanceof jQuery) {
-                element = element[0]; //This should be the only jQuery
-            }
             return element;
         },
 
@@ -41,9 +38,6 @@ jsns.define("htmlrest.domquery", function (using) {
                 }
 
                 element = Sizzle(element, context, results);
-            }
-            if (element instanceof jQuery) {
-                results = element; //This should be the only jQuery
             }
             else if (!typeId.isArray(element)) {
                 results = [element];
