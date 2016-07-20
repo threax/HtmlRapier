@@ -1,8 +1,10 @@
 ﻿"use strict";
 
-(function (Sizzle) {
+jsns.define("htmlrest.form", function (using) {
+    var domQuery = using("htmlrest.componentresolver");
+
     //Form Functions
-    htmlrest.form = htmlrest.form || {
+    var exports = {
         /**
          * Serialze a form to a javascript object
          * @param {HTMLElement|string} form - A selector or form element for the form to serialize.
@@ -11,7 +13,7 @@
         serialize: function (form) {
             //This is from https://code.google.com/archive/p/form-serialize/downloads
             //Modified to return an object instead of a query string
-            form = htmlrest.component.getPlainElement(form);
+            form = domQuery.first(form);
 
             if (!form || form.nodeName !== "FORM") {
                 return;
@@ -79,156 +81,14 @@
          * @param {object} data - The data to bind to the form, form name attributes will be mapped to the keys in the object.
          */
         populate: function (form, data) {
-            form = htmlrest.component.getPlainElement(form);
+            form = domQuery.first(form);
             var nameAttrs = Sizzle('[name]', form);
             for (var i = 0; i < nameAttrs.length; ++i) {
                 var element = nameAttrs[i];
                 element.value = data[element.getAttribute('name')];
             }
-        },
-
-        /**
-         * Settings for the form ajax lifecycle. This provides default binding names for the ajaxLifecycle.
-         * Default binding names:
-         * Main Display - "main"
-         * Load Display - "load"
-         * Fail Display - "fail"
-         * @constructor
-         */
-        AjaxLifecycleSettings: function(){
-            this.form = "form";
-            this.mainDisplay = "main";
-            this.loadDisplay = "load";
-            this.failDisplay = "fail";
-            this.animations = null;
-            var self = this;
-
-            this.getAnimations = function () {
-                if (self.animations) {
-                    return self.animations;
-                }
-                return new htmlrest.animate.NoAnimations();
-            }
-
-            this.getForm = function (bindings) {
-                if (htmlrest.isString(self.form)) {
-                    return bindings.first(self.form);
-                }
-                return self.form;
-            }
-
-            this.getMainDisplay = function (bindings) {
-                if (htmlrest.isString(self.mainDisplay)) {
-                    return bindings.first(self.mainDisplay);
-                }
-                return self.mainDisplay;
-            }
-
-            this.getLoadDisplay = function (bindings) {
-                if (htmlrest.isString(self.loadDisplay)) {
-                    return bindings.first(self.loadDisplay);
-                }
-                return self.loadDisplay;
-            }
-
-            this.getFailDisplay = function (bindings) {
-                if (htmlrest.isString(self.failDisplay)) {
-                    return bindings.first(self.failDisplay);
-                }
-                return self.failDisplay;
-            }
-        },
-        
-        /**
-         * Create a simple ajax lifecyle for the form. This will show a loading screen
-         * when fetching data and provides provisions to handle a data connection failure.
-         * If your html uses the default bindings you don't need to pass settings.
-         * @constructor
-         * @param {htmlrest.component.BindingCollection} bindings - The bindings to use to lookup elements
-         * @param {htmlrest.form.AjaxLifecycleSettings} [settings] - The settings for the form, optional
-         */
-        ajaxLifecycle: function (bindings, settings) {
-            if (settings === undefined) {
-                settings = new htmlrest.form.AjaxLifecycleSettings();
-            }
-
-            var form = settings.getForm(bindings);
-            var mainDisplay = settings.getMainDisplay(bindings);
-            var populateFailDisplay = settings.getFailDisplay(bindings);
-            var loadingDisplay = settings.getLoadDisplay(bindings);
-
-            var animations = settings.getAnimations();
-
-            //If no main dispaly is found use the form
-            if (!mainDisplay) {
-                mainDisplay = form;
-            }
-
-            //Populate
-            this.populateData = function () {
-                loading();
-                var url = form.getAttribute('action');
-                htmlrest.rest.get(url, getSuccess, getFail);
-            }
-
-            function getSuccess(data) {
-                hideAll();
-                htmlrest.form.populate(form, data);
-                if (mainDisplay) {
-                    animations.show(mainDisplay);
-                }
-            }
-
-            function getFail(data) {
-                hideAll();
-                if (populateFailDisplay) {
-                    animations.show(populateFailDisplay);
-                }
-            }
-
-            //Submit
-            form.addEventListener('submit', function (evt) {
-                evt.preventDefault();
-                loading();
-                var url = form.getAttribute('action');
-                var data = htmlrest.form.serialize(form);
-                htmlrest.rest.post(url, data, postSuccess, postFail);
-            });
-
-            function postSuccess(data) {
-                hideAll();
-                if (mainDisplay) {
-                    animations.show(mainDisplay);
-                }
-            }
-
-            function postFail(data) {
-                hideAll();
-                if (mainDisplay) {
-                    animations.show(mainDisplay);
-                }
-                alert(data.message); //temp
-            }
-
-            //Display Functions
-            function loading() {
-                hideAll();
-                if (loadingDisplay) {
-                    animations.show(loadingDisplay);
-                }
-            }
-
-            function hideAll() {
-                if (mainDisplay) {
-                    animations.hide(mainDisplay);
-                }
-                if (populateFailDisplay) {
-                    animations.hide(populateFailDisplay);
-                }
-                if (loadingDisplay) {
-                    animations.hide(loadingDisplay);
-                }
-            }
         }
     }
-})(Sizzle);
+
+    return exports;
+});

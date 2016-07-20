@@ -1,6 +1,7 @@
-﻿(function () {
-    htmlrest.events = htmlrest.events || {}
+"use strict";
 
+jsns.define("htmlrest.events", function (using) {
+    var exports = {};
     var events = {};
 
     /**
@@ -8,7 +9,7 @@
      * @param {string} name - The name of the event to register under.
      * @param {type} func - The function to call when the event is fired.
      */
-    htmlrest.events.register = function (name, func) {
+    exports.register = function (name, func) {
         if (!events.hasOwnProperty(name)) {
             events[name] = [];
         }
@@ -20,7 +21,7 @@
      * @param {string} name - The name of the event to unregister.
      * @param {type} func - The previously registered function to remove.
      */
-    htmlrest.events.unregister = function (name, func) {
+    exports.unregister = function (name, func) {
         if (events.hasOwnProperty(name)) {
             var funcs = events[name];
             for (var i = 0; i < funcs.length; ++i) {
@@ -37,7 +38,7 @@
      * @param sender
      * @param args
      */
-    htmlrest.events.fire = function(name, sender, args){
+    exports.fire = function (name, sender, args) {
         if (events.hasOwnProperty(name)) {
             var funcs = events[name];
             for (var i = 0; i < funcs.length; ++i) {
@@ -45,4 +46,6 @@
             }
         }
     }
-})();
+
+    return exports;
+});

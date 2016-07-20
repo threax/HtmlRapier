@@ -1,4 +1,8 @@
-﻿(function () {
+﻿"use strict";
+
+jsns.define("htmlrest.rest", function (using) {
+    var exports = {};
+
     //Helper function to handle results
     function handleResult(xhr, success, fail) {
         if (xhr.status === 200) {
@@ -26,14 +30,9 @@
         }
     }
 
-    //Rest Functions
-    htmlrest.rest = htmlrest.rest || {
-
-    }
-
     /**
      * This callback is called when server communication has occured.
-     * @callback htmlrest.rest~resultCallback
+     * @callback exports~resultCallback
      * @param {object} data - The data result from the server.
      */
 
@@ -41,43 +40,43 @@
      * Post data to a url. Success and fail called depending on result
      * @param {string} url - The url to post to
      * @param {object} data - The data to post
-     * @param {htmlrest.rest~resultCallback} success - Called if the operation is successful
-     * @param {htmlrest.rest~resultCallback} [fail] - Called if the operation fails, if not provided will call success for this.
+     * @param {exports~resultCallback} success - Called if the operation is successful
+     * @param {exports~resultCallback} [fail] - Called if the operation fails, if not provided will call success for this.
      */
-    htmlrest.rest.post = function (url, data, success, fail) {
-        htmlrest.rest.ajax(url, 'POST', data, success, fail);
+    exports.post = function (url, data, success, fail) {
+        exports.ajax(url, 'POST', data, success, fail);
     }
 
     /**
      * Put data to a url. Success and fail called depending on result
      * @param {string} url - The url to put to
      * @param {object} data - The data to put
-     * @param {htmlrest.rest~resultCallback} success - Called if the operation is successful
-     * @param {htmlrest.rest~resultCallback} [fail] - Called if the operation fails, if not provided will call success for this.
+     * @param {exports~resultCallback} success - Called if the operation is successful
+     * @param {exports~resultCallback} [fail] - Called if the operation fails, if not provided will call success for this.
      */
-    htmlrest.rest.put = function (url, data, success, fail) {
-        htmlrest.rest.ajax(url, 'PUT', data, success, fail);
+    exports.put = function (url, data, success, fail) {
+        exports.ajax(url, 'PUT', data, success, fail);
     }
 
     /**
      * Delete data at a url. Success and fail called depending on result
      * @param {string} url - The url to delete to
      * @param {object} data - Data to include
-     * @param {htmlrest.rest~resultCallback} success - Called if the operation is successful
-     * @param {htmlrest.rest~resultCallback} [fail] - Called if the operation fails, if not provided will call success for this.
+     * @param {exports~resultCallback} success - Called if the operation is successful
+     * @param {exports~resultCallback} [fail] - Called if the operation fails, if not provided will call success for this.
      */
-    htmlrest.rest.delete = function (url, data, success, fail) {
-        htmlrest.rest.ajax(url, 'DELETE', data, success, fail);
+    exports.delete = function (url, data, success, fail) {
+        exports.ajax(url, 'DELETE', data, success, fail);
     }
 
     /**
      * Get data from a url. Success and fail called depending on result
      * @param {string} url - The url to get data from
-     * @param {htmlrest.rest~resultCallback} success - Called if the operation is successful
-     * @param {htmlrest.rest~resultCallback} [fail] - Called if the operation fails, if not provided will call success for this.
+     * @param {exports~resultCallback} success - Called if the operation is successful
+     * @param {exports~resultCallback} [fail] - Called if the operation fails, if not provided will call success for this.
      * @param {type} [cache=false] - True to use cached results, false to always get, default false.
      */
-    htmlrest.rest.get = function (url, success, fail, cache) {
+    exports.get = function (url, success, fail, cache) {
         if (fail === undefined) {
             fail = success;
         }
@@ -104,10 +103,10 @@
      * @param {string} url - The url to call
      * @param {string} method - The method to use
      * @param {object} data - The data to send
-     * @param {htmlrest.rest~resultCallback} success - Called if the operation is successful
-     * @param {htmlrest.rest~resultCallback} [fail] - Called if the operation fails, if not provided will call success for this.
+     * @param {exports~resultCallback} success - Called if the operation is successful
+     * @param {exports~resultCallback} [fail] - Called if the operation fails, if not provided will call success for this.
      */
-    htmlrest.rest.ajax = function (url, method, data, success, fail) {
+    exports.ajax = function (url, method, data, success, fail) {
         if (fail === undefined) {
             fail = success;
         }
@@ -126,10 +125,10 @@
      * @param {string} url - The url to upload to
      * @param {object|FormData} data - The data to upload, if this is already form data it will be used directly, otherwise
      * data will be sent directly as a file.
-     * @param {htmlrest.rest~resultCallback} success - Called if the operation is successful
-     * @param {htmlrest.rest~resultCallback} [fail] - Called if the operation fails, if not provided will call success for this.
+     * @param {exports~resultCallback} success - Called if the operation is successful
+     * @param {exports~resultCallback} [fail] - Called if the operation fails, if not provided will call success for this.
      */
-    htmlrest.rest.upload = function (url, data, success, fail) {
+    exports.upload = function (url, data, success, fail) {
         if (fail === undefined) {
             fail = success;
         }
@@ -151,4 +150,6 @@
         };
         xhr.send(formData);
     }
-})();
+
+    return exports;
+});

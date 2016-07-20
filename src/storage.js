@@ -1,9 +1,10 @@
-﻿(function () {
+﻿"use strict";
+
+jsns.define("htmlrest.storage", function (using) {
     //The instance storage, 
     var instanceStorage = {};
 
-    htmlrest.storage =
-    {
+    return {
         /**
         * @description Get the sesssion data, can specify a default value.
         * @param {string} name The name of the data to recover
@@ -47,7 +48,7 @@
             }
             else {
                 if (value !== undefined) {
-                    htmlrest.storage.storeInInstance(name, value);
+                    this.storeInInstance(name, value);
                 }
                 return value;
             }
@@ -61,4 +62,4 @@
             instanceStorage[name] = value;
         }
     };
-})();
+});
