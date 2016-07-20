@@ -3,6 +3,23 @@
 jsns.define("htmlrest.domquery", function (using) {
     var typeId = using("htmlrest.typeidentifiers");
 
+    //Polyfill for matches
+    //https://developer.mozilla.org/en-US/docs/Web/API/Element/matches
+    if (!Element.prototype.matches) {
+        Element.prototype.matches =
+            Element.prototype.matchesSelector ||
+            Element.prototype.mozMatchesSelector ||
+            Element.prototype.msMatchesSelector ||
+            Element.prototype.oMatchesSelector ||
+            Element.prototype.webkitMatchesSelector ||
+            function (s) {
+                var matches = (this.document || this.ownerDocument).querySelectorAll(s),
+                    i = matches.length;
+                while (--i >= 0 && matches.item(i) !== this) { }
+                return i > -1;
+            };
+    }
+
     return {
         /**
          * Derive the plain javascript element from a passed element
@@ -11,11 +28,16 @@ jsns.define("htmlrest.domquery", function (using) {
          */
         first: function (element, context) {
             if (typeId.isString(element)) {
-                if (context !== undefined && this.matches(context, element)) {
-                    element = context;
+                if (context !== undefined){
+                    if (this.matches(context, element)) {
+                        element = context;
+                    }
+                    else {
+                        element = context.querySelector(element);
+                    }
                 }
                 else {
-                    element = Sizzle(element, context)[0];
+                    element = document.querySelector(element);
                 }
             }
             return element;
@@ -33,17 +55,25 @@ jsns.define("htmlrest.domquery", function (using) {
                 results = [];
             }
             if (typeId.isString(element)) {
-                if (context !== undefined && this.matches(context, element)) {
-                    results.push()
+                if (context !== undefined){
+                    if (this.matches(context, element)) {
+                        results.push(context);
+                    }
+                    else {
+                        nodesToArray(context.querySelectorAll(element), results);
+                    }
                 }
-
-                element = Sizzle(element, context, results);
+                else {
+                    nodesToArray(document.querySelectorAll(element), results);
+                }
             }
             else if (!typeId.isArray(element)) {
-                results = [element];
+                results.push(element);
             }
             else {
-                results = element;
+                for (var i = 0; i < element.length; ++i) {
+                    results.push(element[i]);
+                }
             }
             return results;
         },
@@ -54,8 +84,14 @@ jsns.define("htmlrest.domquery", function (using) {
          * @param {type} selector
          * @returns {type} 
          */
-        matches: function(element, selector) {
-            return Sizzle.matchesSelector(element, selector);
+        matches: function (element, selector) {
+            return element.matches(selector);
         }
     };
+
+    function nodesToArray(nodes, arr) {
+        for (var i = 0; i < nodes.length; ++i) {
+            arr.push(nodes[i]);
+        }
+    }
 });
