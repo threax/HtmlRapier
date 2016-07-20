@@ -19,7 +19,7 @@ var jsns = (function () {
                 modules[name] = exports = factory(using);
             }
             else {
-                console.log('Cannot import namespace named "' + name + '". Not Found.');
+                throw 'Cannot import namespace named "' + name + '". Not Found.';
             }
         }
 

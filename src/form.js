@@ -1,7 +1,7 @@
 ﻿"use strict";
 
 jsns.define("htmlrest.form", function (using) {
-    var domQuery = using("htmlrest.componentresolver");
+    var domQuery = using("htmlrest.domquery");
 
     //Form Functions
     var exports = {

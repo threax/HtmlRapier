@@ -5,7 +5,7 @@
 jsns.define("htmlrest.components", function (using) {
     var factory = {};
     var typeId = using("htmlrest.typeidentifiers");
-    var domquery = using("htmlrest.componentresolver");
+    var domquery = using("htmlrest.domquery");
     var exports = {};
 
     /**
