@@ -222,6 +222,23 @@
                 return results;
             }
 
+            function OutputBindings(elements) {
+                function TextNodeBinding(element, stream) {
+                    this.output = function(data){
+                        element.innerText
+                    }
+                }
+
+                var textNodeBindings = [];
+                for (var i = 0; i < elements.length; ++i) {
+                    var element = elements[i];
+                    var current = element.firstChild;
+                    while (current != null) {
+
+                    }
+                }
+            }
+
             //Constructor
             return function (elements) {
                 if (htmlrest.isString(elements)) {
@@ -306,8 +323,8 @@
     //Auto find components on the page and build them as components
     (function (s, h) {
         //Component creation function
-        function createItem(data, componentString, parentComponent, insertBeforeSibling) {
-            var itemMarkup = h.formatText(componentString, data);
+        function createItem(data, componentStringStream, parentComponent, insertBeforeSibling) {
+            var itemMarkup = componentStringStream.format(data);
             var newItems = str2DOMElement(itemMarkup);
             var arrayedItems = [];
 
@@ -332,7 +349,16 @@
                 element.parentNode.removeChild(element);
 
                 h.registerComponent(componentName, function (data, parentComponent, insertBeforeSibling) {
-                    return createItem(data, componentString, parentComponent, insertBeforeSibling);
+                    //First creation does more work with this function, then reregisters a simplified version
+                    //Tokenize string
+                    var tokenizedString = new h.textStream(componentString);
+                    //Register component again
+                    h.registerComponent(componentName, function (data, parentComponent, insertBeforeSibling) {
+                        //Return results, this is called for each subsequent creation
+                        return createItem(data, tokenizedString, parentComponent, insertBeforeSibling);
+                    });
+                    //Return results
+                    return createItem(data, tokenizedString, parentComponent, insertBeforeSibling);
                 });
             })();
         };
@@ -347,7 +373,16 @@
                 element.parentNode.removeChild(element);
 
                 h.registerComponent(componentName, function (data, parentComponent, insertBeforeSibling) {
-                    return createItem(data, componentString, parentComponent, insertBeforeSibling);
+                    //First creation does more work with this function, then reregisters a simplified version
+                    //Tokenize string
+                    var tokenizedString = new h.textStream(componentString);
+                    //Register component again
+                    h.registerComponent(componentName, function (data, parentComponent, insertBeforeSibling) {
+                        //Return results, this is called for each subsequent creation
+                        return createItem(data, tokenizedString, parentComponent, insertBeforeSibling);
+                    });
+                    //Return results
+                    return createItem(data, tokenizedString, parentComponent, insertBeforeSibling);
                 });
             })();
         }
