@@ -73,7 +73,7 @@ jsns.run(function (using) {
 
     //Actual creation function
     var str2DOMElement = function (html) {
-        //From jQuery and the discussion on http://krasimirtsonev.com/blog/article/Revealing-the-magic-how-to-properly-convert-HTML-string-to-a-DOM-element
+        //From j Query and the discussion on http://krasimirtsonev.com/blog/article/Revealing-the-magic-how-to-properly-convert-HTML-string-to-a-DOM-element
         //Modified, does not support body tags and returns collections of children
 
         var wrapMap = {
