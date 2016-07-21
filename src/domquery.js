@@ -51,10 +51,11 @@ jsns.define("htmlrest.domquery", function (using) {
          * @returns {array[HTMLElement]} - The located html element. Will be the results array if one is passed otherwise a new one.
          */
         all: function (element, context, results) {
-            if (results === undefined) {
-                results = [];
-            }
             if (typeId.isString(element)) {
+                if (results === undefined) {
+                    results = [];
+                }
+
                 if (context !== undefined){
                     if (this.matches(context, element)) {
                         results.push(context);
@@ -68,11 +69,21 @@ jsns.define("htmlrest.domquery", function (using) {
                 }
             }
             else if (!typeId.isArray(element)) {
-                results.push(element);
+                if (results === undefined) {
+                    results = [element];
+                }
+                else {
+                    results.push(element);
+                }
             }
             else {
-                for (var i = 0; i < element.length; ++i) {
-                    results.push(element[i]);
+                if (results === undefined) {
+                    results = element;
+                }
+                else {
+                    for (var i = 0; i < element.length; ++i) {
+                        results.push(element[i]);
+                    }
                 }
             }
             return results;

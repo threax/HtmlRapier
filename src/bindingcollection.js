@@ -89,13 +89,7 @@ jsns.define("htmlrest.bindingcollection", function (using) {
 
     //Constructor
     return function (elements) {
-        if (typeId.isString(elements)) {
-            var query = elements;
-            elements = domQuery.all(query);
-        }
-        else if (!Array.isArray(elements)) {
-            elements = [elements];
-        }
+        elements = domQuery.all(elements);
 
         /**
          * Find the first binding that matches bindingName
