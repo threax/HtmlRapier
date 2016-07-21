@@ -39,22 +39,6 @@ jsns.define("htmlrest.bindingcollection", function (using) {
         }
     }
 
-    function bindNodes(bindings, elements) {
-        for (var key in bindings) {
-            var query = '[data-htmlrest-binding=' + key + ']';
-            for (var eIx = 0; eIx < elements.length; ++eIx) {
-                var element = elements[eIx];
-                var child = domQuery.first(query, element);
-                if (child) {
-                    var elementBindings = bindings[key];
-                    for (var name in elementBindings) {
-                        child.addEventListener(name, elementBindings[name]);
-                    }
-                }
-            }
-        }
-    }
-
     function bindData(data, elements) {
         for (var key in data) {
             var query = '[data-htmlrest-binding=' + key + ']';
@@ -104,23 +88,6 @@ jsns.define("htmlrest.bindingcollection", function (using) {
         return results;
     }
 
-    function OutputBindings(elements) {
-        function TextNodeBinding(element, stream) {
-            this.output = function (data) {
-                element.innerText
-            }
-        }
-
-        var textNodeBindings = [];
-        for (var i = 0; i < elements.length; ++i) {
-            var element = elements[i];
-            var current = element.firstChild;
-            while (current != null) {
-
-            }
-        }
-    }
-
     //Constructor
     return function (elements) {
         elements = domQuery.all(elements);
@@ -163,24 +130,6 @@ jsns.define("htmlrest.bindingcollection", function (using) {
          */
         this.iterate = function (bindingName, callback) {
             iterateNodeArray(bindingName, elements, callback);
-        }
-
-        /**
-         * Bind events to items in an element. elements is an array of elements to bind to.
-         * This is the same format they are returned from the create functions with.
-         * The bindings should be in the following form
-         * name is the data-htmlrest-binding name of the element
-         * eventNameX is the name of the event you want to bind to (click, submit etc)
-         * {
-         * name:{
-         * eventName: function(){},
-         * eventName2: function(){},
-         * etc
-         * }
-         * @param {type} bindings - The bindings to bind
-         */
-        this.bind = function (bindings) {
-            bindNodes(bindings, elements);
         }
 
         /**
