@@ -5,6 +5,7 @@ jsns.define("htmlrest.bindingcollection", function (using) {
     var typeId = using("htmlrest.typeidentifiers");
     var domQuery = using("htmlrest.domquery");
     var TextStream = using("htmlrest.textStream");
+    var toggles = using("htmlrest.toggles");
 
     //Startswith polyfill
     if (!String.prototype.startsWith) {
@@ -107,10 +108,31 @@ jsns.define("htmlrest.bindingcollection", function (using) {
         return results;
     }
 
+    function getToggle(name, elements, toggleCollection) {
+        var toggle = toggleCollection[name];
+        if (toggle === undefined) {
+            var query = '[data-hr-toggle=' + name + ']';
+            for (var eIx = 0; eIx < elements.length; ++eIx) {
+                var element = elements[eIx];
+                var toggleElement = domQuery.first(query, element);
+                if (toggleElement) {
+                    toggle = toggles.build(toggleElement);
+                    toggleCollection[name] = toggle;
+                    return toggle; //Found it, need to break element loop, done here if found
+                }
+                else {
+                    toggle = null;
+                }
+            }
+        }
+        return toggle;
+    }
+
     //Constructor
     return function (elements) {
         elements = domQuery.all(elements);
         var dataTextElements = undefined;
+        var toggleCollection = undefined;
 
         /**
          * Find the first binding that matches bindingName
@@ -146,6 +168,13 @@ jsns.define("htmlrest.bindingcollection", function (using) {
          */
         this.setData = function (data) {
             dataTextElements = bindData(data, elements, dataTextElements);
+        }
+
+        this.getToggle = function (name) {
+            if (toggleCollection === undefined) {
+                toggleCollection = [];
+            }
+            return getToggle(name, elements, toggleCollection);
         }
     };
 });
