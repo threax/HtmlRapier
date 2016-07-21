@@ -16,8 +16,8 @@ jsns.define("htmlrest.bindingcollection", function (using) {
     function EventRunner(name, listener) {
         this.execute = function(evt){
             var cb = listener[name];
-            if(cb && cb()){
-                evt.preventDefault();
+            if(cb){
+                cb.call(this, evt);
             }
         }
     }
