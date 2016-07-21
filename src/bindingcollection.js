@@ -5,6 +5,40 @@ jsns.define("htmlrest.bindingcollection", function (using) {
     var typeId = using("htmlrest.typeidentifiers");
     var domQuery = using("htmlrest.domquery");
 
+    //Startswith polyfill
+    if (!String.prototype.startsWith) {
+        String.prototype.startsWith = function (searchString, position) {
+            position = position || 0;
+            return this.substr(position, searchString.length) === searchString;
+        };
+    }
+
+    function EventRunner(name, listener) {
+        this.execute = function(evt){
+            var cb = listener[name];
+            if(cb && cb()){
+                evt.preventDefault();
+            }
+        }
+    }
+
+    function bindEvents(elements, listener) {
+        for (var eIx = 0; eIx < elements.length; ++eIx) {
+            var element = elements[eIx];
+            var iter = document.createNodeIterator(element, NodeFilter.SHOW_ELEMENT, function (node) {
+                //Look for attribute
+                for (var i = 0; i < node.attributes.length; i++) {
+                    var attribute = node.attributes[i];
+                    if (attribute.name.startsWith('data-hr-on-')) {
+                        var runner = new EventRunner(attribute.value, listener);
+                        node.addEventListener(attribute.name.substr(11), runner.execute);
+                    }
+                }
+            }, false);
+            while(iter.nextNode()){} //Have to walk to get results
+        }
+    }
+
     function bindNodes(bindings, elements) {
         for (var key in bindings) {
             var query = '[data-htmlrest-binding=' + key + ']';
@@ -147,6 +181,15 @@ jsns.define("htmlrest.bindingcollection", function (using) {
          */
         this.bind = function (bindings) {
             bindNodes(bindings, elements);
+        }
+
+        /**
+         * Set the listener for this binding collection. This listener will have its functions
+         * fired when a matching event is fired.
+         * @param {type} listener
+         */
+        this.setListener = function (listener) {
+            bindEvents(elements, listener);
         }
 
         /**
