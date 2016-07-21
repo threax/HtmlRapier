@@ -4,6 +4,7 @@ jsns.define("htmlrest.bindingcollection", function (using) {
     var escape = using("htmlrest.escape");
     var typeId = using("htmlrest.typeidentifiers");
     var domQuery = using("htmlrest.domquery");
+    var TextStream = using("htmlrest.textStream");
 
     //Startswith polyfill
     if (!String.prototype.startsWith) {
@@ -39,17 +40,35 @@ jsns.define("htmlrest.bindingcollection", function (using) {
         }
     }
 
-    function bindData(data, elements) {
-        for (var key in data) {
-            var query = '[data-htmlrest-binding=' + key + ']';
+    function bindData(data, elements, dataTextElements) {
+        //No found elements, iterate everything.
+        if (dataTextElements === undefined) {
+            dataTextElements = [];
             for (var eIx = 0; eIx < elements.length; ++eIx) {
                 var element = elements[eIx];
-                var child = domQuery.first(query, element);
-                if (child) {
-                    child.innerHTML = escape(data[key]);
-                }
+
+                var iter = document.createNodeIterator(element, NodeFilter.SHOW_TEXT, function (node) {
+                    var textStream = new TextStream(node.textContent);
+                    if (textStream.foundVariable()) {
+                        node.textContent = textStream.format(data);
+                        dataTextElements.push({
+                            node: node,
+                            stream: textStream
+                        });
+                    }
+                }, false);
+                while (iter.nextNode()) { } //Have to walk to get results
             }
         }
+        //Already found the text elements, output those.
+        else {
+            for (var i = 0; i < dataTextElements.length; ++i) {
+                var node = dataTextElements[i];
+                node.node.textContent = node.stream.format(data);
+            }
+        }
+
+        return dataTextElements;
     }
 
     function lookupNodeInArray(bindingName, elements) {
@@ -91,6 +110,7 @@ jsns.define("htmlrest.bindingcollection", function (using) {
     //Constructor
     return function (elements) {
         elements = domQuery.all(elements);
+        var dataTextElements = undefined;
 
         /**
          * Find the first binding that matches bindingName
@@ -99,19 +119,6 @@ jsns.define("htmlrest.bindingcollection", function (using) {
          */
         this.first = function (bindingName) {
             return lookupNodeInArray(bindingName, elements);
-        }
-
-        /**
-         * Get the binding that matches input if it is a string.
-         * Otherwise just returns input, ideally because you put an htmlelement in there already
-         * @param {string|HTMLElement} input
-         * @returns {HTMLElement} 
-         */
-        this.firstOrInput = function (input) {
-            if (typeId.isString(input)) {
-                return lookupNodeInArray(input, elements);
-            }
-            return input;
         }
 
         /**
@@ -142,12 +149,12 @@ jsns.define("htmlrest.bindingcollection", function (using) {
         }
 
         /**
-         * Use the bindings to output data. The inner html of all the matching bindings will be replaced
-         * with the values provided by data. The output will be escaped for xss.
+         * Set the data for this binding collection. Will run a format text on all text nodes
+         * inside the collection. These nodes must have variables in them.
          * @param {type} data
          */
-        this.output = function (data) {
-            bindData(data, elements);
+        this.setData = function (data) {
+            dataTextElements = bindData(data, elements, dataTextElements);
         }
     };
 });
