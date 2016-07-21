@@ -122,15 +122,6 @@ jsns.define("htmlrest.bindingcollection", function (using) {
         }
 
         /**
-         * Get all bindings that match the given binding name.
-         * @param {string} bindingName - the name of the bindings to look up
-         * @returns {array} - The array of bindings that match name
-         */
-        this.all = function (bindingName) {
-            return getAllElements(bindingName, elements);
-        }
-
-        /**
          * Call callback for each item that matches bindingName
          * @param {type} bindingName - The name of the binding to look up.
          * @param {type} callback - The callback to call for each discovered binding
