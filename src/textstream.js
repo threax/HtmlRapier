@@ -11,13 +11,19 @@ jsns.define("htmlrest.textstream", function (using) {
 
     function VariableNode(variable) {
         this.write = function (data) {
-            return escape(data[variable]);
+            if (data) {
+                return escape(data[variable]);
+            }
+            return "";
         }
     }
 
     function ThisVariableNode() {
         this.write = function (data) {
-            return escape(data);
+            if (data) {
+                return escape(data);
+            }
+            return "";
         }
     }
 

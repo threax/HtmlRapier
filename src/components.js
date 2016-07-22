@@ -26,7 +26,7 @@ jsns.define("htmlrest.components", function (using) {
      * @param {HTMLElement} insertBeforeSibling - The sibling to insert the new component before.
      * @returns {exports.component.BindingCollection} 
      */
-    exports.single = function (name, data, parentComponent, createdCallback) {
+    exports.single = function (name, parentComponent, data, createdCallback) {
         return doCreateComponent(name, data, parentComponent, null, createdCallback);
     }
 
