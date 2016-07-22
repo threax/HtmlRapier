@@ -31,7 +31,7 @@ jsns.define("htmlrest.models", function (using) {
         }
 
         this.appendData = function (data, createdCallback) {
-            if (typeId.isArray(data)) {
+            if (typeId.isArray(data) || typeId.isFunction(data)) {
                 components.repeat(component, element, data, createdCallback);
             }
             else if (data) {
