@@ -42,32 +42,6 @@ jsns.define("htmlrest.bindingcollection", function (using) {
         }
     }
 
-    function lookupNodeInArray(bindingName, elements) {
-        var query = '[data-htmlrest-binding=' + bindingName + ']';
-        for (var eIx = 0; eIx < elements.length; ++eIx) {
-            var element = elements[eIx];
-            var child = domQuery.first(query, element);
-            if (child) {
-                return child;
-            }
-            else {
-                return null;
-            }
-        }
-    }
-
-    function iterateNodeArray(bindingName, elements, callback) {
-        var query = '[data-htmlrest-binding=' + bindingName + ']';
-        for (var eIx = 0; eIx < elements.length; ++eIx) {
-            var element = elements[eIx];
-
-            var matchingChildren = domQuery.all(query, element);
-            for (var i = 0; i < matchingChildren.length; ++i) {
-                callback(matchingChildren[i]);
-            }
-        }
-    }
-
     function getToggle(name, elements, toggleCollection) {
         var toggle = toggleCollection[name];
         if (toggle === undefined) {
@@ -124,24 +98,6 @@ jsns.define("htmlrest.bindingcollection", function (using) {
         var dataTextElements = undefined;
         var toggleCollection = undefined;
         var modelCollection = undefined;
-
-        /**
-         * Find the first binding that matches bindingName
-         * @param {string} bindingName - The name of the binding to look up.
-         * @returns {HTMLElement} - The found element
-         */
-        this.first = function (bindingName) {
-            return lookupNodeInArray(bindingName, elements);
-        }
-
-        /**
-         * Call callback for each item that matches bindingName
-         * @param {type} bindingName - The name of the binding to look up.
-         * @param {type} callback - The callback to call for each discovered binding
-         */
-        this.iterate = function (bindingName, callback) {
-            iterateNodeArray(bindingName, elements, callback);
-        }
 
         /**
          * Set the listener for this binding collection. This listener will have its functions

@@ -54,7 +54,7 @@
                     </div>
                     <div class="modal-body">
                         <ul data-htmlrest-binding="results">
-                            <li data-htmlrest-component="pagesearch-results-item">
+                            <li data-hr-component="pagesearch-results-item">
                                 <p><a href="{|href}">{|title}</a></p>
                                 <p>{|text}</p>
                             </li>
@@ -79,14 +79,14 @@
         </div>
     </div>
     <div class="components-storage">
-        <ul data-htmlrest-component="sidebarMenu" class="sidebarMenu" data-htmlrest-binding="SidebarMenu">
-            <li data-htmlrest-component="sidebarMenu-folder" data-htmlrest-binding="Parent">
+        <ul data-hr-component="sidebarMenu" class="sidebarMenu" data-htmlrest-binding="SidebarMenu">
+            <li data-hr-component="sidebarMenu-folder" data-htmlrest-binding="Parent">
                 <span data-htmlrest-binding="Button">{|name}</span>
             </li>
-            <li data-htmlrest-component="sidebarMenu-link">
+            <li data-hr-component="sidebarMenu-link">
                 <a href="{|link}">{|title}</a>
             </li>
-            <li data-htmlrest-component="integrated-search-result"><a href="{|href}">{|title}</a></li>
+            <li data-hr-component="integrated-search-result"><a href="{|href}">{|title}</a></li>
         </ul>
     </div>
     {javascript}

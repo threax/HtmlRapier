@@ -21,7 +21,7 @@ jsns.run(function (using) {
         return new BindingCollection(arrayedItems);
     }
 
-    var attrName = "data-htmlrest-component";
+    var attrName = "data-hr-component";
     var componentElements = domquery.all('[' + attrName + ']');
     //Read components backward, removing children from parents along the way.
     for (var i = componentElements.length - 1; i >= 0; --i) {
