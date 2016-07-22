@@ -8,7 +8,7 @@ jsns.define("htmlrest.models", function (using) {
 
     var exports = {};
 
-    function FormModel(form) {
+    function FormModel(form, src) {
         this.setData = function (data) {
             forms.populate(form, data);
         }
@@ -16,9 +16,13 @@ jsns.define("htmlrest.models", function (using) {
         this.getData = function () {
             return forms.serialize(form);
         }
+
+        this.getSrc = function () {
+            return src;
+        }
     }
 
-    function ComponentModel(element, component) {
+    function ComponentModel(element, src, component) {
         this.setData = function (data, createdCallback) {
             components.empty(element);
             if (typeId.isArray(data)) {
@@ -32,9 +36,13 @@ jsns.define("htmlrest.models", function (using) {
         this.getData = function () {
             return {};
         }
+
+        this.getSrc = function () {
+            return src;
+        }
     }
 
-    function TextNodeModel(element) {
+    function TextNodeModel(element, src) {
         var dataTextElements = undefined;
 
         this.setData = function (data) {
@@ -43,6 +51,10 @@ jsns.define("htmlrest.models", function (using) {
 
         this.getData = function () {
             return {};
+        }
+
+        this.getSrc = function () {
+            return src;
         }
     }
 
@@ -74,16 +86,17 @@ jsns.define("htmlrest.models", function (using) {
     }
 
     exports.build = function (element) {
+        var src = element.getAttribute('data-hr-model-src');
         if (element.nodeName === 'FORM') {
-            return new FormModel(element);
+            return new FormModel(element, src);
         }
         else {
             var component = element.getAttribute('data-hr-model-component');
             if (component) {
-                return new ComponentModel(element, component);
+                return new ComponentModel(element, src, component);
             }
             else {
-                return new TextNodeModel(element);
+                return new TextNodeModel(element, src);
             }
         }
     }
@@ -95,6 +108,10 @@ jsns.define("htmlrest.models", function (using) {
 
         this.getData = function () {
             return {};
+        }
+
+        this.getSrc = function () {
+            return "";
         }
     }
 
