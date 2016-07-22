@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.textStream", function (using) {
+jsns.define("htmlrest.textstream", function (using) {
     var escape = using("htmlrest.escape");
 
     function TextNode(str) {

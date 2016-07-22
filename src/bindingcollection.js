@@ -4,8 +4,9 @@ jsns.define("htmlrest.bindingcollection", function (using) {
     var escape = using("htmlrest.escape");
     var typeId = using("htmlrest.typeidentifiers");
     var domQuery = using("htmlrest.domquery");
-    var TextStream = using("htmlrest.textStream");
+    var TextStream = using("htmlrest.textstream");
     var toggles = using("htmlrest.toggles");
+    var models = using("htmlrest.models");
 
     //Startswith polyfill
     if (!String.prototype.startsWith) {
@@ -41,37 +42,6 @@ jsns.define("htmlrest.bindingcollection", function (using) {
         }
     }
 
-    function bindData(data, elements, dataTextElements) {
-        //No found elements, iterate everything.
-        if (dataTextElements === undefined) {
-            dataTextElements = [];
-            for (var eIx = 0; eIx < elements.length; ++eIx) {
-                var element = elements[eIx];
-
-                var iter = document.createNodeIterator(element, NodeFilter.SHOW_TEXT, function (node) {
-                    var textStream = new TextStream(node.textContent);
-                    if (textStream.foundVariable()) {
-                        node.textContent = textStream.format(data);
-                        dataTextElements.push({
-                            node: node,
-                            stream: textStream
-                        });
-                    }
-                }, false);
-                while (iter.nextNode()) { } //Have to walk to get results
-            }
-        }
-        //Already found the text elements, output those.
-        else {
-            for (var i = 0; i < dataTextElements.length; ++i) {
-                var node = dataTextElements[i];
-                node.node.textContent = node.stream.format(data);
-            }
-        }
-
-        return dataTextElements;
-    }
-
     function lookupNodeInArray(bindingName, elements) {
         var query = '[data-htmlrest-binding=' + bindingName + ']';
         for (var eIx = 0; eIx < elements.length; ++eIx) {
@@ -98,16 +68,6 @@ jsns.define("htmlrest.bindingcollection", function (using) {
         }
     }
 
-    function getAllElements(bindingName, elements) {
-        var results = [];
-        var query = '[data-htmlrest-binding=' + bindingName + ']';
-        for (var eIx = 0; eIx < elements.length; ++eIx) {
-            var element = elements[eIx];
-            domQuery.all(query, element, results);
-        }
-        return results;
-    }
-
     function getToggle(name, elements, toggleCollection) {
         var toggle = toggleCollection[name];
         if (toggle === undefined) {
@@ -125,7 +85,37 @@ jsns.define("htmlrest.bindingcollection", function (using) {
                 }
             }
         }
+
+        if (toggle === null) {
+            toggle = new toggles.NullToggle();
+        }
+
         return toggle;
+    }
+
+    function getModel(name, elements, modelCollection) {
+        var model = modelCollection[name];
+        if (model === undefined) {
+            var query = '[data-hr-model=' + name + ']';
+            for (var eIx = 0; eIx < elements.length; ++eIx) {
+                var element = elements[eIx];
+                var targetElement = domQuery.first(query, element);
+                if (targetElement) {
+                    model = models.build(targetElement);
+                    modelCollection[name] = model;
+                    return model; //Found it, need to break element loop, done here if found
+                }
+                else {
+                    model = null;
+                }
+            }
+        }
+
+        if (model === null) {
+            model = new models.NullModel();
+        }
+
+        return model;
     }
 
     //Constructor
@@ -133,6 +123,7 @@ jsns.define("htmlrest.bindingcollection", function (using) {
         elements = domQuery.all(elements);
         var dataTextElements = undefined;
         var toggleCollection = undefined;
+        var modelCollection = undefined;
 
         /**
          * Find the first binding that matches bindingName
@@ -172,9 +163,16 @@ jsns.define("htmlrest.bindingcollection", function (using) {
 
         this.getToggle = function (name) {
             if (toggleCollection === undefined) {
-                toggleCollection = [];
+                toggleCollection = {};
             }
             return getToggle(name, elements, toggleCollection);
+        }
+
+        this.getModel = function (name) {
+            if (modelCollection === undefined) {
+                modelCollection = {};
+            }
+            return getModel(name, elements, modelCollection);
         }
     };
 });

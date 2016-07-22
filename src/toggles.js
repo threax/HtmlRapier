@@ -8,11 +8,15 @@ jsns.define("htmlrest.toggles", function (using) {
      */
     exports.NullToggle = function (next) {
         this.on = function () {
-
+            if (next) {
+                next.on();
+            }
         }
 
         this.off = function () {
-
+            if (next) {
+                next.off();
+            }
         }
     }
 
