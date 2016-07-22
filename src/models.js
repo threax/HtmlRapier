@@ -13,6 +13,8 @@ jsns.define("htmlrest.models", function (using) {
             forms.populate(form, data);
         }
 
+        this.appendData = this.setData;
+
         this.getData = function () {
             return forms.serialize(form);
         }
@@ -25,10 +27,14 @@ jsns.define("htmlrest.models", function (using) {
     function ComponentModel(element, src, component) {
         this.setData = function (data, createdCallback) {
             components.empty(element);
+            this.appendData(data, createdCallback);
+        }
+
+        this.appendData = function (data, createdCallback) {
             if (typeId.isArray(data)) {
                 components.repeat(component, element, data, createdCallback);
             }
-            else if(data){
+            else if (data) {
                 components.single(component, element, data, createdCallback);
             }
         }
@@ -48,6 +54,8 @@ jsns.define("htmlrest.models", function (using) {
         this.setData = function (data) {
             dataTextElements = bindData(data, element, dataTextElements);
         }
+
+        this.appendData = this.setData;
 
         this.getData = function () {
             return {};
@@ -105,6 +113,8 @@ jsns.define("htmlrest.models", function (using) {
         this.setData = function (data) {
 
         }
+
+        this.appendData = this.setData;
 
         this.getData = function () {
             return {};
