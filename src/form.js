@@ -32,6 +32,7 @@ jsns.define("htmlrest.form", function (using) {
                             case 'button':
                             case 'reset':
                             case 'submit':
+                            case 'file':
                                 q[form.elements[i].name] = form.elements[i].value;
                                 break;
                             case 'checkbox':
@@ -39,8 +40,6 @@ jsns.define("htmlrest.form", function (using) {
                                 if (form.elements[i].checked) {
                                     q[form.elements[i].name] = form.elements[i].value;
                                 }
-                                break;
-                            case 'file':
                                 break;
                         }
                         break;
