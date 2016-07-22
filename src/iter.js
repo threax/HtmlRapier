@@ -6,6 +6,8 @@
  * that returns null when its work is complete. This matches functions as data
  * used elsewhere. This makes an easy way to transform data before displaying it
  * by calling iter on the collection and then returning what you want from the callback.
+ * 
+ * You don't new this just call it e.g. iter(things, function(thing){ return thing + ' changes' });
  */
 jsns.define("htmlrest.iter", function (using) {
     return function (items, cb) {
