@@ -80,6 +80,21 @@ jsns.define("htmlrest.toggles", function (using) {
         }
     }
 
+    exports.group = function () {
+        var toggles = arguments;
+
+        this.add = function(toggle){
+            toggles.push(toggle);
+        }
+
+        this.show = function(toggle){
+            for (var i = 0; i < toggles.length; ++i) {
+                toggles[i].off();
+            }
+            toggle.on();
+        }
+    }
+
     exports.build = function(element){
         //Not many of these so just search for everything
         var onStyle = element.getAttribute('data-hr-style-on');
