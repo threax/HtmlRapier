@@ -24,7 +24,10 @@ jsns.define("htmlrest.toggles", function (using) {
      * A toggler that toggles style for an element
      */
     exports.StyleToggle = function (element, onStyle, offStyle, next) {
-        var originalStyles = element.style.cssText;
+        onStyle = onStyle || "";
+        offStyle = offStyle || "";
+
+        var originalStyles = element.style.cssText || "";
 
         this.on = function () {
             element.style.cssText = originalStyles + onStyle;
@@ -45,7 +48,10 @@ jsns.define("htmlrest.toggles", function (using) {
      * A toggler that toggles classes for an element
      */
     exports.ClassToggle = function (element, onClass, offClass, idleClass, next) {
-        var originalClasses = element.getAttribute("class");
+        onClass = onClass || "";
+        offClass = offClass || "";
+
+        var originalClasses = element.getAttribute("class") || "";
 
         this.on = function () {
             element.setAttribute("class", originalClasses + ' ' + onClass);
