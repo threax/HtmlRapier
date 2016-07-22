@@ -40,11 +40,12 @@ jsns.define("htmlrest.toggles", function (using) {
     /**
      * A toggler that toggles classes for an element
      */
-    exports.ClassToggle = function (element, onClass, offClass, next) {
+    exports.ClassToggle = function (element, onClass, offClass, idleClass, next) {
         var originalClasses = element.getAttribute("class");
 
         this.on = function () {
             element.setAttribute("class", originalClasses + ' ' + onClass);
+            startAnimation();
             if (next) {
                 next.on();
             }
@@ -52,9 +53,26 @@ jsns.define("htmlrest.toggles", function (using) {
 
         this.off = function () {
             element.setAttribute("class", originalClasses + ' ' + offClass);
+            startAnimation();
             if (next) {
                 next.off();
             }
+        }
+
+        function startAnimation() {
+            if (idleClass) {
+                element.classList.remove(idleClass);
+                element.removeEventListener('transitionend', stopAnimation);
+                element.removeEventListener('animationend', stopAnimation);
+                element.addEventListener('transitionend', stopAnimation);
+                element.addEventListener('animationend', stopAnimation);
+            }
+        }
+
+        function stopAnimation() {
+            element.removeEventListener('transitionend', stopAnimation);
+            element.removeEventListener('animationend', stopAnimation);
+            element.classList.add(idleClass);
         }
     }
 
@@ -64,6 +82,7 @@ jsns.define("htmlrest.toggles", function (using) {
         var offStyle = element.getAttribute('data-hr-style-off');
         var onClass = element.getAttribute('data-hr-class-on');
         var offClass = element.getAttribute('data-hr-class-off');
+        var idleClass = element.getAttribute('data-hr-class-idle');
         var toggle = null;
 
         if (onStyle || offStyle) {
@@ -71,7 +90,7 @@ jsns.define("htmlrest.toggles", function (using) {
         }
 
         if (onClass || offClass) {
-            toggle = new exports.ClassToggle(element, onClass, offClass, toggle);
+            toggle = new exports.ClassToggle(element, onClass, offClass, idleClass, toggle);
         }
 
         //If we get all the way here with no toggle, use the null toggle.
