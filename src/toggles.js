@@ -3,6 +3,17 @@
 jsns.define("htmlrest.toggles", function (using, exports) {
     var typeId = using("htmlrest.typeidentifiers");
 
+    var togglePlugins = [];
+
+    /**
+     * Add a toggle plugin that can create additional items on the toggle chain.
+     * @param {type} plugin
+     */
+    function addTogglePlugin(plugin) {
+        togglePlugins.push(plugin);
+    }
+    exports.addTogglePlugin = addTogglePlugin;
+
     /**
      * A simple toggler that does nothing. Used to shim correctly if no toggles are defined for a toggle element.
      */
@@ -89,11 +100,11 @@ jsns.define("htmlrest.toggles", function (using, exports) {
     function Group() {
         var toggles = arguments;
 
-        this.add = function(toggle){
+        this.add = function (toggle) {
             toggles.push(toggle);
         }
 
-        this.show = function(toggle){
+        this.show = function (toggle) {
             for (var i = 0; i < toggles.length; ++i) {
                 toggles[i].off();
             }
@@ -102,7 +113,7 @@ jsns.define("htmlrest.toggles", function (using, exports) {
     }
     exports.Group = Group;
 
-    function build(element){
+    function build(element) {
         //Not many of these so just search for everything
         var onStyle = element.getAttribute('data-hr-style-on');
         var offStyle = element.getAttribute('data-hr-style-off');
@@ -119,6 +130,11 @@ jsns.define("htmlrest.toggles", function (using, exports) {
             toggle = new ClassToggle(element, onClass, offClass, idleClass, toggle);
         }
 
+        //Now toggle plugin chain
+        for (var i = 0; i < togglePlugins.length; ++i) {
+            toggle = togglePlugins[i](element, toggle);
+        }
+
         //If we get all the way here with no toggle, use the null toggle.
         if (toggle === null) {
             toggle = new NullToggle(toggle);
@@ -128,6 +144,11 @@ jsns.define("htmlrest.toggles", function (using, exports) {
     }
     exports.build = build;
 
+    /**
+     * Determine if a given toggle is a null toggle.
+     * @param toggle - the toggle to check
+     * @returns {type} - True if toggle is a NullToggle
+     */
     function isNullToggle(toggle) {
         return typeId.isObject(toggle) && typeId.constructor.prototype == NullToggle.prototype;
     }
