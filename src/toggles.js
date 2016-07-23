@@ -100,7 +100,7 @@ jsns.define("htmlrest.toggles", function (using, exports) {
             toggle.on();
         }
     }
-    exports.group = Group; //FIXME: capitalization of group in export
+    exports.Group = Group;
 
     function build(element){
         //Not many of these so just search for everything

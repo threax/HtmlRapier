@@ -30,7 +30,7 @@ jsns.define("htmlrest.formlifecycle", function (using, exports) {
         var load = bindings.getToggle('load');
         var main = bindings.getToggle('main');
         var fail = bindings.getToggle('fail');
-        var formToggler = new toggles.group(load, main, fail);
+        var formToggler = new toggles.Group(load, main, fail);
 
         var settingsModel = bindings.getModel('settings');
 

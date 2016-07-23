@@ -10,21 +10,21 @@ var jsns = (function () {
     var factories = {};
 
     function using(name) {
-        var exports = modules[name];
+        var module = modules[name];
 
         //Not loaded yet, load it
-        if (exports === undefined) {
+        if (module === undefined) {
             var factory = factories[name];
             if (factory !== undefined) {
-                modules[name] = exports = {};
-                factory(using, exports);
+                modules[name] = module = { exports: {} };
+                factory(using, module.exports, module);
             }
             else {
                 throw 'Cannot import namespace named "' + name + '". Not Found.';
             }
         }
 
-        return exports;
+        return module.exports;
     }
 
     return {
