@@ -1,7 +1,7 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.textstream", function (using) {
-    var escape = using("htmlrest.escape");
+jsns.define("htmlrest.textstream", function (using, exports) {
+    var escape = using("htmlrest.escape").escape;
 
     function TextNode(str) {
         this.write = function (data) {
@@ -43,7 +43,7 @@ jsns.define("htmlrest.textstream", function (using) {
      * @param {type} alwaysCreate
      * @returns {type} 
      */
-    return function (text) {
+    function TextStream(text) {
         var streamNodes = [];
         var foundVariable = false;
 
@@ -90,4 +90,5 @@ jsns.define("htmlrest.textstream", function (using) {
             return foundVariable;
         }
     }
+    exports.TextStream = TextStream;
 });

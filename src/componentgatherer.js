@@ -2,8 +2,8 @@
 jsns.run(function (using) {
     var domquery = using("htmlrest.domquery");
 
-    var BindingCollection = using("htmlrest.bindingcollection");
-    var TextStream = using("htmlrest.textstream");
+    var BindingCollection = using("htmlrest.bindingcollection").BindingCollection;
+    var TextStream = using("htmlrest.textstream").TextStream;
     var components = using("htmlrest.components");
 
     //Component creation function

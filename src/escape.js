@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.escape", function (using) {
+jsns.define("htmlrest.escape", function (using, exports) {
     /**
      * Escape text to prevent html characters from being output. Helps prevent xss, called automatically
      * by formatText. If you manually write user data consider using this function to escape it, but it is
@@ -8,7 +8,7 @@ jsns.define("htmlrest.escape", function (using) {
      * @param {string} text - the text to escape.
      * @returns {type} - The escaped version of text.
      */
-    var exports = function (text) {
+    function escape(text) {
         text = String(text);
 
         var status =
@@ -42,6 +42,7 @@ jsns.define("htmlrest.escape", function (using) {
 
         return status.output;
     }
+    exports.escape = escape;
 
     //Helper function for escaping
     function outputEncoded(i, text, status, replacement) {
@@ -49,6 +50,4 @@ jsns.define("htmlrest.escape", function (using) {
         status.output += text.substring(status.textStart, status.bracketStart) + replacement;
         status.textStart = i + 1;
     }
-
-    return exports;
 });

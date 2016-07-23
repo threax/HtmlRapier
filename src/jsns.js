@@ -16,7 +16,8 @@ var jsns = (function () {
         if (exports === undefined) {
             var factory = factories[name];
             if (factory !== undefined) {
-                modules[name] = exports = factory(using);
+                modules[name] = exports = {};
+                factory(using, exports);
             }
             else {
                 throw 'Cannot import namespace named "' + name + '". Not Found.';

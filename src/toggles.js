@@ -1,12 +1,12 @@
 "use strict";
 
-jsns.define("htmlrest.toggles", function (using) {
-    var exports = {};
-    
+jsns.define("htmlrest.toggles", function (using, exports) {
+    var typeId = using("htmlrest.typeidentifiers");
+
     /**
      * A simple toggler that does nothing. Used to shim correctly if no toggles are defined for a toggle element.
      */
-    exports.NullToggle = function (next) {
+    function NullToggle(next) {
         this.on = function () {
             if (next) {
                 next.on();
@@ -23,7 +23,7 @@ jsns.define("htmlrest.toggles", function (using) {
     /**
      * A toggler that toggles style for an element
      */
-    exports.StyleToggle = function (element, onStyle, offStyle, next) {
+    function StyleToggle(element, onStyle, offStyle, next) {
         onStyle = onStyle || "";
         offStyle = offStyle || "";
 
@@ -47,7 +47,7 @@ jsns.define("htmlrest.toggles", function (using) {
     /**
      * A toggler that toggles classes for an element
      */
-    exports.ClassToggle = function (element, onClass, offClass, idleClass, next) {
+    function ClassToggle(element, onClass, offClass, idleClass, next) {
         onClass = onClass || "";
         offClass = offClass || "";
 
@@ -86,7 +86,7 @@ jsns.define("htmlrest.toggles", function (using) {
         }
     }
 
-    exports.group = function () {
+    function Group() {
         var toggles = arguments;
 
         this.add = function(toggle){
@@ -100,8 +100,9 @@ jsns.define("htmlrest.toggles", function (using) {
             toggle.on();
         }
     }
+    exports.group = Group; //FIXME: capitalization of group in export
 
-    exports.build = function(element){
+    function build(element){
         //Not many of these so just search for everything
         var onStyle = element.getAttribute('data-hr-style-on');
         var offStyle = element.getAttribute('data-hr-style-off');
@@ -111,20 +112,24 @@ jsns.define("htmlrest.toggles", function (using) {
         var toggle = null;
 
         if (onStyle || offStyle) {
-            toggle = new exports.StyleToggle(element, onStyle, offStyle, toggle);
+            toggle = new StyleToggle(element, onStyle, offStyle, toggle);
         }
 
         if (onClass || offClass) {
-            toggle = new exports.ClassToggle(element, onClass, offClass, idleClass, toggle);
+            toggle = new ClassToggle(element, onClass, offClass, idleClass, toggle);
         }
 
         //If we get all the way here with no toggle, use the null toggle.
         if (toggle === null) {
-            toggle = new exports.NullToggle(toggle);
+            toggle = new NullToggle(toggle);
         }
 
         return toggle;
     }
+    exports.build = build;
 
-    return exports;
+    function isNullToggle(toggle) {
+        return typeId.isObject(toggle) && typeId.constructor.prototype == NullToggle.prototype;
+    }
+    exports.isNullToggle = isNullToggle;
 });

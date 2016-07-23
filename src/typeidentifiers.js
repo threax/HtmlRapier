@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.typeidentifiers", function (using) {
+jsns.define("htmlrest.typeidentifiers", function (using, exports) {
     //only implement if no native implementation is available
     if (typeof Array.isArray === 'undefined') {
         Array.isArray = function (obj) {
@@ -8,44 +8,44 @@ jsns.define("htmlrest.typeidentifiers", function (using) {
         }
     };
 
-    var exports = {};
-
     /**
      * Determine if a variable is an array.
      * @param test - The object to test
      * @returns {boolean} - True if the object is an array
      */
-    exports.isArray = function(test){
+    function isArray(test){
         return Array.isArray(test);
     }
+    exports.isArray = isArray;
 
     /**
      * Determine if a variable is a string.
      * @param test - The object to test
      * @returns {boolean} - True if a string, false if not
      */
-    exports.isString = function (test) {
+    function isString(test) {
         return typeof (test) === 'string';
     }
+    exports.isString = isString;
 
     /**
      * Determine if a variable is a function.
      * @param test - The object to test
      * @returns {boolean} - True if a function, false if not
      */
-    exports.isFunction = function (test) {
+    function isFunction(test) {
         return typeof (test) === 'function';
     }
+    exports.isFunction = isFunction;
 
     /**
      * Determine if a variable is an object.
      * @param test - The object to test
      * @returns {boolean} - True if an object, false if not
      */
-    exports.isObject = function (test) {
+    function isObject(test) {
         return typeof data === 'object';
     }
-
-    return exports;
+    exports.isObject = isObject;
 });
 

@@ -1,12 +1,10 @@
 "use strict";
 
-jsns.define("htmlrest.models", function (using) {
+jsns.define("htmlrest.models", function (using, exports) {
     var forms = using("htmlrest.form");
-    var TextStream = using("htmlrest.textstream");
+    var TextStream = using("htmlrest.textstream").TextStream;
     var components = using("htmlrest.components");
     var typeId = using("htmlrest.typeidentifiers");
-
-    var exports = {};
 
     function FormModel(form, src) {
         this.setData = function (data) {
@@ -93,7 +91,7 @@ jsns.define("htmlrest.models", function (using) {
         return dataTextElements;
     }
 
-    exports.build = function (element) {
+    function build(element) {
         var src = element.getAttribute('data-hr-model-src');
         if (element.nodeName === 'FORM') {
             return new FormModel(element, src);
@@ -108,8 +106,9 @@ jsns.define("htmlrest.models", function (using) {
             }
         }
     }
+    exports.build = build;
 
-    exports.NullModel = function () {
+    function NullModel() {
         this.setData = function (data) {
 
         }
@@ -124,6 +123,5 @@ jsns.define("htmlrest.models", function (using) {
             return "";
         }
     }
-
-    return exports;
+    exports.NullModel = NullModel;
 });

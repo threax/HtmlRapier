@@ -1,8 +1,6 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.rest", function (using) {
-    var exports = {};
-
+jsns.define("htmlrest.rest", function (using, exports) {
     //Helper function to handle results
     function handleResult(xhr, success, fail) {
         if (xhr.status === 200) {
@@ -43,9 +41,10 @@ jsns.define("htmlrest.rest", function (using) {
      * @param {exports~resultCallback} success - Called if the operation is successful
      * @param {exports~resultCallback} [fail] - Called if the operation fails, if not provided will call success for this.
      */
-    exports.post = function (url, data, success, fail) {
-        exports.ajax(url, 'POST', data, success, fail);
+    function post(url, data, success, fail) {
+        ajax(url, 'POST', data, success, fail);
     }
+    exports.post = post;
 
     /**
      * Put data to a url. Success and fail called depending on result
@@ -54,9 +53,10 @@ jsns.define("htmlrest.rest", function (using) {
      * @param {exports~resultCallback} success - Called if the operation is successful
      * @param {exports~resultCallback} [fail] - Called if the operation fails, if not provided will call success for this.
      */
-    exports.put = function (url, data, success, fail) {
-        exports.ajax(url, 'PUT', data, success, fail);
+    function put(url, data, success, fail) {
+        ajax(url, 'PUT', data, success, fail);
     }
+    exports.put = put;
 
     /**
      * Delete data at a url. Success and fail called depending on result
@@ -65,9 +65,10 @@ jsns.define("htmlrest.rest", function (using) {
      * @param {exports~resultCallback} success - Called if the operation is successful
      * @param {exports~resultCallback} [fail] - Called if the operation fails, if not provided will call success for this.
      */
-    exports.delete = function (url, data, success, fail) {
-        exports.ajax(url, 'DELETE', data, success, fail);
+    function del(url, data, success, fail) {
+        ajax(url, 'DELETE', data, success, fail);
     }
+    exports.delete = del;
 
     /**
      * Get data from a url. Success and fail called depending on result
@@ -76,7 +77,7 @@ jsns.define("htmlrest.rest", function (using) {
      * @param {exports~resultCallback} [fail] - Called if the operation fails, if not provided will call success for this.
      * @param {type} [cache=false] - True to use cached results, false to always get, default false.
      */
-    exports.get = function (url, success, fail, cache) {
+    function get(url, success, fail, cache) {
         if (fail === undefined) {
             fail = success;
         }
@@ -97,6 +98,7 @@ jsns.define("htmlrest.rest", function (using) {
         };
         xhr.send();
     }
+    exports.get = get;
 
     /**
      * A more raw ajax call if needed.
@@ -106,7 +108,7 @@ jsns.define("htmlrest.rest", function (using) {
      * @param {exports~resultCallback} success - Called if the operation is successful
      * @param {exports~resultCallback} [fail] - Called if the operation fails, if not provided will call success for this.
      */
-    exports.ajax = function (url, method, data, success, fail) {
+    function ajax(url, method, data, success, fail) {
         if (fail === undefined) {
             fail = success;
         }
@@ -119,6 +121,7 @@ jsns.define("htmlrest.rest", function (using) {
         };
         xhr.send(JSON.stringify(data));
     }
+    exports.ajax = ajax;
 
     /**
      * Upload a file to a url
@@ -128,7 +131,7 @@ jsns.define("htmlrest.rest", function (using) {
      * @param {exports~resultCallback} success - Called if the operation is successful
      * @param {exports~resultCallback} [fail] - Called if the operation fails, if not provided will call success for this.
      */
-    exports.upload = function (url, data, success, fail) {
+    function upload(url, data, success, fail) {
         if (fail === undefined) {
             fail = success;
         }
@@ -150,6 +153,5 @@ jsns.define("htmlrest.rest", function (using) {
         };
         xhr.send(formData);
     }
-
-    return exports;
+    exports.upload = upload;
 });

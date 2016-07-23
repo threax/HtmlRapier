@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.formlifecycle", function (using) {
+jsns.define("htmlrest.formlifecycle", function (using, exports) {
     var toggles = using("htmlrest.toggles");
     var rest = using("htmlrest.rest");
 
@@ -12,7 +12,7 @@ jsns.define("htmlrest.formlifecycle", function (using) {
      * @param {htmlrest.component.BindingCollection} bindings - The bindings to use to lookup elements
      * @param {htmlrest.form.AjaxLifecycleSettings} [settings] - The settings for the form, optional
      */
-    return function (bindings) {
+    function FormLifecycle(bindings) {
         var tryAgainFunc = null;
         var self = this;
 
@@ -60,4 +60,5 @@ jsns.define("htmlrest.formlifecycle", function (using) {
                 });
         }
     }
+    exports.FormLifecycle = FormLifecycle;
 });

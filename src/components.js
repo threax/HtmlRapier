@@ -2,11 +2,10 @@
 
 //Components is a bit trickier, we want part of it to run right away
 //First define the module
-jsns.define("htmlrest.components", function (using) {
+jsns.define("htmlrest.components", function (using, exports) {
     var factory = {};
     var typeId = using("htmlrest.typeidentifiers");
     var domquery = using("htmlrest.domquery");
-    var exports = {};
 
     /**
      * This callback is called when a component is created
@@ -26,9 +25,10 @@ jsns.define("htmlrest.components", function (using) {
      * @param {HTMLElement} insertBeforeSibling - The sibling to insert the new component before.
      * @returns {exports.component.BindingCollection} 
      */
-    exports.single = function (name, parentComponent, data, createdCallback) {
+    function single(name, parentComponent, data, createdCallback) {
         return doCreateComponent(name, data, parentComponent, null, createdCallback);
     }
+    exports.single = single;
 
     /**
      * This callback is used to create components when they are requested.
@@ -43,9 +43,10 @@ jsns.define("htmlrest.components", function (using) {
      * @param {string} name - The name of the component
      * @param {exports.registerComponent~callback} createFunc - The function that creates the new component.
      */
-    exports.register = function (name, createFunc) {
+    function register(name, createFunc) {
         factory[name] = createFunc;
     }
+    exports.register = register;
 
     /**
      * Create a component for each element in data using that element as the data for the component.
@@ -55,7 +56,7 @@ jsns.define("htmlrest.components", function (using) {
      * If it is a function return the data and then return null to stop iteration.
      * @param {exports.createComponent~callback} createdCallback
      */
-    exports.repeat = function (name, parentComponent, data, createdCallback) {
+    function repeat(name, parentComponent, data, createdCallback) {
         //Look for an insertion point
         var insertBefore = null;
         var insertBefore = parentComponent.firstElementChild;
@@ -81,13 +82,14 @@ jsns.define("htmlrest.components", function (using) {
                 doCreateComponent(name, data[key], parentComponent, insertBefore, createdCallback);
             }
         }
-    };
+    }
+    exports.repeat = repeat;
 
     /**
      * Remove all children from an html element.
      * @param {HTMLElement} parentComponent - The component to remove all children from
      */
-    exports.empty = function (parentComponent) {
+    function empty(parentComponent) {
         parentComponent = domquery.first(parentComponent);
         var currentNode = parentComponent.firstChild;
         var nextNode = null;
@@ -100,7 +102,8 @@ jsns.define("htmlrest.components", function (using) {
             }
             currentNode = nextNode;
         }
-    };
+    }
+    exports.empty = empty;
 
     function doCreateComponent(name, data, parentComponent, insertBeforeSibling, createdCallback) {
         parentComponent = domquery.first(parentComponent);
@@ -112,6 +115,4 @@ jsns.define("htmlrest.components", function (using) {
             return created;
         }
     }
-
-    return exports;
 });

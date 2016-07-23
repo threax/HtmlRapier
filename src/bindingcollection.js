@@ -1,10 +1,25 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.bindingcollection", function (using) {
-    var escape = using("htmlrest.escape");
+/**
+ * @callback htmlrest_bindingcollection_eventcallback
+ */
+
+/**
+ * @callback htmlrest_iter
+ * @param {array} items - the items to iterate
+ * @param {htmlrest_iter_cb} - the function to transform each object
+ * @returns the transformed item and null when all items are iterated
+ */
+
+/**
+ * @typedef {object} htmlrest_bindingcollection
+ */
+
+jsns.define("htmlrest.bindingcollection", function (using, exports) {
+    var escape = using("htmlrest.escape").escape;
     var typeId = using("htmlrest.typeidentifiers");
     var domQuery = using("htmlrest.domquery");
-    var TextStream = using("htmlrest.textstream");
+    var TextStream = using("htmlrest.textstream").TextStream;
     var toggles = using("htmlrest.toggles");
     var models = using("htmlrest.models");
 
@@ -92,8 +107,11 @@ jsns.define("htmlrest.bindingcollection", function (using) {
         return model;
     }
 
-    //Constructor
-    return function (elements) {
+    /**
+     * 
+     * @param {HtmlElement} elements
+     */
+    function BindingCollection(elements) {
         elements = domQuery.all(elements);
         var dataTextElements = undefined;
         var toggleCollection = undefined;
@@ -131,4 +149,6 @@ jsns.define("htmlrest.bindingcollection", function (using) {
             return getModel(name, elements, modelCollection);
         }
     };
+
+    exports.BindingCollection = BindingCollection;
 });
