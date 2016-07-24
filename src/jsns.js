@@ -59,7 +59,7 @@ var jsns = (function () {
         return fullyLoaded;
     }
 
-    function Unloaded(name, depNames, factory) {
+    function Library(name, depNames, factory) {
         this.name = name;
         this.factory = factory;
         this.dependencies = [];
@@ -86,12 +86,12 @@ var jsns = (function () {
 
     return {
         run: function (dependencies, factory) {
-            runners.push(new Unloaded(null, dependencies, factory));
+            runners.push(new Library(null, dependencies, factory));
             loadRunners();
         },
 
         define: function (name, dependencies, factory) {
-            unloaded[name] = new Unloaded(name, dependencies, factory);
+            unloaded[name] = new Library(name, dependencies, factory);
             loadRunners();
         }
     }
