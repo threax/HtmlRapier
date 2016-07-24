@@ -14,7 +14,7 @@ var jsns = (function () {
     }
 
     function loadModule(name){
-        var loaded = unloaded[name].check();
+        var loaded = checkLib(unloaded[name]);
         if (loaded) {
             delete unloaded[name];
         }
@@ -25,58 +25,60 @@ var jsns = (function () {
         this.exports = {};
     }
 
+    function checkLib(library) {
+        var dependencies = library.dependencies;
+        var fullyLoaded = true;
+
+        //Check to see if depenedencies are loaded and if they aren't and can be, load them
+        for (var i = 0; i < dependencies.length; ++i) {
+            var dep = dependencies[i];
+            dep.loaded = isModuleLoaded(dep.name);
+            if (!dep.loaded && isModuleLoadable(dep.name)) {
+                dep.loaded = loadModule(dep.name);
+            }
+            fullyLoaded = fullyLoaded && dep.loaded;
+        }
+
+        //If all dependencies are loaded, load this library
+        if (fullyLoaded) {
+            var module = new Module();
+            if (library.name) {
+                loaded[library.name] = module;
+            }
+            var args = [module.exports, module];
+
+            //Inject dependency arguments
+            for (var i = 0; i < dependencies.length; ++i) {
+                var dep = dependencies[i];
+                args.push(loaded[dep.name].exports);
+            }
+
+            library.factory.apply(module, args);
+        }
+
+        return fullyLoaded;
+    }
+
     function Unloaded(name, depNames, factory) {
-        var dependencies = [];
+        this.name = name;
+        this.factory = factory;
+        this.dependencies = [];
 
         if (depNames) {
             for (var i = 0; i < depNames.length; ++i) {
                 var depName = depNames[i];
-                dependencies.push({
+                this.dependencies.push({
                     name: depName,
                     loaded: isModuleLoaded(depName)
                 });
             }
         }
-
-        function check() {
-            var fullyLoaded = true;
-
-            //Check to see if depenedencies are loaded and if they aren't and can be, load them
-            for (var i = 0; i < dependencies.length; ++i) {
-                var dep = dependencies[i];
-                dep.loaded = isModuleLoaded(dep.name);
-                if (!dep.loaded && isModuleLoadable(dep.name)) {
-                    dep.loaded = loadModule(dep.name);
-                }
-                fullyLoaded = fullyLoaded && dep.loaded;
-            }
-
-            //If all dependencies are loaded, load this library
-            if (fullyLoaded) {
-                var module = new Module();
-                if (name) {
-                    loaded[name] = module;
-                }
-                var args = [module.exports, module];
-
-                //Inject dependency arguments
-                for (var i = 0; i < dependencies.length; ++i) {
-                    var dep = dependencies[i];
-                    args.push(loaded[dep.name].exports);
-                }
-
-                factory.apply(module, args);
-            }
-
-            return fullyLoaded;
-        }
-        this.check = check;
     }
 
     function loadRunners() {
         for (var i = 0; i < runners.length; ++i) {
             var runner = runners[i];
-            if (runner.check()) {
+            if (checkLib(runner)) {
                 runners.splice(i--, 1);
             }
         }
