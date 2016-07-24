@@ -15,14 +15,15 @@
  * @typedef {object} htmlrest_bindingcollection
  */
 
-jsns.define("htmlrest.bindingcollection", function (using, exports) {
-    var escape = using("htmlrest.escape").escape;
-    var typeId = using("htmlrest.typeidentifiers");
-    var domQuery = using("htmlrest.domquery");
-    var TextStream = using("htmlrest.textstream").TextStream;
-    var toggles = using("htmlrest.toggles");
-    var models = using("htmlrest.models");
-
+jsns.define("htmlrest.bindingcollection", function (using) {
+    using("htmlrest.escape");
+    using("htmlrest.typeidentifiers");
+    using("htmlrest.domquery");
+    using("htmlrest.textstream");
+    using("htmlrest.toggles");
+    using("htmlrest.models");
+},
+function (exports, module, escape, typeId, domQuery, TextStream, toggles, models) {
     //Startswith polyfill
     if (!String.prototype.startsWith) {
         String.prototype.startsWith = function (searchString, position) {
@@ -32,9 +33,9 @@ jsns.define("htmlrest.bindingcollection", function (using, exports) {
     }
 
     function EventRunner(name, listener) {
-        this.execute = function(evt){
+        this.execute = function (evt) {
             var cb = listener[name];
-            if(cb){
+            if (cb) {
                 cb.call(this, evt);
             }
         }
@@ -53,7 +54,7 @@ jsns.define("htmlrest.bindingcollection", function (using, exports) {
                     }
                 }
             }, false);
-            while(iter.nextNode()){} //Have to walk to get results
+            while (iter.nextNode()) { } //Have to walk to get results
         }
     }
 
@@ -150,5 +151,5 @@ jsns.define("htmlrest.bindingcollection", function (using, exports) {
         }
     };
 
-    exports.BindingCollection = BindingCollection;
+    module.exports = BindingCollection;
 });

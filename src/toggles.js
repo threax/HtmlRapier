@@ -1,7 +1,9 @@
 "use strict";
 
-jsns.define("htmlrest.toggles", function (using, exports) {
-    var typeId = using("htmlrest.typeidentifiers");
+jsns.define("htmlrest.toggles", function (using) {
+    using("htmlrest.typeidentifiers");
+},
+function(exports, module, typeId){
 
     var togglePlugins = [];
 

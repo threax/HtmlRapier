@@ -1,8 +1,9 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.form", function (using, exports) {
-    var domQuery = using("htmlrest.domquery");
-
+jsns.define("htmlrest.form", function (using) {
+    using("htmlrest.domquery");
+},
+function(exports, module, domQuery){
     /**
      * Serialze a form to a javascript object
      * @param {HTMLElement|string} form - A selector or form element for the form to serialize.

@@ -18,7 +18,8 @@
  * 
  * You don't new this just call it e.g. iter(things, function(thing){ return thing + ' changes' });
  */
-jsns.define("htmlrest.iter", function (using, exports) {
+jsns.define("htmlrest.iter", function (using, exports) {},
+function(exports, module){
 
     /**
      * Iterate over a collection of items calling cb for each one.
@@ -36,5 +37,5 @@ jsns.define("htmlrest.iter", function (using, exports) {
         }
     }
 
-    exports.iter = iter;
+    module.exports = iter;
 });

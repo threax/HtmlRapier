@@ -1,6 +1,7 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.rest", function (using, exports) {
+jsns.define("htmlrest.rest", function (using) {},
+function(exports, module){
     //Helper function to handle results
     function handleResult(xhr, success, fail) {
         if (xhr.status === 200) {

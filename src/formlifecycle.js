@@ -1,8 +1,10 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.formlifecycle", function (using, exports) {
-    var toggles = using("htmlrest.toggles");
-    var rest = using("htmlrest.rest");
+jsns.define("htmlrest.formlifecycle", function (using) {
+    using("htmlrest.toggles");
+    using("htmlrest.rest");
+},
+function(exports, module, toggles, rest){
 
     /**
      * Create a simple ajax lifecyle for the form. This will show a loading screen
@@ -60,5 +62,5 @@ jsns.define("htmlrest.formlifecycle", function (using, exports) {
                 });
         }
     }
-    exports.FormLifecycle = FormLifecycle;
+    module.exports = FormLifecycle;
 });
