@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.escape", function (using) {},
+jsns.define("htmlrest.escape", null,
 function(exports, module){
     /**
      * Escape text to prevent html characters from being output. Helps prevent xss, called automatically

@@ -1,8 +1,8 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.domquery", function (using) {
-    using("htmlrest.typeidentifiers");
-},
+jsns.define("htmlrest.domquery", [
+    "htmlrest.typeidentifiers"
+],
 function(exports, module, typeId){
 
     //Polyfill for matches

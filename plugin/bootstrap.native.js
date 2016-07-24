@@ -1,13 +1,8 @@
 ﻿"use strict";
 
-//jsns.define("bootstrap.native", function (using, exports, module) {
-//    module.exports = {};
-//});
-
-jsns.run(function (using) {
-    using("htmlrest.toggles");
-    //using("bootstrap.native");
-},
+jsns.run([
+    "htmlrest.toggles"
+],
 function(exports, module, toggles){
 
     function ModalToggle(element, next) {

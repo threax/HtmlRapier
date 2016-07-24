@@ -1,11 +1,11 @@
 "use strict";
 
-jsns.define("htmlrest.models", function (using) {
-    using("htmlrest.form");
-    using("htmlrest.textstream");
-    using("htmlrest.components");
-    using("htmlrest.typeidentifiers");
-},
+jsns.define("htmlrest.models", [
+    "htmlrest.form",
+    "htmlrest.textstream",
+    "htmlrest.components",
+    "htmlrest.typeidentifiers"
+],
 function(exports, module, forms, TextStream, components, typeId){
 
     function FormModel(form, src) {

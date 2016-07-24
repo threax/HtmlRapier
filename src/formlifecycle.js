@@ -1,9 +1,9 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.formlifecycle", function (using) {
-    using("htmlrest.toggles");
-    using("htmlrest.rest");
-},
+jsns.define("htmlrest.formlifecycle", [
+    "htmlrest.toggles",
+    "htmlrest.rest"
+],
 function(exports, module, toggles, rest){
 
     /**

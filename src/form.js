@@ -1,8 +1,8 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.form", function (using) {
-    using("htmlrest.domquery");
-},
+jsns.define("htmlrest.form", [
+    "htmlrest.domquery"
+],
 function(exports, module, domQuery){
     /**
      * Serialze a form to a javascript object

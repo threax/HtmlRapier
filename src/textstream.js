@@ -1,8 +1,8 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.textstream", function (using) {
-    using("htmlrest.escape");
-},
+jsns.define("htmlrest.textstream", [
+    "htmlrest.escape"
+],
 function(exports, module, escape){
 
     function TextNode(str) {

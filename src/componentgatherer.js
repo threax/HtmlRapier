@@ -1,10 +1,10 @@
 ﻿//Auto find components on the page and build them as components
-jsns.run(function (using) {
-    using("htmlrest.domquery");
-    using("htmlrest.bindingcollection");
-    using("htmlrest.textstream");
-    using("htmlrest.components");
-},
+jsns.run([
+    "htmlrest.domquery",
+    "htmlrest.bindingcollection",
+    "htmlrest.textstream",
+    "htmlrest.components"
+],
 function (exports, module, domquery, BindingCollection, TextStream, components) {
     //Component creation function
     function createItem(data, componentStringStream, parentComponent, insertBeforeSibling) {

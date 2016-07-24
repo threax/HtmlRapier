@@ -18,7 +18,7 @@
  * 
  * You don't new this just call it e.g. iter(things, function(thing){ return thing + ' changes' });
  */
-jsns.define("htmlrest.iter", function (using, exports) {},
+jsns.define("htmlrest.iter", null,
 function(exports, module){
 
     /**

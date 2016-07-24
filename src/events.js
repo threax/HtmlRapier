@@ -1,6 +1,6 @@
 "use strict";
 
-jsns.define("htmlrest.events", function (using) {},
+jsns.define("htmlrest.events", null,
 function(exports, module){
     var events = {};
 

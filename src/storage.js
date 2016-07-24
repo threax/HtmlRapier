@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.storage", function (using) {},
+jsns.define("htmlrest.storage", null,
 function(exports, module){
     //The instance storage, 
     var instanceStorage = {};

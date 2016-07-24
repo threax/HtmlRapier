@@ -15,14 +15,14 @@
  * @typedef {object} htmlrest_bindingcollection
  */
 
-jsns.define("htmlrest.bindingcollection", function (using) {
-    using("htmlrest.escape");
-    using("htmlrest.typeidentifiers");
-    using("htmlrest.domquery");
-    using("htmlrest.textstream");
-    using("htmlrest.toggles");
-    using("htmlrest.models");
-},
+jsns.define("htmlrest.bindingcollection", [
+    "htmlrest.escape",
+    "htmlrest.typeidentifiers",
+    "htmlrest.domquery",
+    "htmlrest.textstream",
+    "htmlrest.toggles",
+    "htmlrest.models"
+],
 function (exports, module, escape, typeId, domQuery, TextStream, toggles, models) {
     //Startswith polyfill
     if (!String.prototype.startsWith) {

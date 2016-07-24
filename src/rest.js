@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.rest", function (using) {},
+jsns.define("htmlrest.rest", null,
 function(exports, module){
     //Helper function to handle results
     function handleResult(xhr, success, fail) {

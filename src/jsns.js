@@ -14,25 +14,29 @@ var jsns = (function () {
     }
 
     function loadModule(name){
-        return unloaded[name].check();
-        delete unloaded[name];
+        var loaded = unloaded[name].check();
+        if (loaded) {
+            delete unloaded[name];
+        }
+        return loaded;
     }
 
     function Module() {
         this.exports = {};
     }
 
-    function Unloaded(name, depFinder, factory) {
+    function Unloaded(name, depNames, factory) {
         var dependencies = [];
 
-        function tryUsing(name) {
-            var dep = {
-                name: name,
-                loaded: isModuleLoaded(name)
-            };
-            dependencies.push(dep);
+        if (depNames) {
+            for (var i = 0; i < depNames.length; ++i) {
+                var depName = depNames[i];
+                dependencies.push({
+                    name: depName,
+                    loaded: isModuleLoaded(depName)
+                });
+            }
         }
-        depFinder(tryUsing);
 
         function check() {
             var fullyLoaded = true;
