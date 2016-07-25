@@ -23,10 +23,6 @@ function(exports, module, forms, TextStream, components, typeId, domQuery){
         this.getSrc = function () {
             return src;
         }
-
-        this.getConfig = function () {
-            return getConfig(form);
-        };
     }
 
     function ComponentModel(element, src, component) {
@@ -51,10 +47,6 @@ function(exports, module, forms, TextStream, components, typeId, domQuery){
         this.getSrc = function () {
             return src;
         }
-
-        this.getConfig = function () {
-            return getConfig(element);
-        };
     }
 
     function TextNodeModel(element, src) {
@@ -73,24 +65,6 @@ function(exports, module, forms, TextStream, components, typeId, domQuery){
         this.getSrc = function () {
             return src;
         }
-
-        this.getConfig = function () {
-            return getConfig(element);
-        };
-    }
-
-    function getConfig(element) {
-        var data = {};
-        domQuery.iterateNodes(element, NodeFilter.SHOW_ELEMENT, function (node) {
-            //Look for attribute
-            for (var i = 0; i < node.attributes.length; i++) {
-                var attribute = node.attributes[i];
-                if (attribute.name.startsWith('data-hr-config-')) {
-                    data[attribute.name.substr(15)] = attribute.value;
-                }
-            }
-        });
-        return data;
     }
 
     function bindData(data, element, dataTextElements) {
@@ -148,10 +122,6 @@ function(exports, module, forms, TextStream, components, typeId, domQuery){
         }
 
         this.getSrc = function () {
-            return "";
-        }
-
-        this.getConfig = function () {
             return "";
         }
     }

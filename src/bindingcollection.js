@@ -99,6 +99,23 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
         return model;
     }
 
+    function getConfig(elements) {
+        var data = {};
+        for (var eIx = 0; eIx < elements.length; ++eIx) {
+            var element = elements[eIx];
+            domQuery.iterateNodes(element, NodeFilter.SHOW_ELEMENT, function (node) {
+                //Look for attribute
+                for (var i = 0; i < node.attributes.length; i++) {
+                    var attribute = node.attributes[i];
+                    if (attribute.name.startsWith('data-hr-config-')) {
+                        data[attribute.name.substr(15)] = attribute.value;
+                    }
+                }
+            });
+        }
+        return data;
+    }
+
     /**
      * 
      * @param {HtmlElement} elements
@@ -139,6 +156,10 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
                 modelCollection = {};
             }
             return getModel(name, elements, modelCollection);
+        }
+
+        this.getConfig = function () {
+            return getConfig(elements);
         }
     };
 
