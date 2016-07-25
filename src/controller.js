@@ -12,10 +12,10 @@ function (exports, module, BindingCollection, domQuery) {
      * @param {type} name
      * @param {type} controllerConstructor
      */
-    function create(name, controllerConstructor) {
+    function create(name, controllerConstructor, context) {
         domQuery.iterate('[data-hr-controller="' + name + '"]', null, function (element) {
             var bindings = new BindingCollection(element);
-            var controller = new controllerConstructor(bindings);
+            var controller = new controllerConstructor(bindings, context, null);
             bindings.setListener(controller);
             element.removeAttribute('data-hr-controller');
         });
@@ -28,9 +28,9 @@ function (exports, module, BindingCollection, domQuery) {
      * This can be used in the callbacks for setData in model and when creating components.
      * @param {type} controllerConstructor
      */
-    function createOnCallback(controllerConstructor) {
-        return function (bindings) {
-            var controller = new controllerConstructor(bindings);
+    function createOnCallback(controllerConstructor, context) {
+        return function (bindings, data) {
+            var controller = new controllerConstructor(bindings, context, data);
             bindings.setListener(controller);
         }
     }

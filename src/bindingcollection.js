@@ -36,7 +36,7 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
     function bindEvents(elements, listener) {
         for (var eIx = 0; eIx < elements.length; ++eIx) {
             var element = elements[eIx];
-            var iter = document.createNodeIterator(element, NodeFilter.SHOW_ELEMENT, function (node) {
+            domQuery.iterateNodes(element, NodeFilter.SHOW_ELEMENT, function (node) {
                 //Look for attribute
                 for (var i = 0; i < node.attributes.length; i++) {
                     var attribute = node.attributes[i];
@@ -45,8 +45,7 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
                         node.addEventListener(attribute.name.substr(11), runner.execute);
                     }
                 }
-            }, false);
-            while (iter.nextNode()) { } //Have to walk to get results
+            });
         }
     }
 

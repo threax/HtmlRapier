@@ -4,9 +4,10 @@ jsns.define("htmlrest.models", [
     "htmlrest.form",
     "htmlrest.textstream",
     "htmlrest.components",
-    "htmlrest.typeidentifiers"
+    "htmlrest.typeidentifiers",
+    "htmlrest.domquery"
 ],
-function(exports, module, forms, TextStream, components, typeId){
+function(exports, module, forms, TextStream, components, typeId, domQuery){
 
     function FormModel(form, src) {
         this.setData = function (data) {
@@ -22,6 +23,10 @@ function(exports, module, forms, TextStream, components, typeId){
         this.getSrc = function () {
             return src;
         }
+
+        this.getConfig = function () {
+            return getConfig(form);
+        };
     }
 
     function ComponentModel(element, src, component) {
@@ -46,6 +51,10 @@ function(exports, module, forms, TextStream, components, typeId){
         this.getSrc = function () {
             return src;
         }
+
+        this.getConfig = function () {
+            return getConfig(element);
+        };
     }
 
     function TextNodeModel(element, src) {
@@ -64,13 +73,31 @@ function(exports, module, forms, TextStream, components, typeId){
         this.getSrc = function () {
             return src;
         }
+
+        this.getConfig = function () {
+            return getConfig(element);
+        };
+    }
+
+    function getConfig(element) {
+        var data = {};
+        domQuery.iterateNodes(element, NodeFilter.SHOW_ELEMENT, function (node) {
+            //Look for attribute
+            for (var i = 0; i < node.attributes.length; i++) {
+                var attribute = node.attributes[i];
+                if (attribute.name.startsWith('data-hr-config-')) {
+                    data[attribute.name.substr(15)] = attribute.value;
+                }
+            }
+        });
+        return data;
     }
 
     function bindData(data, element, dataTextElements) {
         //No found elements, iterate everything.
         if (dataTextElements === undefined) {
             dataTextElements = [];
-            var iter = document.createNodeIterator(element, NodeFilter.SHOW_TEXT, function (node) {
+            domQuery.iterateNodes(element, NodeFilter.SHOW_TEXT, function (node) {
                 var textStream = new TextStream(node.textContent);
                 if (textStream.foundVariable()) {
                     node.textContent = textStream.format(data);
@@ -79,10 +106,9 @@ function(exports, module, forms, TextStream, components, typeId){
                         stream: textStream
                     });
                 }
-            }, false);
-            while (iter.nextNode()) { } //Have to walk to get results
+            });
         }
-            //Already found the text elements, output those.
+        //Already found the text elements, output those.
         else {
             for (var i = 0; i < dataTextElements.length; ++i) {
                 var node = dataTextElements[i];
@@ -122,6 +148,10 @@ function(exports, module, forms, TextStream, components, typeId){
         }
 
         this.getSrc = function () {
+            return "";
+        }
+
+        this.getConfig = function () {
             return "";
         }
     }

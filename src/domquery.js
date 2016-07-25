@@ -105,6 +105,10 @@ function(exports, module, typeId){
     };
     exports.iterate = iterate;
 
+    function alwaysTrue(node) {
+        return true;
+    }
+
     /**
      * Iterate a node collection using createNodeIterator. There is no query for this version
      * as it iterates everything and allows you to extract what is needed.
@@ -113,7 +117,7 @@ function(exports, module, typeId){
      * @param {NodeFilter} whatToShow - see createNodeIterator, defaults to SHOW_ALL
      */
     function iterateNodes(element, whatToShow, cb) {
-        var iter = document.createNodeIterator(element, whatToShow, null, false);
+        var iter = document.createNodeIterator(element, whatToShow, alwaysTrue, false);
         var node;
         while (node = iter.nextNode()) {
             cb(node);
