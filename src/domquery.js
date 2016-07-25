@@ -4,24 +4,6 @@ jsns.define("htmlrest.domquery", [
     "htmlrest.typeidentifiers"
 ],
 function(exports, module, typeId){
-
-    //Polyfill for matches
-    //https://developer.mozilla.org/en-US/docs/Web/API/Element/matches
-    if (!Element.prototype.matches) {
-        Element.prototype.matches =
-            Element.prototype.matchesSelector ||
-            Element.prototype.mozMatchesSelector ||
-            Element.prototype.msMatchesSelector ||
-            Element.prototype.oMatchesSelector ||
-            Element.prototype.webkitMatchesSelector ||
-            function (s) {
-                var matches = (this.document || this.ownerDocument).querySelectorAll(s),
-                    i = matches.length;
-                while (--i >= 0 && matches.item(i) !== this) { }
-                return i > -1;
-            };
-    }
-
     /**
      * Derive the plain javascript element from a passed element
      * @param {string|HTMLElement} element - the element to detect
@@ -105,11 +87,11 @@ function(exports, module, typeId){
                     cb(context);
                 }
                 else {
-                    iterateNodes(context.querySelectorAll(element), cb);
+                    iterateQuery(context.querySelectorAll(element), cb);
                 }
             }
             else {
-                iterateNodes(document.querySelectorAll(element), cb);
+                iterateQuery(document.querySelectorAll(element), cb);
             }
         }
         else if (!typeId.isArray(element)) {
@@ -122,6 +104,22 @@ function(exports, module, typeId){
         }
     };
     exports.iterate = iterate;
+
+    /**
+     * Iterate a node collection using createNodeIterator. There is no query for this version
+     * as it iterates everything and allows you to extract what is needed.
+     * @param  element - The root element
+     * @param  cb - The function called for each item iterated
+     * @param {NodeFilter} whatToShow - see createNodeIterator, defaults to SHOW_ALL
+     */
+    function iterateNodes(element, whatToShow, cb) {
+        var iter = document.createNodeIterator(element, whatToShow, null, false);
+        var node;
+        while (node = iter.nextNode()) {
+            cb(node);
+        }
+    }
+    exports.iterateNodes = iterateNodes;
 
     /**
      * Determine if an element matches the given selector.
@@ -140,7 +138,7 @@ function(exports, module, typeId){
         }
     }
 
-    function iterateNodes(nodes, cb) {
+    function iterateQuery(nodes, cb) {
         for (var i = 0; i < nodes.length; ++i) {
             cb(nodes[i]);
         }

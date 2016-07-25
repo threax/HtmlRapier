@@ -24,14 +24,6 @@ jsns.define("htmlrest.bindingcollection", [
     "htmlrest.models"
 ],
 function (exports, module, escape, typeId, domQuery, TextStream, toggles, models) {
-    //Startswith polyfill
-    if (!String.prototype.startsWith) {
-        String.prototype.startsWith = function (searchString, position) {
-            position = position || 0;
-            return this.substr(position, searchString.length) === searchString;
-        };
-    }
-
     function EventRunner(name, listener) {
         this.execute = function (evt) {
             var cb = listener[name];
