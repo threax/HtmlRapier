@@ -22,4 +22,18 @@ function (exports, module, BindingCollection, domQuery) {
     }
 
     exports.create = create;
+
+    /**
+     * This function will return a function that will create a controller when called with a BindingCollection inside.
+     * This can be used in the callbacks for setData in model and when creating components.
+     * @param {type} controllerConstructor
+     */
+    function createOnCallback(controllerConstructor) {
+        return function (bindings) {
+            var controller = new controllerConstructor(bindings);
+            bindings.setListener(controller);
+        }
+    }
+
+    exports.createOnCallback = createOnCallback;
 });
