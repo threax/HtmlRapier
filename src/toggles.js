@@ -32,6 +32,7 @@ function(exports, module, typeId){
             }
         }
     }
+    exports.NullToggle = NullToggle;
 
     /**
      * A toggler that toggles style for an element
