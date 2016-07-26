@@ -19,8 +19,7 @@ function(exports, module, typeId, domquery){
     /**
      * Create a new component specified by name with the data in data attached to parentComponent. You can also
      * get a callback whenever a component is created by passing a createdCallback.
-     * @param {string} name - The name of the component to create. These are specified on the page with a data-hr-component
-     * attribute or can be manually specified.
+     * @param {string} name - The name of the component to create.
      * @param {object} data - The data to bind to the component.
      * @param {HTMLElement} parentComponent - The html element to attach the component to.
      * @param {exports.createComponent~callback} createdCallback - The callback called when the component is created.
@@ -52,7 +51,7 @@ function(exports, module, typeId, domquery){
 
     /**
      * Create a component for each element in data using that element as the data for the component.
-     * @param {string} name - The name of the component to create. These are specified on the page with a data-hr-component
+     * @param {string} name - The name of the component to create.
      * @param {HTMLElement} parentComponent - The html element to attach the component to.
      * @param {array|object|function} data - The data to repeat and bind, must be an array, object or function so it can be iterated.
      * If it is a function return the data and then return null to stop iteration.

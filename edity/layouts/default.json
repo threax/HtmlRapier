@@ -1,8 +1,0 @@
-﻿{
-  "$schema": "https://raw.githubusercontent.com/threax/EdityMcEditface/master/SchemaGenerator/Schema/PageDefinition.json",
-  "linkedContent": [ "jQuery", "bootstrap", "htmlrest", "edityLoading", "PageSearch", "Helpful", "SearchController", "TreeMenu" ],
-  "vars": {
-    "pageSearchUrl": "http://localhost:54952/api/mycourses-support/query",
-    "helpfulUrl": "http://localhost:50909/api/mycourses-support"
-  }
-}

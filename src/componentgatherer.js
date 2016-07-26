@@ -26,36 +26,7 @@ function (exports, module, domquery, BindingCollection, TextStream, components) 
         return new BindingCollection(arrayedItems);
     }
 
-    function findComponentElements(context) {
-        var attrName = "data-hr-component";
-        var componentElements = domquery.all('[' + attrName + ']', context);
-        //Read components backward, removing children from parents along the way.
-        for (var i = componentElements.length - 1; i >= 0; --i) {
-            (function () {
-                var element = componentElements[i];
-                var componentName = element.getAttribute(attrName);
-                element.removeAttribute(attrName);
-                var componentString = element.outerHTML;
-                element.parentNode.removeChild(element);
-
-                components.register(componentName, function (data, parentComponent, insertBeforeSibling) {
-                    //First creation does more work with this function, then reregisters a simplified version
-                    //Tokenize string
-                    var tokenizedString = new TextStream(componentString);
-                    //Register component again
-                    components.register(componentName, function (data, parentComponent, insertBeforeSibling) {
-                        //Return results, this is called for each subsequent creation
-                        return createItem(data, tokenizedString, parentComponent, insertBeforeSibling);
-                    });
-                    //Return results
-                    return createItem(data, tokenizedString, parentComponent, insertBeforeSibling);
-                });
-            })();
-        };
-    }
-    findComponentElements();
-
-    //Also grab the templates from the page and use them too
+    //Extract templates off the page
     function extractTemplate(element) {
         var componentName = element.getAttribute("id");
 
