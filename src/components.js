@@ -65,24 +65,28 @@ function(exports, module, typeId, domquery){
             insertBefore = insertBefore.nextElementSibling;
         }
 
+        var fragmentParent = document.createDocumentFragment();
+
         //Output
         if (Array.isArray(data)) {
             for (var i = 0; i < data.length; ++i) {
-                doCreateComponent(name, data[i], parentComponent, insertBefore, createdCallback);
+                doCreateComponent(name, data[i], fragmentParent, null, createdCallback);
             }
         }
         else if (typeId.isFunction(data)) {
             var current = data();
             while (current != null) {
-                doCreateComponent(name, current, parentComponent, insertBefore, createdCallback);
+                doCreateComponent(name, current, fragmentParent, null, createdCallback);
                 current = data();
             }
         }
         else if (typeId.isObject(data)) {
             for (var key in data) {
-                doCreateComponent(name, data[key], parentComponent, insertBefore, createdCallback);
+                doCreateComponent(name, data[key], fragmentParent, null, createdCallback);
             }
         }
+
+        parentComponent.insertBefore(fragmentParent, insertBefore);
     }
     exports.repeat = repeat;
 
