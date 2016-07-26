@@ -116,5 +116,8 @@ function(exports, module, typeId, domquery){
             }
             return created;
         }
+        else {
+            console.log("Failed to create component '" + name + "', cannot find factory, did you forget to define it on the page?")
+        }
     }
 });

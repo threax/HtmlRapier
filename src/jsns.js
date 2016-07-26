@@ -93,6 +93,24 @@ var jsns = (function () {
         define: function (name, dependencies, factory) {
             unloaded[name] = new Library(name, dependencies, factory);
             loadRunners();
+        },
+
+        debug: function () {
+            if (runners.length > 0) {
+                for (var i = 0; i < runners.length; ++i) {
+                    var runner = runners[i];
+                    console.log("Runner waiting " + runner);
+                    for (var j = 0; j < runner.dependencies.length; ++j) {
+                        var dependency = runner.dependencies[j];
+                        if (!isModuleLoaded(dependency.name)) {
+                            console.log("  dependency " + dependency.name);
+                        }
+                    }
+                }
+            }
+            else {
+                console.log("No runners remaining.");
+            }
         }
     }
 })();

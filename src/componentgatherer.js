@@ -1,4 +1,6 @@
-﻿//Auto find components on the page and build them as components
+﻿"use strict";
+
+//Auto find components on the page and build them as components
 jsns.run([
     "htmlrest.domquery",
     "htmlrest.bindingcollection",
@@ -6,6 +8,9 @@ jsns.run([
     "htmlrest.components"
 ],
 function (exports, module, domquery, BindingCollection, TextStream, components) {
+    var browserSupportsTemplates = 'content' in document.createElement('template');
+    var anonTemplateIndex = 0;
+
     //Component creation function
     function createItem(data, componentStringStream, parentComponent, insertBeforeSibling) {
         var itemMarkup = componentStringStream.format(data);
@@ -21,54 +26,79 @@ function (exports, module, domquery, BindingCollection, TextStream, components) 
         return new BindingCollection(arrayedItems);
     }
 
-    var attrName = "data-hr-component";
-    var componentElements = domquery.all('[' + attrName + ']');
-    //Read components backward, removing children from parents along the way.
-    for (var i = componentElements.length - 1; i >= 0; --i) {
-        (function () {
-            var element = componentElements[i];
-            var componentName = element.getAttribute(attrName);
-            element.removeAttribute(attrName);
-            var componentString = element.outerHTML;
-            element.parentNode.removeChild(element);
+    function findComponentElements(context) {
+        var attrName = "data-hr-component";
+        var componentElements = domquery.all('[' + attrName + ']', context);
+        //Read components backward, removing children from parents along the way.
+        for (var i = componentElements.length - 1; i >= 0; --i) {
+            (function () {
+                var element = componentElements[i];
+                var componentName = element.getAttribute(attrName);
+                element.removeAttribute(attrName);
+                var componentString = element.outerHTML;
+                element.parentNode.removeChild(element);
 
-            components.register(componentName, function (data, parentComponent, insertBeforeSibling) {
-                //First creation does more work with this function, then reregisters a simplified version
-                //Tokenize string
-                var tokenizedString = new TextStream(componentString);
-                //Register component again
                 components.register(componentName, function (data, parentComponent, insertBeforeSibling) {
-                    //Return results, this is called for each subsequent creation
+                    //First creation does more work with this function, then reregisters a simplified version
+                    //Tokenize string
+                    var tokenizedString = new TextStream(componentString);
+                    //Register component again
+                    components.register(componentName, function (data, parentComponent, insertBeforeSibling) {
+                        //Return results, this is called for each subsequent creation
+                        return createItem(data, tokenizedString, parentComponent, insertBeforeSibling);
+                    });
+                    //Return results
                     return createItem(data, tokenizedString, parentComponent, insertBeforeSibling);
                 });
-                //Return results
-                return createItem(data, tokenizedString, parentComponent, insertBeforeSibling);
-            });
-        })();
-    };
+            })();
+        };
+    }
+    findComponentElements();
 
     //Also grab the templates from the page and use them too
-    var templateElements = document.getElementsByTagName("TEMPLATE");
-    while (templateElements.length > 0) {
-        (function () {
-            var element = templateElements[0];
-            var componentName = element.getAttribute("id");
-            var componentString = element.innerHTML.trim();
-            element.parentNode.removeChild(element);
+    function extractTemplate(element) {
+        var componentName = element.getAttribute("id");
 
+        //Check to see if this is an anonymous template, if so adjust the parent element and
+        //name the template
+        if (componentName === null) {
+            componentName = 'AnonTemplate_' + anonTemplateIndex++;
+            element.parentElement.setAttribute("data-hr-model-component", componentName);
+        }
+
+        //If the browser supports templates, need to create one to read it properly
+        var templateElement = element;
+        if (browserSupportsTemplates) {
+            var templateElement = document.createElement('div');
+            templateElement.appendChild(document.importNode(element.content, true));
+        }
+
+        //Look for nested child templates, do this before taking inner html so children are removed
+        var childTemplates = templateElement.getElementsByTagName("TEMPLATE");
+        while (childTemplates.length > 0) {
+            extractTemplate(childTemplates[0]);
+        }
+
+        var componentString = templateElement.innerHTML.trim();
+        element.parentNode.removeChild(element);
+
+        components.register(componentName, function (data, parentComponent, insertBeforeSibling) {
+            //First creation does more work with this function, then reregisters a simplified version
+            //Tokenize string
+            var tokenizedString = new TextStream(componentString);
+            //Register component again
             components.register(componentName, function (data, parentComponent, insertBeforeSibling) {
-                //First creation does more work with this function, then reregisters a simplified version
-                //Tokenize string
-                var tokenizedString = new TextStream(componentString);
-                //Register component again
-                components.register(componentName, function (data, parentComponent, insertBeforeSibling) {
-                    //Return results, this is called for each subsequent creation
-                    return createItem(data, tokenizedString, parentComponent, insertBeforeSibling);
-                });
-                //Return results
+                //Return results, this is called for each subsequent creation
                 return createItem(data, tokenizedString, parentComponent, insertBeforeSibling);
             });
-        })();
+            //Return results
+            return createItem(data, tokenizedString, parentComponent, insertBeforeSibling);
+        });
+    }
+
+    var templateElements = document.getElementsByTagName("TEMPLATE");
+    while (templateElements.length > 0) {
+        extractTemplate(templateElements[0]);
     }
 
     //Actual creation function
