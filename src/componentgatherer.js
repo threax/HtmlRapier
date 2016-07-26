@@ -28,7 +28,7 @@ function (exports, module, domquery, BindingCollection, TextStream, components) 
 
     //Extract templates off the page
     function extractTemplate(element) {
-        var componentName = element.getAttribute("id");
+        var componentName = element.getAttribute("data-hr-component");
 
         //Check to see if this is an anonymous template, if so adjust the parent element and
         //name the template
