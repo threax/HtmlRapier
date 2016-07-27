@@ -1,39 +1,57 @@
 ﻿"use strict";
 
 jsns.define("htmlrest.textstream", [
-    "htmlrest.escape"
+    "htmlrest.escape",
+    "htmlrest.typeidentifiers"
 ],
-function(exports, module, escape){
+function(exports, module, escape, typeId){
 
     function TextNode(str) {
-        this.write = function (data) {
+        this.writeObject = function (data) {
             return str;
         }
+
+        this.writeFunction = this.writeObject;
     }
 
     function VariableNode(variable) {
-        this.write = function (data) {
-            if (data) {
-                return escape(data[variable]);
-            }
-            return "";
+        this.writeObject = function (data) {
+            return escape(data[variable]);
+        }
+
+        this.writeFunction = function(data){
+            return escape(data(variable));
         }
     }
 
     function ThisVariableNode() {
-        this.write = function (data) {
-            if (data) {
-                return escape(data);
-            }
-            return "";
+        this.writeObject = function (data) {
+            return escape(data);
+        }
+
+        this.writeFunction = function (data) {
+            return escape(data('this'));
         }
     }
 
     function format(data, streamNodes) {
-        var text = "";
-        for (var i = 0; i < streamNodes.length; ++i) {
-            text += streamNodes[i].write(data);
+        if (data === null || data === undefined) {
+            data = {};
         }
+
+        var text = "";
+
+        if (typeId.isFunction(data)) {
+            for (var i = 0; i < streamNodes.length; ++i) {
+                text += streamNodes[i].writeFunction(data);
+            }
+        }
+        else {
+            for (var i = 0; i < streamNodes.length; ++i) {
+                text += streamNodes[i].writeObject(data);
+            }
+        }
+
         return text;
     }
 
