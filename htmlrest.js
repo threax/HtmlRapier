@@ -1627,7 +1627,7 @@ function(exports, module, typeId){
      * @returns {type} - True if toggle is a NullToggle
      */
     function isNullToggle(toggle) {
-        return typeId.isObject(toggle) && typeId.constructor.prototype == NullToggle.prototype;
+        return typeId.isObject(toggle) && toggle.constructor.prototype == NullToggle.prototype;
     }
     exports.isNullToggle = isNullToggle;
 });
@@ -1678,7 +1678,7 @@ function(exports, module){
      * @returns {boolean} - True if an object, false if not
      */
     function isObject(test) {
-        return typeof data === 'object';
+        return typeof test === 'object';
     }
     exports.isObject = isObject;
 });

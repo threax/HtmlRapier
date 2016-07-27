@@ -45,7 +45,7 @@ function(exports, module){
      * @returns {boolean} - True if an object, false if not
      */
     function isObject(test) {
-        return typeof data === 'object';
+        return typeof test === 'object';
     }
     exports.isObject = isObject;
 });
