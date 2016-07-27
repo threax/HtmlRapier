@@ -360,6 +360,19 @@ function (exports, module, domquery, BindingCollection, TextStream, components) 
         }
 
         var componentString = templateElement.innerHTML.trim();
+
+        //Special case for tables in ie, cannot create templates without a surrounding table element, this will eliminate that unless requested otherwise
+        if (templateElement.childElementCount === 1 && templateElement.firstElementChild.tagName === 'TABLE' && !element.hasAttribute('data-hr-keep-table'))
+        {
+            var tableElement = templateElement.firstElementChild;
+            if (tableElement.childElementCount > 0 && tableElement.firstElementChild.tagName === 'TBODY') {
+                componentString = tableElement.firstElementChild.innerHTML.trim();
+            }
+            else {
+                componentString = tableElement.innerHTML.trim();
+            }
+        }
+
         element.parentNode.removeChild(element);
 
         components.register(componentName, function (data, parentComponent, insertBeforeSibling) {
