@@ -41,8 +41,11 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
                 for (var i = 0; i < node.attributes.length; i++) {
                     var attribute = node.attributes[i];
                     if (attribute.name.startsWith('data-hr-on-')) {
-                        var runner = new EventRunner(attribute.value, listener);
-                        node.addEventListener(attribute.name.substr(11), runner.execute);
+                        var eventFunc = attribute.value;
+                        if (listener[eventFunc]) {
+                            var runner = new EventRunner(eventFunc, listener);
+                            node.addEventListener(attribute.name.substr(11), runner.execute);
+                        }
                     }
                 }
             });

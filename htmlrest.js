@@ -183,8 +183,11 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
                 for (var i = 0; i < node.attributes.length; i++) {
                     var attribute = node.attributes[i];
                     if (attribute.name.startsWith('data-hr-on-')) {
-                        var runner = new EventRunner(attribute.value, listener);
-                        node.addEventListener(attribute.name.substr(11), runner.execute);
+                        var eventFunc = attribute.value;
+                        if (listener[eventFunc]) {
+                            var runner = new EventRunner(eventFunc, listener);
+                            node.addEventListener(attribute.name.substr(11), runner.execute);
+                        }
                     }
                 }
             });
@@ -801,6 +804,44 @@ function(exports, module){
         status.output += text.substring(status.textStart, status.bracketStart) + replacement;
         status.textStart = i + 1;
     }
+});
+"use strict";
+
+jsns.define("htmlrest.eventhandler", null,
+function (exports, module) {
+    function EventHandler() {
+        var handlers = [];
+
+        function add(context, handler) {
+            handlers.push({
+                handler: handler,
+                context: context
+            });
+        }
+
+        function remove(context, handler) {
+            for (var i = 0; i < handlers.length; ++i) {
+                if (handlers[i].handler === handler && handlers[i].context === context) {
+                    handlers.splice(i--, 1);
+                }
+            }
+        }
+
+        this.modifier = {
+            add: add,
+            remove: remove
+        }
+
+        function fire() {
+            for (var i = 0; i < handlers.length; ++i) {
+                var handlerObj = handlers[i];
+                handlerObj.handler.apply(handlerObj.context, arguments);
+            }
+        }
+        this.fire = fire;
+    }
+
+    module.exports = EventHandler;
 });
 "use strict";
 
