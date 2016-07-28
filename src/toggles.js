@@ -61,7 +61,6 @@ function(exports, module, typeId){
         }
         this.applyState = applyState;
     }
-    exports.NullToggle = NullToggle;
 
     /**
      * A toggler that toggles style for an element
@@ -203,12 +202,14 @@ function(exports, module, typeId){
         }
         var toggle = null;
 
-        toggle = extractStates(element, states, 'data-hr-style-', StyleToggle, toggle);
-        toggle = extractStates(element, states, 'data-hr-class-', ClassToggle, toggle);
+        if (element !== null) {
+            toggle = extractStates(element, states, 'data-hr-style-', StyleToggle, toggle);
+            toggle = extractStates(element, states, 'data-hr-class-', ClassToggle, toggle);
 
-        //Now toggle plugin chain
-        for (var i = 0; i < togglePlugins.length; ++i) {
-            toggle = togglePlugins[i](element, states, toggle);
+            //Now toggle plugin chain
+            for (var i = 0; i < togglePlugins.length; ++i) {
+                toggle = togglePlugins[i](element, states, toggle);
+            }
         }
 
         //If we get all the way here with no toggle, use the null toggle.

@@ -49,7 +49,7 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
         }
     }
 
-    function getToggle(name, elements, toggleCollection) {
+    function getToggle(name, elements, states, toggleCollection) {
         var toggle = toggleCollection[name];
         if (toggle === undefined) {
             var query = '[data-hr-toggle=' + name + ']';
@@ -57,7 +57,7 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
                 var element = elements[eIx];
                 var toggleElement = domQuery.first(query, element);
                 if (toggleElement) {
-                    toggle = toggles.build(toggleElement);
+                    toggle = toggles.build(toggleElement, states);
                     toggleCollection[name] = toggle;
                     return toggle; //Found it, need to break element loop, done here if found
                 }
@@ -68,7 +68,7 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
         }
 
         if (toggle === null) {
-            toggle = new toggles.NullToggle();
+            toggle = toggles.build(null, states);
         }
 
         return toggle;
@@ -144,11 +144,11 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
             dataTextElements = bindData(data, elements, dataTextElements);
         }
 
-        this.getToggle = function (name) {
+        this.getToggle = function (name, states) {
             if (toggleCollection === undefined) {
                 toggleCollection = {};
             }
-            return getToggle(name, elements, toggleCollection);
+            return getToggle(name, elements, states, toggleCollection);
         }
 
         this.getModel = function (name) {
