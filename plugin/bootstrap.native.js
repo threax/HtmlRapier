@@ -8,19 +8,22 @@ function(exports, module, toggles){
     function ModalToggle(element, next) {
         var modal = new Modal(element);
 
-        this.on = function () {
+        function on() {
             modal.open();
-            if (next) {
-                next.on();
-            }
+            return next;
         }
+        this.on = on;
 
-        this.off = function () {
+        function off() {
             modal.close();
-            if (next) {
-                next.off();
-            }
+            return next;
         }
+        this.off = off;
+
+        function applyState(style) {
+            return next;
+        }
+        this.applyState = applyState;
     }
 
     toggles.addTogglePlugin(function (element, toggle) {

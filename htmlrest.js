@@ -1490,72 +1490,78 @@ function(exports, module, typeId){
     }
     exports.addTogglePlugin = addTogglePlugin;
 
+    function safeApplyState(toggle, name) {
+        if (toggle) {
+            var func = toggle[name];
+            if (func) {
+                func();
+            }
+            else {
+                var next = toggle.applyState(null);
+                safeApplyState(next, name);
+            }
+        }
+    }
+
+    function ToggleState(name, value, toggle) {
+        function activate() {
+            var next = toggle.applyState(value);
+            safeApplyState(next, name);
+        }
+
+        return activate;
+    }
+
+    function addState(toggle, name, value) {
+        toggle[name] = ToggleState(name, value, toggle);
+    }
+
     /**
      * A simple toggler that does nothing. Used to shim correctly if no toggles are defined for a toggle element.
      */
     function NullToggle(next) {
-        this.on = function () {
-            if (next) {
-                next.on();
-            }
+        function applyState(value) {
+            return next;
         }
-
-        this.off = function () {
-            if (next) {
-                next.off();
-            }
-        }
+        this.applyState = applyState;
     }
     exports.NullToggle = NullToggle;
 
     /**
      * A toggler that toggles style for an element
      */
-    function StyleToggle(element, onStyle, offStyle, next) {
-        onStyle = onStyle || "";
-        offStyle = offStyle || "";
-
+    function StyleToggle(element, next) {
         var originalStyles = element.style.cssText || "";
 
-        this.on = function () {
-            element.style.cssText = originalStyles + onStyle;
-            if (next) {
-                next.on();
+        function applyState(style) {
+            if (style) {
+                element.style.cssText = originalStyles + style;
             }
-        }
-
-        this.off = function () {
-            element.style.cssText = originalStyles + offStyle;
-            if (next) {
-                next.off();
+            else {
+                element.style.cssText = originalStyles;
             }
+            return next;
         }
+        this.applyState = applyState;
     }
 
     /**
-     * A toggler that toggles classes for an element
-     */
-    function ClassToggle(element, onClass, offClass, idleClass, next) {
-        onClass = onClass || "";
-        offClass = offClass || "";
-
+    * A toggler that toggles classes for an element
+    */
+    function ClassToggle(element, idleClass, next) {
         var originalClasses = element.getAttribute("class") || "";
 
-        this.on = function () {
-            element.setAttribute("class", originalClasses + ' ' + onClass);
-            startAnimation();
-            if (next) {
-                next.on();
+        function applyState(classes) {
+            if (classes) {
+                element.setAttribute("class", originalClasses + ' ' + classes);
             }
-        }
-
-        this.off = function () {
-            element.setAttribute("class", originalClasses + ' ' + offClass);
-            startAnimation();
-            if (next) {
-                next.off();
+            else {
+                element.setAttribute("class", originalClasses);
             }
+            startAnimation();
+            return next;
         }
+        this.applyState = applyState;
 
         function startAnimation() {
             if (idleClass) {
@@ -1577,16 +1583,26 @@ function(exports, module, typeId){
     function Group() {
         var toggles = arguments;
 
-        this.add = function (toggle) {
+        function add(toggle) {
             toggles.push(toggle);
         }
+        this.add = add;
 
-        this.show = function (toggle) {
-            for (var i = 0; i < toggles.length; ++i) {
-                toggles[i].off();
+        function show(toggle, showState, hideState) {
+            if (showState === undefined) {
+                showState = 'on';
             }
-            toggle.on();
+
+            if (hideState === undefined) {
+                hideState = 'off';
+            }
+
+            for (var i = 0; i < toggles.length; ++i) {
+                safeApplyState(toggles[i], hideState);
+            }
+            safeApplyState(toggle, showState);
         }
+        this.show = show;
     }
     exports.Group = Group;
 
@@ -1600,11 +1616,15 @@ function(exports, module, typeId){
         var toggle = null;
 
         if (onStyle || offStyle) {
-            toggle = new StyleToggle(element, onStyle, offStyle, toggle);
+            toggle = new StyleToggle(element, toggle);
+            addState(toggle, "on", onStyle);
+            addState(toggle, "off", offStyle);
         }
 
         if (onClass || offClass) {
-            toggle = new ClassToggle(element, onClass, offClass, idleClass, toggle);
+            toggle = new ClassToggle(element, idleClass, toggle);
+            addState(toggle, "on", onClass);
+            addState(toggle, "off", offClass);
         }
 
         //Now toggle plugin chain
@@ -1694,19 +1714,22 @@ function(exports, module, toggles){
     function ModalToggle(element, next) {
         var modal = new Modal(element);
 
-        this.on = function () {
+        function on() {
             modal.open();
-            if (next) {
-                next.on();
-            }
+            return next;
         }
+        this.on = on;
 
-        this.off = function () {
+        function off() {
             modal.close();
-            if (next) {
-                next.off();
-            }
+            return next;
         }
+        this.off = off;
+
+        function applyState(style) {
+            return next;
+        }
+        this.applyState = applyState;
     }
 
     toggles.addTogglePlugin(function (element, toggle) {
