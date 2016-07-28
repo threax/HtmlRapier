@@ -26,7 +26,7 @@ function(exports, module, toggles){
         this.applyState = applyState;
     }
 
-    toggles.addTogglePlugin(function (element, toggle) {
+    toggles.addTogglePlugin(function (element, states, toggle) {
         if (element.classList.contains('modal')) {
             toggle = new ModalToggle(element, toggle);
         }
