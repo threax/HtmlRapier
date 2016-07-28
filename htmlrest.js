@@ -1596,7 +1596,11 @@ function(exports, module, typeId){
      * The Group defines a collection of toggles that can be manipulated together.
      */
     function Group() {
-        var toggles = arguments;
+        var toggles = [];
+
+        for (var i = 0; i < arguments.length; ++i) {
+            toggles.push(arguments[i]);
+        }
 
         /**
          * Add a toggle to the group.
@@ -1608,7 +1612,7 @@ function(exports, module, typeId){
         this.add = add;
 
         /**
-         * This function will set all toggles in the group (including the passed one if its in the grouip) 
+         * This function will set all toggles in the group (including the passed one if its in the group) 
          * to the hideState and then will set the passed toggle to showState.
          * @param toggle - The toggle to set.
          * @param {string} [showState] - The state to set the passed toggle to.
