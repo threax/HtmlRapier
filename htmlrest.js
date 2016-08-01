@@ -1850,6 +1850,8 @@ function(exports, module, toggles){
         return toggle;
     });
 });
+"use strict";
+
 jsns.define("htmlrest.widgets.navmenu", [
     "htmlrest.eventhandler",
     "htmlrest.controller"
@@ -1867,10 +1869,11 @@ function (exports, module, EventHandler, controller) {
             if (controllerConstructor !== undefined) {
                 controllerConstructor = controller.createOnCallback(controllerConstructor);
             }
-            menuItems.push({
+            var item = {
                 name: name,
                 created: controllerConstructor
-            });
+            };
+            menuItems.push(item);
             itemAdded.fire(item);
         }
         this.add = add;
