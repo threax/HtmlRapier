@@ -540,7 +540,7 @@ function(exports, module, typeId, domquery){
         //Walk the nodes and remove any non keepers
         while (currentNode != null) {
             nextNode = currentNode.nextSibling;
-            if (currentNode.nodeType !== 1 || !currentNode.hasAttribute('data-htmlrest-keep')) {
+            if (currentNode.nodeType !== 1 || !currentNode.hasAttribute('data-hr-keep')) {
                 parentComponent.removeChild(currentNode);
             }
             currentNode = nextNode;
