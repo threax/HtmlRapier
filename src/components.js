@@ -6,7 +6,7 @@ jsns.define("htmlrest.components", [
     "htmlrest.typeidentifiers",
     "htmlrest.domquery"
 ],
-function(exports, module, typeId, domquery){
+function (exports, module, typeId, domquery) {
     var factory = {};
 
     /**
@@ -17,19 +17,11 @@ function(exports, module, typeId, domquery){
      */
 
     /**
-     * Create a new component specified by name with the data in data attached to parentComponent. You can also
-     * get a callback whenever a component is created by passing a createdCallback.
-     * @param {string} name - The name of the component to create.
-     * @param {object} data - The data to bind to the component.
-     * @param {HTMLElement} parentComponent - The html element to attach the component to.
-     * @param {exports.createComponent~callback} createdCallback - The callback called when the component is created.
-     * @param {HTMLElement} insertBeforeSibling - The sibling to insert the new component before.
-     * @returns {exports.component.BindingCollection} 
+     * This callback is called when a component is about to be created and we want its variant.
+     * @callback exports.createComponent~callback
+     * @param {object} data - The data to identify a variant for.
+     * @return {string} the name of the variant to use or null to use the original.
      */
-    function single(name, parentComponent, data, createdCallback) {
-        return doCreateComponent(name, data, parentComponent, null, createdCallback);
-    }
-    exports.single = single;
 
     /**
      * This callback is used to create components when they are requested.
@@ -50,17 +42,46 @@ function(exports, module, typeId, domquery){
     exports.register = register;
 
     /**
+     * Get the default vaule if variant is undefined.
+     * @returns variant default value (null)
+     */
+    function getDefaultVariant() {
+        return null;
+    }
+
+    /**
+     * Create a new component specified by name with the data in data attached to parentComponent. You can also
+     * get a callback whenever a component is created by passing a createdCallback.
+     * @param {string} name - The name of the component to create.
+     * @param {object} data - The data to bind to the component.
+     * @param {HTMLElement} parentComponent - The html element to attach the component to.
+     * @param {exports.createComponent~callback} createdCallback - The callback called when the component is created.
+     * @returns {exports.component.BindingCollection} 
+     */
+    function single(name, parentComponent, data, createdCallback, variant) {
+        if (variant === undefined) {
+            variant = getDefaultVariant();
+        }
+        return doCreateComponent(name, data, parentComponent, null, variant, createdCallback);
+    }
+    exports.single = single;
+
+    /**
      * Create a component for each element in data using that element as the data for the component.
      * @param {string} name - The name of the component to create.
      * @param {HTMLElement} parentComponent - The html element to attach the component to.
-     * @param {array|object|function} data - The data to repeat and bind, must be an array, object or function so it can be iterated.
+     * @param {array|function} data - The data to repeat and bind, must be an array or function so it can be iterated.
      * If it is a function return the data and then return null to stop iteration.
      * @param {exports.createComponent~callback} createdCallback
      */
-    function repeat(name, parentComponent, data, createdCallback) {
+    function repeat(name, parentComponent, data, createdCallback, variantFinderCallback) {
+        if (variantFinderCallback === undefined) {
+            variantFinderCallback = getDefaultVariant;
+        }
         //Look for an insertion point
         var insertBefore = null;
         var insertBefore = parentComponent.firstElementChild;
+        var variant;
         while (insertBefore != null && !insertBefore.hasAttribute('data-hr-insert')) {
             insertBefore = insertBefore.nextElementSibling;
         }
@@ -70,19 +91,17 @@ function(exports, module, typeId, domquery){
         //Output
         if (Array.isArray(data)) {
             for (var i = 0; i < data.length; ++i) {
-                doCreateComponent(name, data[i], fragmentParent, null, createdCallback);
+                variant = variantFinderCallback(data[i]);
+                doCreateComponent(name, data[i], fragmentParent, null, variant, createdCallback);
             }
         }
         else if (typeId.isFunction(data)) {
             var current = data();
+            variant = variantFinderCallback(current);
             while (current != null) {
-                doCreateComponent(name, current, fragmentParent, null, createdCallback);
+                doCreateComponent(name, current, fragmentParent, null, variant, createdCallback);
                 current = data();
-            }
-        }
-        else if (typeId.isObject(data)) {
-            for (var key in data) {
-                doCreateComponent(name, data[key], fragmentParent, null, createdCallback);
+                variant = variantFinderCallback(current);
             }
         }
 
@@ -110,11 +129,11 @@ function(exports, module, typeId, domquery){
     }
     exports.empty = empty;
 
-    function doCreateComponent(name, data, parentComponent, insertBeforeSibling, createdCallback) {
+    function doCreateComponent(name, data, parentComponent, insertBeforeSibling, variant, createdCallback) {
         parentComponent = domquery.first(parentComponent);
         if (factory.hasOwnProperty(name)) {
-            var created = factory[name](data, parentComponent, insertBeforeSibling);
-            if (createdCallback !== undefined) {
+            var created = factory[name](data, parentComponent, insertBeforeSibling, variant);
+            if (createdCallback !== undefined && createdCallback !== null) {
                 createdCallback(created, data);
             }
             return created;

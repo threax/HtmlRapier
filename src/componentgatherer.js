@@ -28,11 +28,11 @@ function (exports, module, domquery, BindingCollection, TextStream, components) 
 
     function VariantBuilder(componentString) {
         var tokenizedString;
-        var currentCreateFunc = tokenize;
+        var currentBuildFunc = tokenize;
 
         function tokenize(data, parentComponent, insertBeforeSibling) {
             tokenizedString = new TextStream(componentString);
-            currentCreateFunc = build;
+            currentBuildFunc = build;
             return build(data, parentComponent, insertBeforeSibling);
         }
 
@@ -41,7 +41,7 @@ function (exports, module, domquery, BindingCollection, TextStream, components) 
         }
 
         function create(data, parentComponent, insertBeforeSibling) {
-            return currentCreateFunc(data, parentComponent, insertBeforeSibling);
+            return currentBuildFunc(data, parentComponent, insertBeforeSibling);
         }
         this.create = create;
     }
@@ -49,11 +49,11 @@ function (exports, module, domquery, BindingCollection, TextStream, components) 
     function ComponentBuilder(componentString) {
         var variants = {};
         var tokenizedString;
-        var currentCreateFunc = tokenize;
+        var currentBuildFunc = tokenize;
 
         function tokenize(data, parentComponent, insertBeforeSibling) {
             tokenizedString = new TextStream(componentString);
-            currentCreateFunc = build;
+            currentBuildFunc = build;
             return build(data, parentComponent, insertBeforeSibling);
         }
 
@@ -61,8 +61,11 @@ function (exports, module, domquery, BindingCollection, TextStream, components) 
             return createItem(data, tokenizedString, parentComponent, insertBeforeSibling);
         }
 
-        function create(data, parentComponent, insertBeforeSibling) {
-            return currentCreateFunc(data, parentComponent, insertBeforeSibling);
+        function create(data, parentComponent, insertBeforeSibling, variant) {
+            if (variant !== null && variants.hasOwnProperty(variant)) {
+                return variants[variant].create(data, parentComponent, insertBeforeSibling);
+            }
+            return currentBuildFunc(data, parentComponent, insertBeforeSibling);
         }
         this.create = create;
 

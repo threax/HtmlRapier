@@ -26,17 +26,17 @@ function(exports, module, forms, TextStream, components, typeId, domQuery){
     }
 
     function ComponentModel(element, src, component) {
-        this.setData = function (data, createdCallback) {
+        this.setData = function (data, createdCallback, variantFinderCallback) {
             components.empty(element);
-            this.appendData(data, createdCallback);
+            this.appendData(data, createdCallback, variantFinderCallback);
         }
 
-        this.appendData = function (data, createdCallback) {
+        this.appendData = function (data, createdCallback, variantFinderCallback) {
             if (typeId.isArray(data) || typeId.isFunction(data)) {
-                components.repeat(component, element, data, createdCallback);
+                components.repeat(component, element, data, createdCallback, variantFinderCallback);
             }
             else if (data) {
-                components.single(component, element, data, createdCallback);
+                components.single(component, element, data, createdCallback, variantFinderCallback);
             }
         }
 
