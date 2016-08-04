@@ -499,7 +499,7 @@ function(exports, module, typeId, domquery){
         //Look for an insertion point
         var insertBefore = null;
         var insertBefore = parentComponent.firstElementChild;
-        while (insertBefore != null && !insertBefore.hasAttribute('data-htmlrest-insert')) {
+        while (insertBefore != null && !insertBefore.hasAttribute('data-hr-insert')) {
             insertBefore = insertBefore.nextElementSibling;
         }
 
