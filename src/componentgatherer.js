@@ -26,17 +26,54 @@ function (exports, module, domquery, BindingCollection, TextStream, components) 
         return new BindingCollection(arrayedItems);
     }
 
-    //Extract templates off the page
-    function extractTemplate(element) {
-        var componentName = element.getAttribute("data-hr-component");
+    function VariantBuilder(componentString) {
+        var tokenizedString;
+        var currentCreateFunc = tokenize;
 
-        //Check to see if this is an anonymous template, if so adjust the parent element and
-        //name the template
-        if (componentName === null) {
-            componentName = 'AnonTemplate_' + anonTemplateIndex++;
-            element.parentElement.setAttribute("data-hr-model-component", componentName);
+        function tokenize(data, parentComponent, insertBeforeSibling) {
+            tokenizedString = new TextStream(componentString);
+            currentCreateFunc = build;
+            return build(data, parentComponent, insertBeforeSibling);
         }
 
+        function build(data, parentComponent, insertBeforeSibling) {
+            return createItem(data, tokenizedString, parentComponent, insertBeforeSibling);
+        }
+
+        function create(data, parentComponent, insertBeforeSibling) {
+            return currentCreateFunc(data, parentComponent, insertBeforeSibling);
+        }
+        this.create = create;
+    }
+
+    function ComponentBuilder(componentString) {
+        var variants = {};
+        var tokenizedString;
+        var currentCreateFunc = tokenize;
+
+        function tokenize(data, parentComponent, insertBeforeSibling) {
+            tokenizedString = new TextStream(componentString);
+            currentCreateFunc = build;
+            return build(data, parentComponent, insertBeforeSibling);
+        }
+
+        function build(data, parentComponent, insertBeforeSibling) {
+            return createItem(data, tokenizedString, parentComponent, insertBeforeSibling);
+        }
+
+        function create(data, parentComponent, insertBeforeSibling) {
+            return currentCreateFunc(data, parentComponent, insertBeforeSibling);
+        }
+        this.create = create;
+
+        function addVariant(name, variantBuilder) {
+            variants[name] = variantBuilder;
+        }
+        this.addVariant = addVariant;
+    }
+
+    //Extract templates off the page
+    function extractTemplate(element, currentBuilder) {
         //If the browser supports templates, need to create one to read it properly
         var templateElement = element;
         if (browserSupportsTemplates) {
@@ -47,7 +84,7 @@ function (exports, module, domquery, BindingCollection, TextStream, components) 
         //Look for nested child templates, do this before taking inner html so children are removed
         var childTemplates = templateElement.getElementsByTagName("TEMPLATE");
         while (childTemplates.length > 0) {
-            extractTemplate(childTemplates[0]);
+            var currentBuilder = extractTemplate(childTemplates[0], currentBuilder);
         }
 
         var componentString = templateElement.innerHTML.trim();
@@ -64,25 +101,37 @@ function (exports, module, domquery, BindingCollection, TextStream, components) 
             }
         }
 
-        element.parentNode.removeChild(element);
+        var elementParent = element.parentNode;
+        elementParent.removeChild(element);
 
-        components.register(componentName, function (data, parentComponent, insertBeforeSibling) {
-            //First creation does more work with this function, then reregisters a simplified version
-            //Tokenize string
-            var tokenizedString = new TextStream(componentString);
-            //Register component again
-            components.register(componentName, function (data, parentComponent, insertBeforeSibling) {
-                //Return results, this is called for each subsequent creation
-                return createItem(data, tokenizedString, parentComponent, insertBeforeSibling);
-            });
-            //Return results
-            return createItem(data, tokenizedString, parentComponent, insertBeforeSibling);
-        });
+        var variantName = element.getAttribute("data-hr-variant");
+        if (variantName === null) {
+            var componentName = element.getAttribute("data-hr-component");
+            //Check to see if this is an anonymous template, if so adjust the parent element and
+            //name the template
+            if (componentName === null) {
+                componentName = 'AnonTemplate_' + anonTemplateIndex++;
+                elementParent.setAttribute("data-hr-model-component", componentName);
+            }
+
+            var builder = new ComponentBuilder(componentString);
+            components.register(componentName, builder.create);
+            return builder;
+        }
+        else {
+            if (currentBuilder !== undefined) {
+                currentBuilder.addVariant(variantName, new VariantBuilder(componentString));
+            }
+            else {
+                console.log('Attempted to create a variant named "' + variantName + '" with no default component in the chain. Please start your template element chain with a data-hr-component or a anonymous template. This template has been ignored.');
+            }
+            return currentBuilder;
+        }
     }
 
     var templateElements = document.getElementsByTagName("TEMPLATE");
     while (templateElements.length > 0) {
-        extractTemplate(templateElements[0]);
+        var currentBuilder = extractTemplate(templateElements[0], currentBuilder);
     }
 
     //Actual creation function
