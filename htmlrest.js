@@ -1209,7 +1209,7 @@ function(exports, module, forms, TextStream, components, typeId, domQuery){
 
     function build(element) {
         var src = element.getAttribute('data-hr-model-src');
-        if (element.nodeName === 'FORM') {
+        if (element.nodeName === 'FORM' || element.nodeName == 'INPUT' || element.nodeName == 'TEXTAREA') {
             return new FormModel(element, src);
         }
         else {
@@ -1249,11 +1249,17 @@ function(exports, module){
     function handleResult(xhr, success, fail) {
         if (xhr.status === 200) {
             if (success !== undefined) {
-                var data = undefined;
-                try {
-                    data = JSON.parse(xhr.response);
+                var data;
+                var contentType = xhr.getResponseHeader('content-type');
+                if (contentType && contentType.search(/application\/json/) !== -1) {
+                    try {
+                        data = JSON.parse(xhr.response);
+                    }
+                    catch (err) {
+                        data = xhr.response;
+                    }
                 }
-                catch (err) {
+                else {
                     data = xhr.response;
                 }
                 success(data);
@@ -2097,7 +2103,7 @@ function (exports, module, rest, EventHandler) {
                     updated.fire(data);
                 },
                 function (data) {
-                    loadError.fire(data);
+                    error.fire(data);
                 });
         }
         this.updateData = updateData;

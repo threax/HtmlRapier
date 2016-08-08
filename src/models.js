@@ -95,7 +95,7 @@ function(exports, module, forms, TextStream, components, typeId, domQuery){
 
     function build(element) {
         var src = element.getAttribute('data-hr-model-src');
-        if (element.nodeName === 'FORM') {
+        if (element.nodeName === 'FORM' || element.nodeName == 'INPUT' || element.nodeName == 'TEXTAREA') {
             return new FormModel(element, src);
         }
         else {

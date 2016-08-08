@@ -25,7 +25,7 @@ function (exports, module, rest, EventHandler) {
                     updated.fire(data);
                 },
                 function (data) {
-                    loadError.fire(data);
+                    error.fire(data);
                 });
         }
         this.updateData = updateData;

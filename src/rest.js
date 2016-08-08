@@ -6,11 +6,17 @@ function(exports, module){
     function handleResult(xhr, success, fail) {
         if (xhr.status === 200) {
             if (success !== undefined) {
-                var data = undefined;
-                try {
-                    data = JSON.parse(xhr.response);
+                var data;
+                var contentType = xhr.getResponseHeader('content-type');
+                if (contentType && contentType.search(/application\/json/) !== -1) {
+                    try {
+                        data = JSON.parse(xhr.response);
+                    }
+                    catch (err) {
+                        data = xhr.response;
+                    }
                 }
-                catch (err) {
+                else {
                     data = xhr.response;
                 }
                 success(data);
