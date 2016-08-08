@@ -9,12 +9,21 @@ jsns.define("htmlrest.models", [
 ],
 function(exports, module, forms, TextStream, components, typeId, domQuery){
 
+    function sharedClearer(i) {
+        return "";
+    }
+
     function FormModel(form, src) {
         this.setData = function (data) {
             forms.populate(form, data);
         }
 
         this.appendData = this.setData;
+
+        function clear() {
+            forms.populate(form, sharedClearer);
+        }
+        this.clear = clear;
 
         this.getData = function () {
             return forms.serialize(form);
@@ -40,6 +49,11 @@ function(exports, module, forms, TextStream, components, typeId, domQuery){
             }
         }
 
+        function clear() {
+            components.empty(element);
+        }
+        this.clear = clear;
+
         this.getData = function () {
             return {};
         }
@@ -55,6 +69,11 @@ function(exports, module, forms, TextStream, components, typeId, domQuery){
         this.setData = function (data) {
             dataTextElements = bindData(data, element, dataTextElements);
         }
+
+        function clear() {
+            dataTextElements = bindData(sharedClearer, element, dataTextElements);
+        }
+        this.clear = clear;
 
         this.appendData = this.setData;
 

@@ -917,9 +917,10 @@ function (exports, module) {
 "use strict";
 
 jsns.define("htmlrest.form", [
-    "htmlrest.domquery"
+    "htmlrest.domquery",
+    "htmlrest.typeidentifiers"
 ],
-function(exports, module, domQuery){
+function(exports, module, domQuery, typeIds){
     /**
      * Serialze a form to a javascript object
      * @param {HTMLElement|string} form - A selector or form element for the form to serialize.
@@ -998,9 +999,17 @@ function(exports, module, domQuery){
     function populate(form, data) {
         form = domQuery.first(form);
         var nameAttrs = domQuery.all('[name]', form);
-        for (var i = 0; i < nameAttrs.length; ++i) {
-            var element = nameAttrs[i];
-            element.value = data[element.getAttribute('name')];
+        if (typeIds.isObject(data)) {
+            for (var i = 0; i < nameAttrs.length; ++i) {
+                var element = nameAttrs[i];
+                element.value = data[element.getAttribute('name')];
+            }
+        }
+        else if (typeIds.isFunction(data)){
+            for (var i = 0; i < nameAttrs.length; ++i) {
+                var element = nameAttrs[i];
+                element.value = data(element.getAttribute('name'));
+            }
         }
     }
     exports.populate = populate;
@@ -1123,12 +1132,21 @@ jsns.define("htmlrest.models", [
 ],
 function(exports, module, forms, TextStream, components, typeId, domQuery){
 
+    function sharedClearer(i) {
+        return "";
+    }
+
     function FormModel(form, src) {
         this.setData = function (data) {
             forms.populate(form, data);
         }
 
         this.appendData = this.setData;
+
+        function clear() {
+            forms.populate(form, sharedClearer);
+        }
+        this.clear = clear;
 
         this.getData = function () {
             return forms.serialize(form);
@@ -1154,6 +1172,11 @@ function(exports, module, forms, TextStream, components, typeId, domQuery){
             }
         }
 
+        function clear() {
+            components.empty(element);
+        }
+        this.clear = clear;
+
         this.getData = function () {
             return {};
         }
@@ -1169,6 +1192,11 @@ function(exports, module, forms, TextStream, components, typeId, domQuery){
         this.setData = function (data) {
             dataTextElements = bindData(data, element, dataTextElements);
         }
+
+        function clear() {
+            dataTextElements = bindData(sharedClearer, element, dataTextElements);
+        }
+        this.clear = clear;
 
         this.appendData = this.setData;
 
