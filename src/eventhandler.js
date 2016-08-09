@@ -36,3 +36,49 @@ function (exports, module) {
 
     module.exports = EventHandler;
 });
+
+jsns.define("htmlrest.lateboundeventhandler", [
+    "htmlrest.eventhandler"
+],
+function (exports, module, HrEventHandler) {
+    function LateBoundEventHandler() {
+        var eventHandler = new HrEventHandler();
+        var queuedEvents = [];
+        var currentFire = queuedFire;
+
+        function add(context, handler) {
+            eventHandler.add(context, handler);
+            if (queuedEvents !== null) {
+                currentFire = eventFire;
+                for (var i = 0; i < queuedEvents.length; ++i) {
+                    fire.apply(this, queuedEvents[i]);
+                }
+                queuedEvents = null;
+            }
+        }
+
+        function remove(context, handler) {
+            eventHandler.remove(context, handler);
+        }
+
+        this.modifier = {
+            add: add,
+            remove: remove
+        }
+
+        function queuedFire() {
+            queuedEvents.push(arguments);
+        }
+
+        function eventFire() {
+            eventHandler.fire.apply(eventHandler, arguments);
+        }
+
+        function fire() {
+            currentFire.apply(this, arguments);
+        }
+        this.fire = fire;
+    }
+
+    module.exports = LateBoundEventHandler;
+});
