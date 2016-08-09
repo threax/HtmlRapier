@@ -880,6 +880,10 @@ function(exports, module){
 
 jsns.define("htmlrest.eventhandler", null,
 function (exports, module) {
+
+    /**
+     * This class provides a reusable way to fire events to multiple listeners.
+     */
     function EventHandler() {
         var handlers = [];
 
@@ -919,13 +923,19 @@ jsns.define("htmlrest.lateboundeventhandler", [
     "htmlrest.eventhandler"
 ],
 function (exports, module, HrEventHandler) {
+
+    /**
+     * This class will queue up the events that fire through it until
+     * an event handler is added, at that point it will function as a normal
+     * event handler. Only the first bound event gets the queued events.
+     */
     function LateBoundEventHandler() {
         var eventHandler = new HrEventHandler();
         var queuedEvents = [];
         var currentFire = queuedFire;
 
         function add(context, handler) {
-            eventHandler.add(context, handler);
+            eventHandler.modifier.add(context, handler);
             if (queuedEvents !== null) {
                 currentFire = eventFire;
                 for (var i = 0; i < queuedEvents.length; ++i) {
@@ -936,7 +946,7 @@ function (exports, module, HrEventHandler) {
         }
 
         function remove(context, handler) {
-            eventHandler.remove(context, handler);
+            eventHandler.modifier.remove(context, handler);
         }
 
         this.modifier = {
