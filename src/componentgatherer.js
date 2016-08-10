@@ -108,8 +108,8 @@ function (exports, module, domquery, BindingCollection, TextStream, components) 
         elementParent.removeChild(element);
 
         var variantName = element.getAttribute("data-hr-variant");
+        var componentName = element.getAttribute("data-hr-component");
         if (variantName === null) {
-            var componentName = element.getAttribute("data-hr-component");
             //Check to see if this is an anonymous template, if so adjust the parent element and
             //name the template
             if (componentName === null) {
@@ -122,11 +122,16 @@ function (exports, module, domquery, BindingCollection, TextStream, components) 
             return builder;
         }
         else {
-            if (currentBuilder !== undefined) {
-                currentBuilder.addVariant(variantName, new VariantBuilder(componentString));
+            if (componentName === null) {
+                if (currentBuilder !== undefined) {
+                    currentBuilder.addVariant(variantName, new VariantBuilder(componentString));
+                }
+                else {
+                    console.log('Attempted to create a variant named "' + variantName + '" with no default component in the chain. Please start your template element chain with a data-hr-component or a anonymous template. This template has been ignored.');
+                }
             }
             else {
-                console.log('Attempted to create a variant named "' + variantName + '" with no default component in the chain. Please start your template element chain with a data-hr-component or a anonymous template. This template has been ignored.');
+                components.registerVariant(componentName, variantName, builder.create);
             }
             return currentBuilder;
         }

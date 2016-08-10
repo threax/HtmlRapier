@@ -42,6 +42,17 @@ function (exports, module, typeId, domquery) {
     exports.register = register;
 
     /**
+     * Register a variant function with the component system.
+     * @param {string} name - The name of the component
+     * @param {string} variant - The name of the variant for the component.
+     * @param {exports.registerComponent~callback} createFunc - The function that creates the new component.
+     */
+    function registerVariant(name, variant, createFunc) {
+        factory[name].addVariant(createFunc);
+    }
+    exports.registerVariant = registerVariant;
+
+    /**
      * Get the default vaule if variant is undefined.
      * @returns variant default value (null)
      */
