@@ -387,6 +387,8 @@ function (exports, module, domquery, BindingCollection, TextStream, components) 
         this.addVariant = addVariant;
     }
 
+    var extractedBuilders = {};
+
     //Extract templates off the page
     function extractTemplate(element, currentBuilder) {
         //If the browser supports templates, need to create one to read it properly
@@ -430,6 +432,7 @@ function (exports, module, domquery, BindingCollection, TextStream, components) 
             }
 
             var builder = new ComponentBuilder(componentString);
+            extractedBuilders[componentName] = builder;
             components.register(componentName, builder.create);
             return builder;
         }
@@ -443,7 +446,7 @@ function (exports, module, domquery, BindingCollection, TextStream, components) 
                 }
             }
             else {
-                components.registerVariant(componentName, variantName, builder.create);
+                extractedBuilders[componentName].addVariant(variantName, new VariantBuilder(componentString));
             }
             return currentBuilder;
         }
@@ -535,17 +538,6 @@ function (exports, module, typeId, domquery) {
         factory[name] = createFunc;
     }
     exports.register = register;
-
-    /**
-     * Register a variant function with the component system.
-     * @param {string} name - The name of the component
-     * @param {string} variant - The name of the variant for the component.
-     * @param {exports.registerComponent~callback} createFunc - The function that creates the new component.
-     */
-    function registerVariant(name, variant, createFunc) {
-        factory[name].addVariant(createFunc);
-    }
-    exports.registerVariant = registerVariant;
 
     /**
      * Get the default vaule if variant is undefined.

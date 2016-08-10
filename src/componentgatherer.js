@@ -75,6 +75,8 @@ function (exports, module, domquery, BindingCollection, TextStream, components) 
         this.addVariant = addVariant;
     }
 
+    var extractedBuilders = {};
+
     //Extract templates off the page
     function extractTemplate(element, currentBuilder) {
         //If the browser supports templates, need to create one to read it properly
@@ -118,6 +120,7 @@ function (exports, module, domquery, BindingCollection, TextStream, components) 
             }
 
             var builder = new ComponentBuilder(componentString);
+            extractedBuilders[componentName] = builder;
             components.register(componentName, builder.create);
             return builder;
         }
@@ -131,7 +134,7 @@ function (exports, module, domquery, BindingCollection, TextStream, components) 
                 }
             }
             else {
-                components.registerVariant(componentName, variantName, builder.create);
+                extractedBuilders[componentName].addVariant(variantName, new VariantBuilder(componentString));
             }
             return currentBuilder;
         }
