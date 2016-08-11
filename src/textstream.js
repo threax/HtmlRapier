@@ -75,6 +75,8 @@ function (exports, module, escape, typeId) {
         var leadingText;
         var variable;
         var bracketVariable;
+        //This holds text we have not created a TextNode for as we parse, this way we can combine output variables with surrounding text for the stream itself
+        var skippedTextBuffer = "";
         for (var i = 0; i < text.length; ++i) {
 
             if (text[i] == '{') {
@@ -102,11 +104,12 @@ function (exports, module, escape, typeId) {
 
                     switch (bracketCount) {
                         case 1:
-                            //1 bracket, output as is
-                            streamNodes.push(new TextNode(leadingText + bracketVariable));
+                            //1 bracket, add to buffer
+                            skippedTextBuffer += leadingText + bracketVariable;
                             break;
                         case 2:
-                            streamNodes.push(new TextNode(leadingText));
+                            streamNodes.push(new TextNode(skippedTextBuffer + leadingText));
+                            skippedTextBuffer = ""; //This is reset every time we actually output something
                             variable = bracketVariable.substring(2, bracketVariable.length - 2);
                             if (variable === "this") {
                                 streamNodes.push(new ThisVariableNode());
@@ -116,8 +119,8 @@ function (exports, module, escape, typeId) {
                             }
                             break;
                         default:
-                            //Multiple brackets, escape by removing one
-                            streamNodes.push(new TextNode(leadingText + bracketVariable.substring(1, bracketVariable.Length - 2)));
+                            //Multiple brackets, escape by removing one and add to buffer
+                            skippedTextBuffer += leadingText + bracketVariable.substring(1, bracketVariable.length - 1);
                             break;
                     }
 
@@ -128,7 +131,7 @@ function (exports, module, escape, typeId) {
         }
 
         if (textStart < text.length) {
-            streamNodes.push(new TextNode(text.substring(textStart, text.length)));
+            streamNodes.push(new TextNode(skippedTextBuffer + text.substring(textStart, text.length)));
         }
 
         this.format = function (data) {
