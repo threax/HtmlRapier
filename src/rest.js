@@ -54,6 +54,20 @@ function(exports, module){
     exports.post = post;
 
     /**
+     * Perform a post request and get a promise to the results. This is similar to using plain post, but
+     * success and fail are handled by the promise returned.
+     * @param {string} url - The url to post to
+     * @param {object} data - The data to post
+     * @returns {Promise} A promise to the response.
+     */
+    function postPromise(url, data) {
+        return new Promise(function (resolve, reject) {
+            post(url, data, resolve, reject);
+        });
+    }
+    exports.postPromise = postPromise;
+
+    /**
      * Put data to a url. Success and fail called depending on result
      * @param {string} url - The url to put to
      * @param {object} data - The data to put
@@ -66,6 +80,20 @@ function(exports, module){
     exports.put = put;
 
     /**
+     * Perform a put request and get a promise to the results. This is similar to using plain put, but
+     * success and fail are handled by the promise returned.
+     * @param {string} url - The url to put to
+     * @param {object} data - The data to put
+     * @returns {Promise} A promise to the response.
+     */
+    function putPromise(url, data) {
+        return new Promise(function (resolve, reject) {
+            put(url, data, resolve, reject);
+        });
+    }
+    exports.putPromise = putPromise;
+
+    /**
      * Delete data at a url. Success and fail called depending on result
      * @param {string} url - The url to delete to
      * @param {object} data - Data to include
@@ -76,6 +104,20 @@ function(exports, module){
         ajax(url, 'DELETE', data, success, fail);
     }
     exports.delete = del;
+
+    /**
+     * Perform a delete request and get a promise to the results. This is similar to using plain delete, but
+     * success and fail are handled by the promise returned.
+     * @param {string} url - The url to delete to
+     * @param {object} data - Data to include
+     * @returns {Promise} A promise to the response.
+     */
+    function delPromise(url, data) {
+        return new Promise(function (resolve, reject) {
+            del(url, data, resolve, reject);
+        });
+    }
+    exports.delPromise = delPromise;
 
     /**
      * Get data from a url. Success and fail called depending on result
@@ -108,6 +150,20 @@ function(exports, module){
     exports.get = get;
 
     /**
+     * Perform a get request and get a promise to the results. This is similar to using plain get, but
+     * success and fail are handled by the promise returned.
+     * @param {type} url - The url to get data from
+     * @param {type} cache - True to use cached results, false to always get, default false.
+     * @returns {Promise} A promise to the response.
+     */
+    function getPromise(url, cache) {
+        return new Promise(function (resolve, reject) {
+            get(url, resolve, reject, cache);
+        });
+    }
+    exports.getPromise = getPromise;
+
+    /**
      * A more raw ajax call if needed.
      * @param {string} url - The url to call
      * @param {string} method - The method to use
@@ -129,6 +185,21 @@ function(exports, module){
         xhr.send(JSON.stringify(data));
     }
     exports.ajax = ajax;
+
+    /**
+     * Perform an ajax request and get a promise to the results. This is similar to using plain ajax, but
+     * success and fail are handled by the promise returned.
+     * @param {string} url - The url to call
+     * @param {string} method - The method to use
+     * @param {object} data - The data to send
+     * @returns {Promise} A promise to the response.
+     */
+    function ajaxPromise(url, method, data) {
+        return new Promise(function (resolve, reject) {
+            ajax(url, method, data, resolve, reject);
+        });
+    }
+    exports.ajaxPromise = ajaxPromise;
 
     /**
      * Upload a file to a url
@@ -161,4 +232,18 @@ function(exports, module){
         xhr.send(formData);
     }
     exports.upload = upload;
+
+    /**
+     * Perform an upload request and get a promise to the results. This is similar to using plain upload, but
+     * success and fail are handled by the promise returned.
+     * @param {string} url - The url to call
+     * @param {object} data - The data to send
+     * @returns {Promise} A promise to the response.
+     */
+    function uploadPromise(url, data) {
+        return new Promise(function (resolve, reject) {
+            upload(url, data, resolve, reject);
+        });
+    }
+    exports.uploadPromise = uploadPromise;
 });
