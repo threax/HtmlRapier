@@ -108,11 +108,6 @@ function (exports, module, escape, typeId) {
                         case 2:
                             streamNodes.push(new TextNode(leadingText));
                             variable = bracketVariable.substring(2, bracketVariable.length - 2);
-                            //temp, fixes old escaping
-                            if (variable[0] === '|') {
-                                variable = variable.substring(1);
-                            }
-                            //end temp
                             if (variable === "this") {
                                 streamNodes.push(new ThisVariableNode());
                             }
