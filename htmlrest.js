@@ -1595,7 +1595,7 @@ jsns.define("htmlrest.textstream", [
     "htmlrest.escape",
     "htmlrest.typeidentifiers"
 ],
-function(exports, module, escape, typeId){
+function (exports, module, escape, typeId) {
 
     function TextNode(str) {
         this.writeObject = function (data) {
@@ -1610,7 +1610,7 @@ function(exports, module, escape, typeId){
             return escape(data[variable]);
         }
 
-        this.writeFunction = function(data){
+        this.writeFunction = function (data) {
             return escape(data(variable));
         }
     }
@@ -1661,31 +1661,65 @@ function(exports, module, escape, typeId){
         var textStart = 0;
         var bracketStart = 0;
         var bracketEnd = 0;
+        var bracketCount = 0;
+        var bracketCheck = 0;
+        var leadingText;
+        var variable;
+        var bracketVariable;
         for (var i = 0; i < text.length; ++i) {
-            switch (text[i]) {
-                case '{':
-                    if (text[i + 1] !== '{') {
-                        bracketStart = i;
-                    }
-                    break;
-                case '}':
-                    if (i + 1 === text.length || text[i + 1] !== '}') {
-                        bracketEnd = i;
 
-                        if (bracketStart < bracketEnd - 1) {
-                            streamNodes.push(new TextNode(text.substring(textStart, bracketStart)));
-                            var variableName = text.substring(bracketStart + 1, bracketEnd);
-                            if (variableName === "this") {
+            if (text[i] == '{') {
+                //Count up opening brackets
+                bracketStart = i;
+                bracketCount = 1;
+                while (++i < text.length && text[i] == '{') {
+                    ++bracketCount;
+                }
+
+                //Find closing bracket chain, ignore if mismatched or whitespace
+                bracketCheck = bracketCount;
+                while (++i < text.length) {
+                    if ((text[i] == '}' && --bracketCheck == 0) || /\s/.test(text[i])) {
+                        break;
+                    }
+                }
+
+                //If the check got back to 0 we found a variable
+                if (bracketCheck == 0) {
+                    leadingText = text.substring(textStart, bracketStart);
+
+                    bracketEnd = i;
+                    bracketVariable = text.substring(bracketStart, bracketEnd + 1);
+
+                    switch (bracketCount) {
+                        case 1:
+                            //1 bracket, output as is
+                            streamNodes.push(new TextNode(leadingText + bracketVariable));
+                            break;
+                        case 2:
+                            streamNodes.push(new TextNode(leadingText));
+                            variable = bracketVariable.substring(2, bracketVariable.length - 2);
+                            //temp, fixes old escaping
+                            if (variable[0] === '|') {
+                                variable = variable.substring(1);
+                            }
+                            //end temp
+                            if (variable === "this") {
                                 streamNodes.push(new ThisVariableNode());
                             }
                             else {
-                                streamNodes.push(new VariableNode(variableName));
+                                streamNodes.push(new VariableNode(variable));
                             }
-                            textStart = i + 1;
-                            foundVariable = true;
-                        }
+                            break;
+                        default:
+                            //Multiple brackets, escape by removing one
+                            streamNodes.push(new TextNode(leadingText + bracketVariable.substring(1, bracketVariable.Length - 2)));
+                            break;
                     }
-                    break;
+
+                    textStart = i + 1;
+                    foundVariable = true;
+                }
             }
         }
 
