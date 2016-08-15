@@ -1593,36 +1593,35 @@ function(exports, module, forms, TextStream, components, typeId, domQuery){
 "use strict";
 
 jsns.define("htmlrest.rest", null,
-function(exports, module){
+function (exports, module) {
+
+    function extractData(xhr) {
+        var data;
+        var contentType = xhr.getResponseHeader('content-type');
+        if (contentType && contentType.search(/application\/json/) !== -1) {
+            try {
+                data = JSON.parse(xhr.response);
+            }
+            catch (err) {
+                data = xhr.response;
+            }
+        }
+        else {
+            data = xhr.response;
+        }
+        return data;
+    }
+
     //Helper function to handle results
     function handleResult(xhr, success, fail) {
         if (xhr.status === 200) {
             if (success !== undefined) {
-                var data;
-                var contentType = xhr.getResponseHeader('content-type');
-                if (contentType && contentType.search(/application\/json/) !== -1) {
-                    try {
-                        data = JSON.parse(xhr.response);
-                    }
-                    catch (err) {
-                        data = xhr.response;
-                    }
-                }
-                else {
-                    data = xhr.response;
-                }
-                success(data);
+                success(extractData(xhr));
             }
         }
         else {
             if (fail !== undefined) {
-                try {
-                    data = JSON.parse(xhr.response);
-                }
-                catch (err) {
-                    data = xhr.response;
-                }
-                fail(data);
+                fail(extractData(xhr));
             }
         }
     }
