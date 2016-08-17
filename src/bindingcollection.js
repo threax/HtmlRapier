@@ -119,6 +119,15 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
         return data;
     }
 
+    function iterateControllers(name, elements, cb) {
+        for (var eIx = 0; eIx < elements.length; ++eIx) {
+            var element = elements[eIx];
+            domQuery.iterate('[data-hr-controller="' + name + '"]', element, function (cntrlElement) {
+                cb(cntrlElement);
+            });
+        }
+    }
+
     /**
      * 
      * @param {HtmlElement} elements
@@ -163,6 +172,10 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
 
         this.getConfig = function () {
             return getConfig(elements);
+        }
+
+        this.iterateControllers = function (name, cb) {
+            iterateControllers(name, elements, cb);
         }
     };
 

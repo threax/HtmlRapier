@@ -12,13 +12,20 @@ function (exports, module, BindingCollection, domQuery) {
      * @param {type} name
      * @param {type} controllerConstructor
      */
-    function create(name, controllerConstructor, context) {
-        domQuery.iterate('[data-hr-controller="' + name + '"]', null, function (element) {
+    function create(name, controllerConstructor, context, parentBindings) {
+        function foundElement(element) {
             var bindings = new BindingCollection(element);
             var controller = new controllerConstructor(bindings, context, null);
             bindings.setListener(controller);
             element.removeAttribute('data-hr-controller');
-        });
+        }
+
+        if (parentBindings) {
+            parentBindings.iterateControllers(name, foundElement);
+        }
+        else {
+            domQuery.iterate('[data-hr-controller="' + name + '"]', null, foundElement);
+        }
     }
 
     exports.create = create;

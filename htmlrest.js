@@ -497,6 +497,15 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
         return data;
     }
 
+    function iterateControllers(name, elements, cb) {
+        for (var eIx = 0; eIx < elements.length; ++eIx) {
+            var element = elements[eIx];
+            domQuery.iterate('[data-hr-controller="' + name + '"]', element, function (cntrlElement) {
+                cb(cntrlElement);
+            });
+        }
+    }
+
     /**
      * 
      * @param {HtmlElement} elements
@@ -541,6 +550,10 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
 
         this.getConfig = function () {
             return getConfig(elements);
+        }
+
+        this.iterateControllers = function (name, cb) {
+            iterateControllers(name, elements, cb);
         }
     };
 
@@ -891,13 +904,20 @@ function (exports, module, BindingCollection, domQuery) {
      * @param {type} name
      * @param {type} controllerConstructor
      */
-    function create(name, controllerConstructor, context) {
-        domQuery.iterate('[data-hr-controller="' + name + '"]', null, function (element) {
+    function create(name, controllerConstructor, context, parentBindings) {
+        function foundElement(element) {
             var bindings = new BindingCollection(element);
             var controller = new controllerConstructor(bindings, context, null);
             bindings.setListener(controller);
             element.removeAttribute('data-hr-controller');
-        });
+        }
+
+        if (parentBindings) {
+            parentBindings.iterateControllers(name, foundElement);
+        }
+        else {
+            domQuery.iterate('[data-hr-controller="' + name + '"]', null, foundElement);
+        }
     }
 
     exports.create = create;
