@@ -2148,14 +2148,14 @@ function (exports, module, EventHandler) {
         }
         this.setDelay = setDelay;
 
-        function stop() {
+        function cancel() {
             clearTimeout(holder);
             args = undefined;
         }
-        this.stop = stop;
+        this.cancel = cancel;
 
         function fire() {
-            stop();
+            cancel();
             holder = window.setTimeout(fireHandler, _delay);
             args = arguments;
         }
