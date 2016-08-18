@@ -24,6 +24,7 @@
 	<ul>
 		<li><strong>Variant </strong>- <code>&lt;template data-hr-component=&quot;componentName&quot;&nbsp;data-hr-variant=&quot;<em>name</em>&quot;&gt;<em>markup</em>&lt;/template&gt;</code> - This will specify a variant of a template. Variants allow you to have different verisons of a component depending on your source data. You will define a function when binding data to a model that returns the name of the variant to use for a component. Variant names must be unique for each component, but can be repeated otherwise. You can omit the data-hr-component part if you are creating this variant as part of a variant chain. To do this create your first template element, either anonymous or with a name. Next as the immediate sibling to that first &lt;template&gt; element create another with the data-hr-variant attribute and give it a variant name. This will attach the 2nd template as a variant on the first. This chain will continue until there are no more siblings or another element type is encountered.</li>
 	</ul></li>
+	<li><strong>Ignore </strong>- <code>data-hr-ignored</code> - Add this to an element to ignore any components and controllers it has as children. This is mostly a special case to handle editors where you still need to run other&nbsp;HtmlRapier code.</li>
 </ul>
 <h2>Hello World</h2>
 <p>This is a really simple example of using a controller and a model to display some data on the screen.</p>
@@ -65,3 +66,44 @@ jsns.run([
 	<div class="col-md-6" data-hr-model="output">
 		<p>Hello {{userName}} you have input some data with HtmlRapier.</p></div></div>
 <p>&nbsp;</p>
+<p>Here input your name and press enter (or click submit). Your name will appear in the output section.</p>
+<h3>How Does It Work?</h3>
+<h4>The Markup</h4>
+<pre style="margin: 0px; line-height: 125%;"><span style="color: rgb(0, 119, 0);">&lt;div</span> <span style="color: rgb(0, 0, 204);">class=</span><span style="background-color: rgb(255, 240, 240);">&quot;row&quot;</span> <span style="color: rgb(0, 0, 204);">data-hr-controller=</span><span style="background-color: rgb(255, 240, 240);">&quot;inputDemo&quot;</span><span style="color: rgb(0, 119, 0);">&gt;</span>
+	<span style="color: rgb(0, 119, 0);">&lt;form</span> <span style="color: rgb(0, 0, 204);">class=</span><span style="background-color: rgb(255, 240, 240);">&quot;col-md-6&quot;</span> <span style="color: rgb(0, 0, 204);">data-hr-model=</span><span style="background-color: rgb(255, 240, 240);">&quot;input&quot;</span> <span style="color: rgb(0, 0, 204);">data-hr-on-submit=</span><span style="background-color: rgb(255, 240, 240);">&quot;outputInfo&quot;</span><span style="color: rgb(0, 119, 0);">&gt;</span>
+		<span style="color: rgb(0, 119, 0);">&lt;div</span> <span style="color: rgb(0, 0, 204);">class=</span><span style="background-color: rgb(255, 240, 240);">&quot;form-group&quot;</span><span style="color: rgb(0, 119, 0);">&gt;</span>
+			<span style="color: rgb(0, 119, 0);">&lt;label</span> <span style="color: rgb(0, 0, 204);">for=</span><span style="background-color: rgb(255, 240, 240);">&quot;userName&quot;</span><span style="color: rgb(0, 119, 0);">&gt;</span>Enter your name<span style="color: rgb(0, 119, 0);">&lt;/label&gt;</span> 
+			<span style="color: rgb(0, 119, 0);">&lt;input</span> <span style="color: rgb(0, 0, 204);">class=</span><span style="background-color: rgb(255, 240, 240);">&quot;form-control&quot;</span> <span style="color: rgb(0, 0, 204);">name=</span><span style="background-color: rgb(255, 240, 240);">&quot;userName&quot;</span> <span style="color: rgb(0, 0, 204);">type=</span><span style="background-color: rgb(255, 240, 240);">&quot;text&quot;</span> <span style="color: rgb(0, 119, 0);">/&gt;</span>
+		<span style="color: rgb(0, 119, 0);">&lt;/div&gt;</span>
+		<span style="color: rgb(0, 119, 0);">&lt;button</span> <span style="color: rgb(0, 0, 204);">type=</span><span style="background-color: rgb(255, 240, 240);">&quot;submit&quot;</span><span style="color: rgb(0, 119, 0);">&gt;</span>Submit<span style="color: rgb(0, 119, 0);">&lt;/button&gt;</span>
+	<span style="color: rgb(0, 119, 0);">&lt;/form&gt;</span>
+	<span style="color: rgb(0, 119, 0);">&lt;div</span> <span style="color: rgb(0, 0, 204);">class=</span><span style="background-color: rgb(255, 240, 240);">&quot;col-md-6&quot;</span> <span style="color: rgb(0, 0, 204);">data-hr-model=</span><span style="background-color: rgb(255, 240, 240);">&quot;output&quot;</span><span style="color: rgb(0, 119, 0);">&gt;</span>
+		<span style="color: rgb(0, 119, 0);">&lt;p&gt;</span>Hello {{userName}} you have input some data with HtmlRapier.<span style="color: rgb(0, 119, 0);">&lt;/p&gt;</span>
+	<span style="color: rgb(0, 119, 0);">&lt;/div&gt;</span>
+<span style="color: rgb(0, 119, 0);">&lt;/div&gt;</span> </pre>
+<p>&nbsp;</p>
+<p>Here we create a controller called <em>inputDemo </em>with 2 models named <em>input </em>and <em>output</em>. We also bind the function <em>outputInfo</em> from our controller object to the <em>submit</em> event on the form.</p>
+<p>The input model will create a FormModel since it is on a form element.</p>
+<p>The output model will create a TextNodeModel since it has variables, but no other special characteristics.</p>
+<h4>The Javascript</h4>
+<pre style="margin: 0px; line-height: 125%;"><span style="background-color: rgb(255, 240, 240);">&quot;use strict&quot;</span>;
+
+jsns.run([
+    <span style="background-color: rgb(255, 240, 240);">&quot;hr.controller&quot;</span>
+], <span style="color: rgb(0, 136, 0); font-weight: bold;">function</span> (exports, module, controller) {
+    <span style="color: rgb(0, 136, 0); font-weight: bold;">function</span> InputController(bindings) {
+        <span style="color: rgb(0, 136, 0); font-weight: bold;">var</span> inputModel <span style="color: rgb(51, 51, 51);">=</span> bindings.getModel(<span style="background-color: rgb(255, 240, 240);">&quot;input&quot;</span>);
+        <span style="color: rgb(0, 136, 0); font-weight: bold;">var</span> outputModel <span style="color: rgb(51, 51, 51);">=</span> bindings.getModel(<span style="background-color: rgb(255, 240, 240);">&quot;output&quot;</span>);
+
+        <span style="color: rgb(0, 136, 0); font-weight: bold;">function</span> outputInfo(evt) {
+            evt.preventDefault();
+            <span style="color: rgb(0, 136, 0); font-weight: bold;">var</span> data <span style="color: rgb(51, 51, 51);">=</span> inputModel.getData();
+            outputModel.setData(data);
+        }
+        <span style="color: rgb(0, 136, 0); font-weight: bold;">this</span>.outputInfo <span style="color: rgb(51, 51, 51);">=</span> outputInfo;
+    }
+
+    controller.create(<span style="background-color: rgb(255, 240, 240);">&quot;inputDemo&quot;</span>, InputController);
+});</pre>
+<p>&nbsp;</p>
+<p>Here we create our controller constructor function called InputController. It is bound to the inputDemo controller in the markup. Inside we gather up the input and output model and create a function called outputInfo that is added to the this object for the constructor. The outputInfo function will be bound to the form submit (using addEventListener(submit, func)). As such we get the event passed by the browser and prevent its default. Then we grab the data from input and put it into output.</p>
