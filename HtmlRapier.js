@@ -817,7 +817,7 @@ function (exports, module, typeId, domquery) {
      * Create a component for each element in data using that element as the data for the component.
      * @param {string} name - The name of the component to create.
      * @param {HTMLElement} parentComponent - The html element to attach the component to.
-     * @param {array|function} data - The data to repeat and bind, must be an array or function so it can be iterated.
+     * @param {array|object} data - The data to repeat and bind, must be an array or object with a forEach method to be iterated.
      * If it is a function return the data and then return null to stop iteration.
      * @param {exports.createComponent~callback} createdCallback
      */
@@ -849,15 +849,6 @@ function (exports, module, typeId, domquery) {
                 variant = variantFinderCallback(item);
                 doCreateComponent(name, item, fragmentParent, null, variant, createdCallback);
             })
-        }
-        else if (typeId.isFunction(data)) {
-            var current = data();
-            variant = variantFinderCallback(current);
-            while (current != null) {
-                doCreateComponent(name, current, fragmentParent, null, variant, createdCallback);
-                current = data();
-                variant = variantFinderCallback(current);
-            }
         }
 
         parentComponent.insertBefore(fragmentParent, insertBefore);
@@ -1656,7 +1647,7 @@ function(exports, module, forms, TextStream, components, typeId, domQuery){
         }
 
         this.appendData = function (data, createdCallback, variantFinderCallback) {
-            if (typeId.isArray(data) || typeId.isForEachable(data) || typeId.isFunction(data)) {
+            if (typeId.isArray(data) || typeId.isForEachable(data)) {
                 components.repeat(component, element, data, createdCallback, variantFinderCallback);
             }
             else if (data) {
