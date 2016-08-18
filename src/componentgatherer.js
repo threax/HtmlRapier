@@ -88,6 +88,15 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
 
     //Extract templates off the page
     function extractTemplate(element, currentBuilder) {
+        //INC HERE - This is where currentTemplate is incremented to its next value
+        //This single iter is shared for all levels of the gatherer
+        currentTemplate = templateElements.next();
+
+        //Check to see if this is an ignored element, and quickly exit if it is
+        if (ignoredNodes.isIgnored(element)) {
+            return currentBuilder;
+        }
+
         //If the browser supports templates, need to create one to read it properly
         var templateElement = element;
         if (browserSupportsTemplates) {
@@ -96,9 +105,6 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
         }
 
         //Look for nested child templates, do this before taking inner html so children are removed
-        //INC HERE - This is where currentTemplate is incremented to its next value
-        //This single iter is shared for all levels of the gatherer
-        currentTemplate = templateElements.next();
         while (!currentTemplate.done && element.contains(currentTemplate.value)) {
             var currentBuilder = extractTemplate(currentTemplate.value, currentBuilder);
         }

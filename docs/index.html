@@ -1,6 +1,60 @@
 <h1>HtmlRapier Quick Guide</h1>
 <p>This guide shows some example usages of the HtmlRest library.</p>
+<p>At its heart this library is a fancy way of labeling elements on a html page with some attributes that make extracting them later, with some special properties, easier. You can define the following types of attributes on your elements.</p>
+<ul>
+	<li><strong>Controller </strong>- <code><samp>data-hr-controller=&quot;<em>controllerName</em>&quot;</samp></code> - This defines the primary interface between your&nbsp;javascript and&nbsp;the&nbsp;markup and act as more or less of an entry point for everything else. The <em>controllerName&nbsp;</em>value defines the name of the controller.</li>
+	<li><strong>Event<strong> </strong></strong>-<strong> </strong><code>data-hr-on-<em>eventName</em>=&quot;<em>functionName</em>&quot;</code><em> - </em>Bind the element event <em>eventName </em>to the function in your controller named <em>functionName</em>.</li>
+	<li><strong>Config</strong> - <code>data-hr-config-<em>name</em>=&quot;<em>value</em>&quot;</code> - Create&nbsp;a configuration for the controller named <em>name </em>with the value <em>value</em>.</li>
+	<li><strong>Toggle</strong> - <code>data-hr-toggle=&quot;<em>name</em>&quot;</code> - Create a toggle named name. Toggles abstract the dom from your javascript for things like styles and classes. Toggles can be set&nbsp;to on and off in your javascript code.&nbsp;You can use the following attributes to in addition to a data-hr-toggle on an element to control what it looks like when the toggle is on and off.
+	<ul>
+		<li><strong>On Styles</strong> -<strong> </strong><code><font face="Courier New">data-hr-style-on=&quot;<em>styleList</em>&quot;</font></code> - Apply the styles in <em>styleList </em>when this toggle is on.</li>
+		<li><strong>Off Styles</strong> - <code>data-hr-style-off=&quot;<em>styleList</em>&quot;</code> - Apply the styles in <em>styleList </em>when this toggle is off.</li>
+		<li><strong>On Classes</strong> - <code>data-hr-class-on=&quot;<em>classList</em>&quot;</code> - Apply the classes in <em>classList </em>when this toggle is on.</li>
+		<li><strong>Off Classes</strong> - <code>data-hr-class-off=&quot;<em>classList</em>&quot;</code> - Apply the classes in <em>classList </em>when this toggle is off.</li>
+		<li><strong>Idle Classes</strong> - <code>data-hr-class-idle=&quot;<em>classList</em>&quot;</code> - Apply <em>classList </em>classes when the animations on this element have completed. HtmlRapier can track animation states when you toggle and will apply this class after the animations are completed.</li>
+	</ul></li>
+	<li><strong>Model </strong>- <code>data-hr-model=&quot;<em>name</em>&quot;</code> - Create a model on the specified element named <em>name</em>. Models define functions for getData, setData, appendData, getSrc and clear. Even though most models support a getData function, they will not do anything except return a blank object unless you have&nbsp;a&nbsp;FormModel, in which&nbsp;case you will get the form&#39;s data. A model, if it is able, will automatically repeat&nbsp;collection data that it is passed, otherwise it outputs a single element.&nbsp;Depending on what kind of element you attach this to you will get different models:
+	<ul>
+		<li><strong>FormModel</strong> - This model is created if this attribute is added to a form element. Form models can get and set a single piece of data using getData and setData. This is the only model that returns something useful from getData, which is the current data on the form as a plain javascript object.</li>
+		<li><strong>ComponentModel</strong> - This model is created when the data-hr-model attribute is added to a node that also has data-hr-component on it (or will get one from an anonymous template). It will use a template that you define to output the data you specify. If the data is a collection then you will get repeated elements. This is the most flexible kind of model. To get this kind of model add a <code>data-hr-component=&quot;name&quot;</code> attribute to it or define a template as its child, which will make an anonymous template, which has the same effect.</li>
+		<li><strong>TextNodeModel </strong>-&nbsp;With no special conditions a TextNodeModel is created. This will look for variables defined like {{varName}} and fill them in with matching data on the object bound to this model.</li>
+		<li>Finally you can configure the source string for a model with the <code>data-hr-model-src=&quot;<em>value</em>&quot;</code> attribute.</li>
+	</ul></li>
+	<li><strong>Component</strong> -&nbsp;<code>&lt;template data-hr-component=&quot;<em>name</em>&quot;&gt;<em>markup</em>&lt;/template&gt;</code> - Create a component named <em>name</em> with the&nbsp;html code&nbsp;<em>markup</em>. Components must be &lt;template&gt; elements. You can actually omit the <code>data-hr-component=&quot;name&quot;</code> attribute if you are creating the component as a direct descendant of a model node, which creates an anonymous template that gets its name assigned at runtime. This makes labeling components to their models much simpler since you don&#39;t have to come up with a ton of unique names, however, sometimes you will need to specify the names directly and you can do this here.
+	<ul>
+		<li><strong>Variant </strong>- <code>&lt;template data-hr-component=&quot;componentName&quot;&nbsp;data-hr-variant=&quot;<em>name</em>&quot;&gt;<em>markup</em>&lt;/template&gt;</code> - This will specify a variant of a template. Variants allow you to have different verisons of a component depending on your source data. You will define a function when binding data to a model that returns the name of the variant to use for a component. Variant names must be unique for each component, but can be repeated otherwise. You can omit the data-hr-component part if you are creating this variant as part of a variant chain. To do this create your first template element, either anonymous or with a name. Next as the immediate sibling to that first &lt;template&gt; element create another with the data-hr-variant attribute and give it a variant name. This will attach the 2nd template as a variant on the first. This chain will continue until there are no more siblings or another element type is encountered.</li>
+	</ul></li>
+</ul>
 <h2>Hello World</h2>
 <p>This is a really simple example of using a controller and a model to display some data on the screen.</p>
-<div>
-	<p data-hr-model="hello">Hello World</p></div>
+<div data-hr-controller="helloWorldDemo">
+	<p data-hr-model="hello">Hello {{message}}</p>
+	<p data-hr-model="hello">So, that is pretty stupid, but it is actually doing something.</p></div>
+<h3>How Does It Work?</h3>
+<h4>The Markup</h4>
+<pre style="margin: 0px; line-height: 125%;"><span style="color: rgb(0, 119, 0);">&lt;div</span> <span style="color: rgb(0, 0, 204);">data-hr-controller=</span><span style="background-color: rgb(255, 240, 240);">&quot;helloWorldDemo&quot;</span><span style="color: rgb(0, 119, 0);">&gt;</span>
+    <span style="color: rgb(0, 119, 0);">&lt;p</span> <span style="color: rgb(0, 0, 204);">data-hr-model=</span><span style="background-color: rgb(255, 240, 240);">&quot;hello&quot;</span><span style="color: rgb(0, 119, 0);">&gt;</span>Hello {{message}}<span style="color: rgb(0, 119, 0);">&lt;/p&gt;</span>
+<span style="color: rgb(0, 119, 0);">&lt;/div&gt;</span></pre>
+<p>&nbsp;</p>
+<p>The markup defines a controller named <em>helloWorldDemo</em> and a model named <em>hello</em>&nbsp;and model that we use to bind our data. The model will be a TextNodeModel which will fill in a variable called {{message}}.</p>
+<h4>The Javascript</h4>
+<pre style="margin: 0px; line-height: 125%;"><span style="background-color: rgb(255, 240, 240);">&quot;use strict&quot;</span>;
+
+jsns.run([
+    <span style="background-color: rgb(255, 240, 240);">&quot;hr.controller&quot;</span>
+], <span style="color: rgb(0, 136, 0); font-weight: bold;">function</span> (exports, module, controller) {
+    <span style="color: rgb(0, 136, 0); font-weight: bold;">function</span> HelloWorldController(bindings) {
+        <span style="color: rgb(0, 136, 0); font-weight: bold;">var</span> model <span style="color: rgb(51, 51, 51);">=</span> bindings.getModel(<span style="background-color: rgb(255, 240, 240);">&#39;hello&#39;</span>);
+
+        model.setData({
+            message<span style="color: rgb(51, 51, 51);">:</span> <span style="background-color: rgb(255, 240, 240);">&quot;World&quot;</span>
+        });
+    }
+
+    controller.create(<span style="background-color: rgb(255, 240, 240);">&quot;helloWorldDemo&quot;</span>, HelloWorldController);
+});</pre>
+<p>&nbsp;</p>
+<p>In javascript we create a controller constructor function named HelloWorldController. This is then passed to controller.create along with the name of the controller elements we want to bind new instances of that controller object to.</p>
+<p>Once the controller is being constructed we get our model from the bindings and set its message data with setData. This will go to the markup and replace any {{message}} variables with the value &quot;World&quot; from our data.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>

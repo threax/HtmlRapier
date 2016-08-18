@@ -649,6 +649,15 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
 
     //Extract templates off the page
     function extractTemplate(element, currentBuilder) {
+        //INC HERE - This is where currentTemplate is incremented to its next value
+        //This single iter is shared for all levels of the gatherer
+        currentTemplate = templateElements.next();
+
+        //Check to see if this is an ignored element, and quickly exit if it is
+        if (ignoredNodes.isIgnored(element)) {
+            return currentBuilder;
+        }
+
         //If the browser supports templates, need to create one to read it properly
         var templateElement = element;
         if (browserSupportsTemplates) {
@@ -657,9 +666,6 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
         }
 
         //Look for nested child templates, do this before taking inner html so children are removed
-        //INC HERE - This is where currentTemplate is incremented to its next value
-        //This single iter is shared for all levels of the gatherer
-        currentTemplate = templateElements.next();
         while (!currentTemplate.done && element.contains(currentTemplate.value)) {
             var currentBuilder = extractTemplate(currentTemplate.value, currentBuilder);
         }
@@ -899,9 +905,10 @@ function (exports, module, typeId, domquery) {
 
 jsns.define("hr.controller", [
     "hr.bindingcollection",
-    "hr.domquery"
+    "hr.domquery",
+    "hr.ignored",
 ],
-function (exports, module, BindingCollection, domQuery) {
+function (exports, module, BindingCollection, domQuery, ignoredNodes) {
     /**
      * Create controller instances for all controllers named name using the given controllerConstructor function.
      * The created controllers will automatically be assigned as a listener to the bindings. This way the object
@@ -911,10 +918,12 @@ function (exports, module, BindingCollection, domQuery) {
      */
     function create(name, controllerConstructor, context, parentBindings) {
         function foundElement(element) {
-            var bindings = new BindingCollection(element);
-            var controller = new controllerConstructor(bindings, context, null);
-            bindings.setListener(controller);
-            element.removeAttribute('data-hr-controller');
+            if (!ignoredNodes.isIgnored(element)) {
+                var bindings = new BindingCollection(element);
+                var controller = new controllerConstructor(bindings, context, null);
+                bindings.setListener(controller);
+                element.removeAttribute('data-hr-controller');
+            }
         }
 
         if (parentBindings) {
@@ -1499,7 +1508,7 @@ function(exports, module, toggles, rest){
 "use strict";
 
 //This module defines html nodes that are ignored and a way to check to see if a node is ignored or the
-//child of an ignored node. Ignored nodes are defined with the data-hr-ignored="true" attribute.
+//child of an ignored node. Ignored nodes are defined with the data-hr-ignored attribute.
 jsns.define("hr.ignored", [
     "hr.domquery"
 ],
@@ -1514,6 +1523,7 @@ function (exports, module, domQuery) {
         }
         return false;
     }
+    exports.isIgnored = isIgnored;
 });
 "use strict";
 

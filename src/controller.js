@@ -2,9 +2,10 @@
 
 jsns.define("hr.controller", [
     "hr.bindingcollection",
-    "hr.domquery"
+    "hr.domquery",
+    "hr.ignored",
 ],
-function (exports, module, BindingCollection, domQuery) {
+function (exports, module, BindingCollection, domQuery, ignoredNodes) {
     /**
      * Create controller instances for all controllers named name using the given controllerConstructor function.
      * The created controllers will automatically be assigned as a listener to the bindings. This way the object
@@ -14,10 +15,12 @@ function (exports, module, BindingCollection, domQuery) {
      */
     function create(name, controllerConstructor, context, parentBindings) {
         function foundElement(element) {
-            var bindings = new BindingCollection(element);
-            var controller = new controllerConstructor(bindings, context, null);
-            bindings.setListener(controller);
-            element.removeAttribute('data-hr-controller');
+            if (!ignoredNodes.isIgnored(element)) {
+                var bindings = new BindingCollection(element);
+                var controller = new controllerConstructor(bindings, context, null);
+                bindings.setListener(controller);
+                element.removeAttribute('data-hr-controller');
+            }
         }
 
         if (parentBindings) {

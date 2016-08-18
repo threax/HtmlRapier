@@ -1,7 +1,7 @@
 ﻿"use strict";
 
 //This module defines html nodes that are ignored and a way to check to see if a node is ignored or the
-//child of an ignored node. Ignored nodes are defined with the data-hr-ignored="true" attribute.
+//child of an ignored node. Ignored nodes are defined with the data-hr-ignored attribute.
 jsns.define("hr.ignored", [
     "hr.domquery"
 ],
@@ -16,4 +16,5 @@ function (exports, module, domQuery) {
         }
         return false;
     }
+    exports.isIgnored = isIgnored;
 });

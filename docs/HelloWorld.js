@@ -1,7 +1,7 @@
 ﻿"use strict";
 
 jsns.run([
-    "htmlrest.controller"
+    "hr.controller"
 ], function (exports, module, controller) {
     function HelloWorldController(bindings) {
         var model = bindings.getModel('hello');
