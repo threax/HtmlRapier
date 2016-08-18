@@ -1,5 +1,5 @@
 <h1>HtmlRapier Quick Guide</h1>
-<p>This guide shows some example usages of the HtmlRest library.</p>
+<p>This guide shows some example usages of the HtmlRapier library. This library forms a good MVC foundation for heavier ajax websites without attempting to make &quot;Single Page&quot; applications work. You can still create very rich web pages, but each one should stay more focused on one thing. Incidentally this should be easier to program than some of the alternatives.</p>
 <h3>Data Attributes</h3>
 <p>At its heart this library is a fancy way of labeling elements on a html page with some attributes that make extracting them later, with some special properties, easier. You can define the following types of attributes on your elements.</p>
 <ul>
@@ -68,6 +68,24 @@ jsns.define(<span style="background-color: rgb(255, 240, 240);">&quot;hr.control
 <p>There is a simple rest ajax request library. This supports get, post, put and delete. It also adds an upload funciton that tries to automate creating form data. All of these functions also have a promise variation such as getPromise or postPromise. These are the reccomended versions of these functions since promises work so much better than callbacks it is likely the plain versions will be removed in the future.</p>
 <h4>Storage</h4>
 <p>This provides an easy interface to the session storage in the browser. This will take plain javascript objects and serialize them to/from json when they are being saved.</p>
+<h4>Toggles</h4>
+<p>Toggles are discussed as part of the html section, since that handles most of the work, however, if you import the toggles module you can do a couple extra things.</p>
+<ol>
+	<li>Define Toggle groups to activate and deactivate sets of toggles more easily.
+	<pre style="margin: 0px; line-height: 125%;"><span style="color: rgb(0, 136, 0); font-weight: bold;">var</span> load <span style="color: rgb(51, 51, 51);">=</span> bindings.getToggle(<span style="background-color: rgb(255, 240, 240);">&#39;load&#39;</span>);
+<span style="color: rgb(0, 136, 0); font-weight: bold;">var</span> main <span style="color: rgb(51, 51, 51);">=</span> bindings.getToggle(<span style="background-color: rgb(255, 240, 240);">&#39;main&#39;</span>);
+<span style="color: rgb(0, 136, 0); font-weight: bold;">var</span> fail <span style="color: rgb(51, 51, 51);">=</span> bindings.getToggle(<span style="background-color: rgb(255, 240, 240);">&#39;fail&#39;</span>);
+<span style="color: rgb(0, 136, 0); font-weight: bold;">var</span> toggler <span style="color: rgb(51, 51, 51);">=</span> <span style="color: rgb(0, 136, 0); font-weight: bold;">new</span> toggles.Group(load, main, fail);
+toggler.activate(load);</pre>Here 3 toggles are added to a group. Then the toggler is told to activate the load toggle. This will turn the main and fail toggles to off and the load toggle to on.</li>
+	<li>Extend toggles with new types. You can use the addTogglePlugin function in this module to add a listener that is called when a toggle is being created. This was used to make bootstrap modals work over toggles if the toggle is attached to an item that has the class toggle on it. Toggles build chains of all possible actions when they are created, so if you use a class on attribute with a style on and off the class and style will be applied on on and only the off style will be applied on off.</li>
+</ol>
+<h3>Other Patterns</h3>
+<h4>Services</h4>
+<p>This library has no concrete concept of services or how you should make them (or indeed if you should make them at all). However, it is reccomended for any advanced server communication to create a module likely with service in its name that accesses the server and does work. You can also put events in them like loadStarted, loadComplete that can easily be bound to ui elements to make work more visible.</p>
+<h4>Promises</h4>
+<p>Promises are awesome for async code. Use them, the library will slowly move in the direction of using promises for all async code, its pretty close now. The library includes a promise polyfill so you can use them on IE and other browsers that don&#39;t support them natively.</p>
+<h1>Demos</h1>
+<p>That is pretty much everything at a high level for this library. It is intended to give you some basic scaffolding and separate your code from the dom, but otherwise is pretty raw for you to use as you see fit. The&nbsp;library also attempts to keep the programmer in the driver&#39;s seat so it does not have any 2 way data binding or other such fun. You are responsible for moving data from a to b and it usually does not take much code to do it.</p>
 <h2>Hello World</h2>
 <p>This is a really simple example of using a controller and a model to display some data on the screen.</p>
 <div data-hr-controller="helloWorldDemo">
