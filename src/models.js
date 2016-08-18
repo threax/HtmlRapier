@@ -41,7 +41,7 @@ function(exports, module, forms, TextStream, components, typeId, domQuery){
         }
 
         this.appendData = function (data, createdCallback, variantFinderCallback) {
-            if (typeId.isArray(data) || typeId.isFunction(data)) {
+            if (typeId.isArray(data) || typeId.isForEachable(data) || typeId.isFunction(data)) {
                 components.repeat(component, element, data, createdCallback, variantFinderCallback);
             }
             else if (data) {

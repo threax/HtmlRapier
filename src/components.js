@@ -89,11 +89,19 @@ function (exports, module, typeId, domquery) {
         var fragmentParent = document.createDocumentFragment();
 
         //Output
-        if (Array.isArray(data)) {
+        if (typeId.isArray(data)) {
+            //An array, read it as fast as possible
             for (var i = 0; i < data.length; ++i) {
                 variant = variantFinderCallback(data[i]);
                 doCreateComponent(name, data[i], fragmentParent, null, variant, createdCallback);
             }
+        }
+        else if (typeId.isForEachable(data)) {
+            //Data supports a 'foreach' method, use this to iterate it
+            data.forEach(function (item) {
+                variant = variantFinderCallback(item);
+                doCreateComponent(name, item, fragmentParent, null, variant, createdCallback);
+            })
         }
         else if (typeId.isFunction(data)) {
             var current = data();

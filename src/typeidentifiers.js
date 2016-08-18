@@ -48,5 +48,10 @@ function(exports, module){
         return typeof test === 'object';
     }
     exports.isObject = isObject;
+
+    function isForEachable(test) {
+        return test && isFunction(test['forEach']);
+    }
+    exports.isForEachable = isForEachable;
 });
 
