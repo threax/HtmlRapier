@@ -566,9 +566,11 @@ jsns.run([
     "hr.domquery",
     "hr.bindingcollection",
     "hr.textstream",
-    "hr.components"
+    "hr.components",
+    "hr.ignored",
+    "hr.iterable"
 ],
-function (exports, module, domquery, BindingCollection, TextStream, components) {
+function (exports, module, domquery, BindingCollection, TextStream, components, ignoredNodes, Iterable) {
     var browserSupportsTemplates = 'content' in document.createElement('template');
     var anonTemplateIndex = 0;
 
@@ -638,6 +640,13 @@ function (exports, module, domquery, BindingCollection, TextStream, components) 
 
     var extractedBuilders = {};
 
+    var templateElements = new Iterable(Array.prototype.slice.call(document.getElementsByTagName("TEMPLATE"))).iterator();
+    var currentTemplate = templateElements.next();
+    while (!currentTemplate.done) {
+        var currentBuilder = extractTemplate(currentTemplate.value, currentBuilder);
+        //The iterator is incremented below where the comment says INC HERE
+    }
+
     //Extract templates off the page
     function extractTemplate(element, currentBuilder) {
         //If the browser supports templates, need to create one to read it properly
@@ -648,9 +657,11 @@ function (exports, module, domquery, BindingCollection, TextStream, components) 
         }
 
         //Look for nested child templates, do this before taking inner html so children are removed
-        var childTemplates = templateElement.getElementsByTagName("TEMPLATE");
-        while (childTemplates.length > 0) {
-            var currentBuilder = extractTemplate(childTemplates[0], currentBuilder);
+        //INC HERE - This is where currentTemplate is incremented to its next value
+        //This single iter is shared for all levels of the gatherer
+        currentTemplate = templateElements.next();
+        while (!currentTemplate.done && element.contains(currentTemplate.value)) {
+            var currentBuilder = extractTemplate(currentTemplate.value, currentBuilder);
         }
 
         var componentString = templateElement.innerHTML.trim();
@@ -699,11 +710,6 @@ function (exports, module, domquery, BindingCollection, TextStream, components) 
             }
             return currentBuilder;
         }
-    }
-
-    var templateElements = document.getElementsByTagName("TEMPLATE");
-    while (templateElements.length > 0) {
-        var currentBuilder = extractTemplate(templateElements[0], currentBuilder);
     }
 
     //Actual creation function
@@ -1489,6 +1495,25 @@ function(exports, module, toggles, rest){
         }
     }
     module.exports = FormLifecycle;
+});
+"use strict";
+
+//This module defines html nodes that are ignored and a way to check to see if a node is ignored or the
+//child of an ignored node. Ignored nodes are defined with the data-hr-ignored="true" attribute.
+jsns.define("hr.ignored", [
+    "hr.domquery"
+],
+function (exports, module, domQuery) {
+    var ignoredNodes = domQuery.all('[data-hr-ignored]');
+
+    function isIgnored(node) {
+        for (var i = 0; i < ignoredNodes.length; ++i) {
+            if (ignoredNodes[i].contains(node)) {
+                return true;
+            }
+        }
+        return false;
+    }
 });
 "use strict";
 
