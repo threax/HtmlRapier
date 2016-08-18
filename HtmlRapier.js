@@ -2720,4 +2720,4 @@ function (exports, module, rest, EventHandler) {
 
     module.exports = PagedData;
 });
-//# sourceMappingURL=htmlrest.js.map
+//# sourceMappingURL=HtmlRapier.js.map
