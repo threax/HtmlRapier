@@ -56,5 +56,12 @@ jsns.run([
 <p>&nbsp;</p>
 <p>In javascript we create a controller constructor function named HelloWorldController. This is then passed to controller.create along with the name of the controller elements we want to bind new instances of that controller object to.</p>
 <p>Once the controller is being constructed we get our model from the bindings and set its message data with setData. This will go to the markup and replace any {{message}} variables with the value &quot;World&quot; from our data.</p>
+<h2>Input Example</h2>
+<p>This example shows taking input and outputting it again.</p>
 <p>&nbsp;</p>
+<div class="row" data-hr-controller="inputDemo">
+	<form class="col-md-6" data-hr-model="input" data-hr-on-submit="outputInfo">
+		<div class="form-group"><label for="userName">Enter your name</label> <input class="form-control" name="userName" type="text" /></div><button type="submit">Submit</button></form>
+	<div class="col-md-6" data-hr-model="output">
+		<p>Hello {{userName}} you have input some data with HtmlRapier.</p></div></div>
 <p>&nbsp;</p>

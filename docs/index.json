@@ -1,1 +1,4 @@
-{"vars":{"title":"Quick Guide"},"linkedContent":[]}
+{
+  "vars": { "title": "Quick Guide" },
+  "linkedContent": [ "HelloWorldDemo", "InputDemo" ]
+}

@@ -4,6 +4,10 @@
     "HelloWorldDemo": {
       "js": [ { "file": "/HelloWorld.js" } ],
       "dependencies": [ "HtmlRapier" ]
+    },
+    "InputDemo": {
+      "js": [ { "file": "/Input.js" } ],
+      "dependencies": [ "HtmlRapier" ]
     }
   }
 }
