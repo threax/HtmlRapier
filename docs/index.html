@@ -1,5 +1,6 @@
 <h1>HtmlRapier Quick Guide</h1>
 <p>This guide shows some example usages of the HtmlRest library.</p>
+<h3>Data Attributes</h3>
 <p>At its heart this library is a fancy way of labeling elements on a html page with some attributes that make extracting them later, with some special properties, easier. You can define the following types of attributes on your elements.</p>
 <ul>
 	<li><strong>Controller </strong>- <code><samp>data-hr-controller=&quot;<em>controllerName</em>&quot;</samp></code> - This defines the primary interface between your&nbsp;javascript and&nbsp;the&nbsp;markup and act as more or less of an entry point for everything else. The <em>controllerName&nbsp;</em>value defines the name of the controller.</li>
@@ -13,7 +14,7 @@
 		<li><strong>Off Classes</strong> - <code>data-hr-class-off=&quot;<em>classList</em>&quot;</code> - Apply the classes in <em>classList </em>when this toggle is off.</li>
 		<li><strong>Idle Classes</strong> - <code>data-hr-class-idle=&quot;<em>classList</em>&quot;</code> - Apply <em>classList </em>classes when the animations on this element have completed. HtmlRapier can track animation states when you toggle and will apply this class after the animations are completed.</li>
 	</ul></li>
-	<li><strong>Model </strong>- <code>data-hr-model=&quot;<em>name</em>&quot;</code> - Create a model on the specified element named <em>name</em>. Models define functions for getData, setData, appendData, getSrc and clear. Even though most models support a getData function, they will not do anything except return a blank object unless you have&nbsp;a&nbsp;FormModel, in which&nbsp;case you will get the form&#39;s data. A model, if it is able, will automatically repeat&nbsp;collection data that it is passed, otherwise it outputs a single element.&nbsp;Depending on what kind of element you attach this to you will get different models:
+	<li><strong>Model </strong>- <code>data-hr-model=&quot;<em>name</em>&quot;</code> - Create a model on the specified element named <em>name</em>. Models define functions for getData, setData, appendData, getSrc and clear. Even though most models support a getData function, they will not do anything except return a blank object unless you have&nbsp;a&nbsp;FormModel, in which&nbsp;case you will get the form&#39;s data. A model, if it is able, will automatically repeat&nbsp;collection data that it is passed, otherwise it outputs a single element.&nbsp;All models will escape their output for malicious html, so you don&#39;t need to scrub your data yourself. Depending on what kind of element you attach this to you will get different models:
 	<ul>
 		<li><strong>FormModel</strong> - This model is created if this attribute is added to a form element. Form models can get and set a single piece of data using getData and setData. This is the only model that returns something useful from getData, which is the current data on the form as a plain javascript object.</li>
 		<li><strong>ComponentModel</strong> - This model is created when the data-hr-model attribute is added to a node that also has data-hr-component on it (or will get one from an anonymous template). It will use a template that you define to output the data you specify. If the data is a collection then you will get repeated elements. This is the most flexible kind of model. To get this kind of model add a <code>data-hr-component=&quot;name&quot;</code> attribute to it or define a template as its child, which will make an anonymous template, which has the same effect.</li>
@@ -26,6 +27,34 @@
 	</ul></li>
 	<li><strong>Ignore </strong>- <code>data-hr-ignored</code> - Add this to an element to ignore any components and controllers it has as children. This is mostly a special case to handle editors where you still need to run other&nbsp;HtmlRapier code.</li>
 </ul>
+<h3>Javascript Functions</h3>
+<p>Beyond its features for html the library defines a couple other classes and concepts that you can use.</p>
+<h4>JSNS</h4>
+<p>Jsns is the core of htmlrapier in terms of how it deals with files. This stands for Javascript Namespace and it allows you an easy way to define javascript libraries that can be shared across files, loaded in any order and either bundled + minified or as separate files (or a mixture). It does a better job of handling the reality of web development better than browserify that crams everything into one file and avoids the issues and partial deprecation of AMD. It also tries to optimize a little bit by only loading the moduels that it needs. This way you can have a larger core shared library of javascript that is minified into one file with individual pages using their own separate javascript files that can plug into the rest of the system. This enables the sharing and chacing of core code resources between requests. It is also possible to load javascript using the async keyword with this system as long as the jsns.js contents have loaded.</p>
+<p>The class exposes 2 important functions:</p>
+<ol>
+	<li><strong>Define </strong>- <code>jsns.define(name, dependencies, factory)</code>&nbsp;- Define a module in the system. These will never run unless they are needed by something else, then the factory function will be called to create the module and its exports. A boilerplate example of a define function call looks like the following:
+	<pre style="margin: 0px; line-height: 125%;"><span style="background-color: rgb(255, 240, 240);">&quot;use strict&quot;</span>;
+
+jsns.define(<span style="background-color: rgb(255, 240, 240);">&quot;my.name&quot;</span>, [
+    
+],
+<span style="color: rgb(0, 136, 0); font-weight: bold;">function</span>(exports, module){
+    
+});</pre>Here we define a module named my.name, with no dependencies that defines nothing in its factory method. To specify dependencies list them in the array and add them as arguments to the factory function. The system will inject the libraries it finds for each dependency into the arguments to this function that come after module.
+	<br />
+	<br />To get a better idea of how this works look at the first few lines from controller.js.
+	<pre style="margin: 0px; line-height: 125%;"><span style="background-color: rgb(255, 240, 240);">&quot;use strict&quot;</span>;
+
+jsns.define(<span style="background-color: rgb(255, 240, 240);">&quot;hr.controller&quot;</span>, [
+    <span style="background-color: rgb(255, 240, 240);">&quot;hr.bindingcollection&quot;</span>,
+    <span style="background-color: rgb(255, 240, 240);">&quot;hr.domquery&quot;</span>,
+    <span style="background-color: rgb(255, 240, 240);">&quot;hr.ignored&quot;</span>,
+],
+<span style="color: rgb(0, 136, 0); font-weight: bold;">function</span> (exports, module, BindingCollection, domQuery, ignoredNodes) {</pre>Here we define 3 dependencies and take them as arguments to the factory function.
+	<br />&nbsp;</li>
+	<li><strong>Run </strong>- <code>jsns.run(dependencies, factory)</code>&nbsp;- Run a module. Calling run with a factory function is what makes the jsns system start to actually do something. If all you do is define a bunch of stuff but never run anything, nothing will happen on your page. So you want to have at least one thing that runs per page. This will probably be what defines and activates your controllers. The factory functions passed in will not actually run until all of the dependencies have loaded. Remember the order does not matter after jsns.js is included. You can define a runner that uses HtmlRapier classes and then later include the HtmlRapier library itself. Once those dependencies have loaded the runner will run. Runners are run in the order they are added to jsns or once all their dependencies have loaded, whichever comes first.</li>
+</ol>
 <h2>Hello World</h2>
 <p>This is a really simple example of using a controller and a model to display some data on the screen.</p>
 <div data-hr-controller="helloWorldDemo">
