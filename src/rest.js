@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.rest", null,
+jsns.define("hr.rest", null,
 function (exports, module) {
 
     function extractData(xhr) {

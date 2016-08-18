@@ -2,10 +2,10 @@
 
 //Auto find components on the page and build them as components
 jsns.run([
-    "htmlrest.domquery",
-    "htmlrest.bindingcollection",
-    "htmlrest.textstream",
-    "htmlrest.components"
+    "hr.domquery",
+    "hr.bindingcollection",
+    "hr.textstream",
+    "hr.components"
 ],
 function (exports, module, domquery, BindingCollection, TextStream, components) {
     var browserSupportsTemplates = 'content' in document.createElement('template');

@@ -1,7 +1,7 @@
 "use strict";
 
-jsns.define("htmlrest.toggles", [
-    "htmlrest.typeidentifiers"
+jsns.define("hr.toggles", [
+    "hr.typeidentifiers"
 ],
 function(exports, module, typeId){
     var defaultStates = ['on', 'off']; //Reusuable states, so we don't end up creating tons of these arrays

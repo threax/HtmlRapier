@@ -1,7 +1,7 @@
 ﻿"use strict";
 
 jsns.run([
-    "htmlrest.toggles"
+    "hr.toggles"
 ],
 function(exports, module, toggles){
 

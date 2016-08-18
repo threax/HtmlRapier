@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.eventhandler", null,
+jsns.define("hr.eventhandler", null,
 function (exports, module) {
 
     /**
@@ -62,8 +62,8 @@ function (exports, module) {
     module.exports = EventHandler;
 });
 
-jsns.define("htmlrest.lateboundeventhandler", [
-    "htmlrest.eventhandler"
+jsns.define("hr.lateboundeventhandler", [
+    "hr.eventhandler"
 ],
 function (exports, module, HrEventHandler) {
 
@@ -114,7 +114,7 @@ function (exports, module, HrEventHandler) {
     module.exports = LateBoundEventHandler;
 });
 
-jsns.define("htmlrest.promiseeventhandler", null,
+jsns.define("hr.promiseeventhandler", null,
 function (exports, module) {
 
     /**

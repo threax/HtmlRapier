@@ -1,8 +1,8 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.textstream", [
-    "htmlrest.escape",
-    "htmlrest.typeidentifiers"
+jsns.define("hr.textstream", [
+    "hr.escape",
+    "hr.typeidentifiers"
 ],
 function (exports, module, escape, typeId) {
 

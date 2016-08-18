@@ -33,7 +33,7 @@ jsns.run(function (using) {
 
             //outputFactory();
 
-            var rest = using("htmlrest.rest");
+            var rest = using("hr.rest");
             intellisense.logMessage('restaazaaa');
             //outputObject(rest);
 

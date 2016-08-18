@@ -1,6 +1,6 @@
-﻿jsns.define("htmlrest.widgets.pagenumbers", [
-    "htmlrest.toggles",
-    "htmlrest.eventhandler"
+﻿jsns.define("hr.widgets.pagenumbers", [
+    "hr.toggles",
+    "hr.eventhandler"
 ],
 function (exports, module, toggles, EventHandler) {
 

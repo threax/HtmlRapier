@@ -379,27 +379,27 @@ var jsns = (function () {
 "use strict";
 
 /**
- * @callback htmlrest_bindingcollection_eventcallback
+ * @callback hr_bindingcollection_eventcallback
  */
 
 /**
- * @callback htmlrest_iter
+ * @callback hr_iter
  * @param {array} items - the items to iterate
- * @param {htmlrest_iter_cb} - the function to transform each object
+ * @param {hr_iter_cb} - the function to transform each object
  * @returns the transformed item and null when all items are iterated
  */
 
 /**
- * @typedef {object} htmlrest_bindingcollection
+ * @typedef {object} hr_bindingcollection
  */
 
-jsns.define("htmlrest.bindingcollection", [
-    "htmlrest.escape",
-    "htmlrest.typeidentifiers",
-    "htmlrest.domquery",
-    "htmlrest.textstream",
-    "htmlrest.toggles",
-    "htmlrest.models"
+jsns.define("hr.bindingcollection", [
+    "hr.escape",
+    "hr.typeidentifiers",
+    "hr.domquery",
+    "hr.textstream",
+    "hr.toggles",
+    "hr.models"
 ],
 function (exports, module, escape, typeId, domQuery, TextStream, toggles, models) {
     function EventRunner(name, listener) {
@@ -563,10 +563,10 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
 
 //Auto find components on the page and build them as components
 jsns.run([
-    "htmlrest.domquery",
-    "htmlrest.bindingcollection",
-    "htmlrest.textstream",
-    "htmlrest.components"
+    "hr.domquery",
+    "hr.bindingcollection",
+    "hr.textstream",
+    "hr.components"
 ],
 function (exports, module, domquery, BindingCollection, TextStream, components) {
     var browserSupportsTemplates = 'content' in document.createElement('template');
@@ -749,9 +749,9 @@ function (exports, module, domquery, BindingCollection, TextStream, components) 
 
 //Components is a bit trickier, we want part of it to run right away
 //First define the module
-jsns.define("htmlrest.components", [
-    "htmlrest.typeidentifiers",
-    "htmlrest.domquery"
+jsns.define("hr.components", [
+    "hr.typeidentifiers",
+    "hr.domquery"
 ],
 function (exports, module, typeId, domquery) {
     var factory = {};
@@ -892,9 +892,9 @@ function (exports, module, typeId, domquery) {
 });
 "use strict";
 
-jsns.define("htmlrest.controller", [
-    "htmlrest.bindingcollection",
-    "htmlrest.domquery"
+jsns.define("hr.controller", [
+    "hr.bindingcollection",
+    "hr.domquery"
 ],
 function (exports, module, BindingCollection, domQuery) {
     /**
@@ -938,8 +938,8 @@ function (exports, module, BindingCollection, domQuery) {
 });
 "use strict";
 
-jsns.define("htmlrest.domquery", [
-    "htmlrest.typeidentifiers"
+jsns.define("hr.domquery", [
+    "hr.typeidentifiers"
 ],
 function(exports, module, typeId){
     /**
@@ -1088,12 +1088,12 @@ function(exports, module, typeId){
 });
 "use strict";
 
-jsns.define("htmlrest.escape", null,
+jsns.define("hr.escape", null,
 function(exports, module){
     /**
      * Escape text to prevent html characters from being output. Helps prevent xss, called automatically
      * by formatText. If you manually write user data consider using this function to escape it, but it is
-     * not needed using other htmlrest functions like repeat, createComponent or formatText.
+     * not needed using other HtmlRapier functions like repeat, createComponent or formatText.
      * @param {string} text - the text to escape.
      * @returns {type} - The escaped version of text.
      */
@@ -1142,7 +1142,7 @@ function(exports, module){
 });
 "use strict";
 
-jsns.define("htmlrest.eventhandler", null,
+jsns.define("hr.eventhandler", null,
 function (exports, module) {
 
     /**
@@ -1204,8 +1204,8 @@ function (exports, module) {
     module.exports = EventHandler;
 });
 
-jsns.define("htmlrest.lateboundeventhandler", [
-    "htmlrest.eventhandler"
+jsns.define("hr.lateboundeventhandler", [
+    "hr.eventhandler"
 ],
 function (exports, module, HrEventHandler) {
 
@@ -1256,7 +1256,7 @@ function (exports, module, HrEventHandler) {
     module.exports = LateBoundEventHandler;
 });
 
-jsns.define("htmlrest.promiseeventhandler", null,
+jsns.define("hr.promiseeventhandler", null,
 function (exports, module) {
 
     /**
@@ -1327,9 +1327,9 @@ function (exports, module) {
 });
 "use strict";
 
-jsns.define("htmlrest.form", [
-    "htmlrest.domquery",
-    "htmlrest.typeidentifiers"
+jsns.define("hr.form", [
+    "hr.domquery",
+    "hr.typeidentifiers"
 ],
 function(exports, module, domQuery, typeIds){
     /**
@@ -1427,9 +1427,9 @@ function(exports, module, domQuery, typeIds){
 });
 "use strict";
 
-jsns.define("htmlrest.formlifecycle", [
-    "htmlrest.toggles",
-    "htmlrest.rest"
+jsns.define("hr.formlifecycle", [
+    "hr.toggles",
+    "hr.rest"
 ],
 function(exports, module, toggles, rest){
 
@@ -1438,8 +1438,8 @@ function(exports, module, toggles, rest){
      * when fetching data and provides provisions to handle a data connection failure.
      * If your html uses the default bindings you don't need to pass settings.
      * @constructor
-     * @param {htmlrest.component.BindingCollection} bindings - The bindings to use to lookup elements
-     * @param {htmlrest.form.AjaxLifecycleSettings} [settings] - The settings for the form, optional
+     * @param {hr.component.BindingCollection} bindings - The bindings to use to lookup elements
+     * @param {hr.form.AjaxLifecycleSettings} [settings] - The settings for the form, optional
      */
     function FormLifecycle(bindings) {
         var tryAgainFunc = null;
@@ -1494,13 +1494,13 @@ function(exports, module, toggles, rest){
 "use strict";
 
 /**
- * @callback htmlrest_iter_cb
+ * @callback hr_iter_cb
  */
 
 /**
- * @callback htmlrest_iter
+ * @callback hr_iter
  * @param {array} items - the items to iterate
- * @param {htmlrest_iter_cb} - the function to transform each object
+ * @param {hr_iter_cb} - the function to transform each object
  * @returns the transformed item and null when all items are iterated
  *
  * Iter defines a function that will return a function that iterates
@@ -1511,13 +1511,13 @@ function(exports, module, toggles, rest){
  * 
  * You don't new this just call it e.g. iter(things, function(thing){ return thing + ' changes' });
  */
-jsns.define("htmlrest.iter", null,
+jsns.define("hr.iter", null,
 function(exports, module){
 
     /**
      * Iterate over a collection of items calling cb for each one.
      * @param {array} items
-     * @param {htmlrest_iter_cb} cb
+     * @param {hr_iter_cb} cb
      * @returns - The transformed item and null when all items are iterated.
      */
     function iter(items, cb) {
@@ -1534,12 +1534,12 @@ function(exports, module){
 });
 "use strict";
 
-jsns.define("htmlrest.models", [
-    "htmlrest.form",
-    "htmlrest.textstream",
-    "htmlrest.components",
-    "htmlrest.typeidentifiers",
-    "htmlrest.domquery"
+jsns.define("hr.models", [
+    "hr.form",
+    "hr.textstream",
+    "hr.components",
+    "hr.typeidentifiers",
+    "hr.domquery"
 ],
 function(exports, module, forms, TextStream, components, typeId, domQuery){
 
@@ -1682,7 +1682,7 @@ function(exports, module, forms, TextStream, components, typeId, domQuery){
 });
 "use strict";
 
-jsns.define("htmlrest.rest", null,
+jsns.define("hr.rest", null,
 function (exports, module) {
 
     function extractData(xhr) {
@@ -1930,7 +1930,7 @@ function (exports, module) {
 });
 "use strict";
 
-jsns.define("htmlrest.storage", null,
+jsns.define("hr.storage", null,
 function(exports, module){
     //The instance storage, 
     var instanceStorage = {};
@@ -2001,9 +2001,9 @@ function(exports, module){
 });
 "use strict";
 
-jsns.define("htmlrest.textstream", [
-    "htmlrest.escape",
-    "htmlrest.typeidentifiers"
+jsns.define("hr.textstream", [
+    "hr.escape",
+    "hr.typeidentifiers"
 ],
 function (exports, module, escape, typeId) {
 
@@ -2147,8 +2147,8 @@ function (exports, module, escape, typeId) {
 });
 "use strict";
 
-jsns.define("htmlrest.timedtrigger", [
-    "htmlrest.eventhandler"
+jsns.define("hr.timedtrigger", [
+    "hr.eventhandler"
 ],
 function (exports, module, EventHandler) {
     function TimedTrigger(delay) {
@@ -2201,8 +2201,8 @@ function (exports, module, EventHandler) {
 });
 "use strict";
 
-jsns.define("htmlrest.toggles", [
-    "htmlrest.typeidentifiers"
+jsns.define("hr.toggles", [
+    "hr.typeidentifiers"
 ],
 function(exports, module, typeId){
     var defaultStates = ['on', 'off']; //Reusuable states, so we don't end up creating tons of these arrays
@@ -2449,7 +2449,7 @@ function(exports, module, typeId){
 });
 "use strict";
 
-jsns.define("htmlrest.typeidentifiers", null,
+jsns.define("hr.typeidentifiers", null,
 function(exports, module){
     //only implement if no native implementation is available
     if (typeof Array.isArray === 'undefined') {
@@ -2503,7 +2503,7 @@ function(exports, module){
 "use strict";
 
 jsns.run([
-    "htmlrest.toggles"
+    "hr.toggles"
 ],
 function(exports, module, toggles){
 
@@ -2538,9 +2538,9 @@ function(exports, module, toggles){
 });
 "use strict";
 
-jsns.define("htmlrest.widgets.navmenu", [
-    "htmlrest.eventhandler",
-    "htmlrest.controller"
+jsns.define("hr.widgets.navmenu", [
+    "hr.eventhandler",
+    "hr.controller"
 ],
 function (exports, module, EventHandler, controller) {
     var navMenus = {};
@@ -2579,9 +2579,9 @@ function (exports, module, EventHandler, controller) {
     }
     exports.getNavMenu = getNavMenu;
 });
-jsns.define("htmlrest.widgets.pagenumbers", [
-    "htmlrest.toggles",
-    "htmlrest.eventhandler"
+jsns.define("hr.widgets.pagenumbers", [
+    "hr.toggles",
+    "hr.eventhandler"
 ],
 function (exports, module, toggles, EventHandler) {
 
@@ -2685,9 +2685,9 @@ function (exports, module, toggles, EventHandler) {
 
     module.exports = PageNumbers;
 });
-jsns.define("htmlrest.data.paged", [
-    "htmlrest.rest",
-    "htmlrest.eventhandler"
+jsns.define("hr.data.paged", [
+    "hr.rest",
+    "hr.eventhandler"
 ],
 function (exports, module, rest, EventHandler) {
 

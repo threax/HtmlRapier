@@ -1,11 +1,11 @@
 "use strict";
 
-jsns.define("htmlrest.models", [
-    "htmlrest.form",
-    "htmlrest.textstream",
-    "htmlrest.components",
-    "htmlrest.typeidentifiers",
-    "htmlrest.domquery"
+jsns.define("hr.models", [
+    "hr.form",
+    "hr.textstream",
+    "hr.components",
+    "hr.typeidentifiers",
+    "hr.domquery"
 ],
 function(exports, module, forms, TextStream, components, typeId, domQuery){
 

@@ -1,13 +1,13 @@
 "use strict";
 
 /**
- * @callback htmlrest_iter_cb
+ * @callback hr_iter_cb
  */
 
 /**
- * @callback htmlrest_iter
+ * @callback hr_iter
  * @param {array} items - the items to iterate
- * @param {htmlrest_iter_cb} - the function to transform each object
+ * @param {hr_iter_cb} - the function to transform each object
  * @returns the transformed item and null when all items are iterated
  *
  * Iter defines a function that will return a function that iterates
@@ -18,13 +18,13 @@
  * 
  * You don't new this just call it e.g. iter(things, function(thing){ return thing + ' changes' });
  */
-jsns.define("htmlrest.iter", null,
+jsns.define("hr.iter", null,
 function(exports, module){
 
     /**
      * Iterate over a collection of items calling cb for each one.
      * @param {array} items
-     * @param {htmlrest_iter_cb} cb
+     * @param {hr_iter_cb} cb
      * @returns - The transformed item and null when all items are iterated.
      */
     function iter(items, cb) {

@@ -1,8 +1,8 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.form", [
-    "htmlrest.domquery",
-    "htmlrest.typeidentifiers"
+jsns.define("hr.form", [
+    "hr.domquery",
+    "hr.typeidentifiers"
 ],
 function(exports, module, domQuery, typeIds){
     /**

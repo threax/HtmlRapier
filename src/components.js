@@ -2,9 +2,9 @@
 
 //Components is a bit trickier, we want part of it to run right away
 //First define the module
-jsns.define("htmlrest.components", [
-    "htmlrest.typeidentifiers",
-    "htmlrest.domquery"
+jsns.define("hr.components", [
+    "hr.typeidentifiers",
+    "hr.domquery"
 ],
 function (exports, module, typeId, domquery) {
     var factory = {};

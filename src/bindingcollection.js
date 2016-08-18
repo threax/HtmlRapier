@@ -1,27 +1,27 @@
 ﻿"use strict";
 
 /**
- * @callback htmlrest_bindingcollection_eventcallback
+ * @callback hr_bindingcollection_eventcallback
  */
 
 /**
- * @callback htmlrest_iter
+ * @callback hr_iter
  * @param {array} items - the items to iterate
- * @param {htmlrest_iter_cb} - the function to transform each object
+ * @param {hr_iter_cb} - the function to transform each object
  * @returns the transformed item and null when all items are iterated
  */
 
 /**
- * @typedef {object} htmlrest_bindingcollection
+ * @typedef {object} hr_bindingcollection
  */
 
-jsns.define("htmlrest.bindingcollection", [
-    "htmlrest.escape",
-    "htmlrest.typeidentifiers",
-    "htmlrest.domquery",
-    "htmlrest.textstream",
-    "htmlrest.toggles",
-    "htmlrest.models"
+jsns.define("hr.bindingcollection", [
+    "hr.escape",
+    "hr.typeidentifiers",
+    "hr.domquery",
+    "hr.textstream",
+    "hr.toggles",
+    "hr.models"
 ],
 function (exports, module, escape, typeId, domQuery, TextStream, toggles, models) {
     function EventRunner(name, listener) {

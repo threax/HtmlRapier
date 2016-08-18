@@ -1,8 +1,8 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.widgets.navmenu", [
-    "htmlrest.eventhandler",
-    "htmlrest.controller"
+jsns.define("hr.widgets.navmenu", [
+    "hr.eventhandler",
+    "hr.controller"
 ],
 function (exports, module, EventHandler, controller) {
     var navMenus = {};

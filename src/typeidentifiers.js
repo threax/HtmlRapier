@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.typeidentifiers", null,
+jsns.define("hr.typeidentifiers", null,
 function(exports, module){
     //only implement if no native implementation is available
     if (typeof Array.isArray === 'undefined') {

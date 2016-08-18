@@ -1,7 +1,7 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.timedtrigger", [
-    "htmlrest.eventhandler"
+jsns.define("hr.timedtrigger", [
+    "hr.eventhandler"
 ],
 function (exports, module, EventHandler) {
     function TimedTrigger(delay) {

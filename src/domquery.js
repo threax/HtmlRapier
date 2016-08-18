@@ -1,7 +1,7 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.domquery", [
-    "htmlrest.typeidentifiers"
+jsns.define("hr.domquery", [
+    "hr.typeidentifiers"
 ],
 function(exports, module, typeId){
     /**

@@ -1,8 +1,8 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.formlifecycle", [
-    "htmlrest.toggles",
-    "htmlrest.rest"
+jsns.define("hr.formlifecycle", [
+    "hr.toggles",
+    "hr.rest"
 ],
 function(exports, module, toggles, rest){
 
@@ -11,8 +11,8 @@ function(exports, module, toggles, rest){
      * when fetching data and provides provisions to handle a data connection failure.
      * If your html uses the default bindings you don't need to pass settings.
      * @constructor
-     * @param {htmlrest.component.BindingCollection} bindings - The bindings to use to lookup elements
-     * @param {htmlrest.form.AjaxLifecycleSettings} [settings] - The settings for the form, optional
+     * @param {hr.component.BindingCollection} bindings - The bindings to use to lookup elements
+     * @param {hr.form.AjaxLifecycleSettings} [settings] - The settings for the form, optional
      */
     function FormLifecycle(bindings) {
         var tryAgainFunc = null;

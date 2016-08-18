@@ -1,8 +1,8 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.controller", [
-    "htmlrest.bindingcollection",
-    "htmlrest.domquery"
+jsns.define("hr.controller", [
+    "hr.bindingcollection",
+    "hr.domquery"
 ],
 function (exports, module, BindingCollection, domQuery) {
     /**

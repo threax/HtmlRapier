@@ -1,11 +1,11 @@
 ﻿"use strict";
 
-jsns.define("htmlrest.escape", null,
+jsns.define("hr.escape", null,
 function(exports, module){
     /**
      * Escape text to prevent html characters from being output. Helps prevent xss, called automatically
      * by formatText. If you manually write user data consider using this function to escape it, but it is
-     * not needed using other htmlrest functions like repeat, createComponent or formatText.
+     * not needed using other HtmlRapier functions like repeat, createComponent or formatText.
      * @param {string} text - the text to escape.
      * @returns {type} - The escaped version of text.
      */

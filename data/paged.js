@@ -1,6 +1,6 @@
-﻿jsns.define("htmlrest.data.paged", [
-    "htmlrest.rest",
-    "htmlrest.eventhandler"
+﻿jsns.define("hr.data.paged", [
+    "hr.rest",
+    "hr.eventhandler"
 ],
 function (exports, module, rest, EventHandler) {
 
