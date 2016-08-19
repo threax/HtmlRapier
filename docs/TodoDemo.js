@@ -22,6 +22,7 @@ jsns.run([
             var item = addModel.getData();
             itemsModel.appendData(item, controller.createOnCallback(TodoItemController, self), findItemVariant);
             todoItems.push(item);
+            addModel.clear();
         }
         this.addItem = addItem;
 

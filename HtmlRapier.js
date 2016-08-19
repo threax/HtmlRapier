@@ -1436,7 +1436,14 @@ function(exports, module, domQuery, typeIds){
         else if (typeIds.isFunction(data)){
             for (var i = 0; i < nameAttrs.length; ++i) {
                 var element = nameAttrs[i];
-                element.value = data(element.getAttribute('name'));
+                switch (element.type) {
+                    case 'checkbox':
+                        element.checked = data(element.getAttribute('name')) === element.value;
+                        break;
+                    default:
+                        element.value = data(element.getAttribute('name'));
+                        break;
+                }
             }
         }
     }
