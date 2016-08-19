@@ -2,9 +2,9 @@
 
 jsns.define("hr.formlifecycle", [
     "hr.toggles",
-    "hr.rest"
+    "hr.http"
 ],
-function(exports, module, toggles, rest){
+function (exports, module, toggles, http) {
 
     /**
      * Create a simple ajax lifecyle for the form. This will show a loading screen
@@ -38,28 +38,28 @@ function(exports, module, toggles, rest){
 
         this.populate = function () {
             formToggler.show(load);
-            rest.get(settingsModel.getSrc(),
-                function (successData) {
-                    settingsModel.setData(successData);
-                    formToggler.show(main);
-                },
-                function (failData) {
-                    tryAgainFunc = self.populate;
-                    formToggler.show(fail);
-                });
+            http.get(settingsModel.getSrc())
+            .then(function (successData) {
+                settingsModel.setData(successData);
+                formToggler.show(main);
+            })
+            .catch(function (failData) {
+                tryAgainFunc = self.populate;
+                formToggler.show(fail);
+            });
         }
 
-        this.submit = function() {
+        this.submit = function () {
             formToggler.show(load);
             var data = settingsModel.getData();
-            rest.post(settingsModel.getSrc(), data,
-                function (successData) {
-                    formToggler.show(main);
-                },
-                function (failData) {
-                    tryAgainFunc = self.submit;
-                    formToggler.show(fail);
-                });
+            http.post(settingsModel.getSrc(), data)
+            .then(function (successData) {
+                formToggler.show(main);
+            })
+            .catch(function (failData) {
+                tryAgainFunc = self.submit;
+                formToggler.show(fail);
+            });
         }
     }
     module.exports = FormLifecycle;

@@ -1,47 +1,47 @@
-﻿var thingy = {};
+﻿//var thingy = {};
 
-jsns.run(function (using) {
-    //function outputFactory() {
-    //    var iter = jsns.getFac();
+//jsns.run(function (using) {
+//    //function outputFactory() {
+//    //    var iter = jsns.getFac();
         
-    //    for (key in iter) {
-    //        intellisense.logMessage("lib " + key);
-    //        var lib = iter[key]();
-    //        for(libKey in lib){
-    //            intellisense.logMessage("   key " + libKey + " val " + lib[libKey]);
-    //        }
-    //    }
-    //}
+//    //    for (key in iter) {
+//    //        intellisense.logMessage("lib " + key);
+//    //        var lib = iter[key]();
+//    //        for(libKey in lib){
+//    //            intellisense.logMessage("   key " + libKey + " val " + lib[libKey]);
+//    //        }
+//    //    }
+//    //}
 
-    //function outputModule() {
-    //    var iter = jsns.getMod();
-    //    intellisense.logMessage("modules " + iter);
-    //    outputObject(iter);
-    //}
+//    //function outputModule() {
+//    //    var iter = jsns.getMod();
+//    //    intellisense.logMessage("modules " + iter);
+//    //    outputObject(iter);
+//    //}
 
-    function outputObject(iter){
-        for (key in iter) {
-            intellisense.logMessage("key " + key + " val " + iter[key]);
-        }
-    }
+//    function outputObject(iter){
+//        for (key in iter) {
+//            intellisense.logMessage("key " + key + " val " + iter[key]);
+//        }
+//    }
 
-    intellisense.addEventListener('statementcompletion', function (e) {
-        //if (e.targetName === 'debug') {
-            intellisense.logMessage("Debug jsns");
+//    intellisense.addEventListener('statementcompletion', function (e) {
+//        //if (e.targetName === 'debug') {
+//            intellisense.logMessage("Debug jsns");
 
-            //intellisense.logMessage("comments " + " " + iter + " "  + intellisense.getFunctionComments(iter));
+//            //intellisense.logMessage("comments " + " " + iter + " "  + intellisense.getFunctionComments(iter));
 
-            //outputFactory();
+//            //outputFactory();
 
-            var rest = using("hr.rest");
-            intellisense.logMessage('restaazaaa');
-            //outputObject(rest);
+//            var rest = using("hr.rest");
+//            intellisense.logMessage('restaazaaa');
+//            //outputObject(rest);
 
-            // Prints out all statement completion items.
-            //e.items.forEach(function (item) {
-            //    //intellisense.logMessage('[completion item] ' + item.name + ', kind:' + item.kind + ', scope:' + item.scope + ', value:' + item.value);
-            //    //item.name = "things";
-            //});
-        //}
-    });
-});
+//            // Prints out all statement completion items.
+//            //e.items.forEach(function (item) {
+//            //    //intellisense.logMessage('[completion item] ' + item.name + ', kind:' + item.kind + ', scope:' + item.scope + ', value:' + item.value);
+//            //    //item.name = "things";
+//            //});
+//        //}
+//    });
+//});

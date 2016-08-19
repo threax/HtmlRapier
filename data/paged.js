@@ -1,8 +1,8 @@
 ﻿jsns.define("hr.data.paged", [
-    "hr.rest",
+    "hr.http",
     "hr.eventhandler"
 ],
-function (exports, module, rest, EventHandler) {
+function (exports, module, http, EventHandler) {
 
     function PagedData(src, resultsPerPage) {
         var updating = new EventHandler();
@@ -20,13 +20,13 @@ function (exports, module, rest, EventHandler) {
         function updateData() {
             updating.fire();
             var url = src + '?page=' + this.currentPage + '&count=' + this.resultsPerPage;
-            rest.get(url,
-                function (data) {
-                    updated.fire(data);
-                },
-                function (data) {
-                    error.fire(data);
-                });
+            http.get(url)
+            .then(function (data) {
+                updated.fire(data);
+            })
+            .catch(function (data) {
+                error.fire(data);
+            });
         }
         this.updateData = updateData;
     }
