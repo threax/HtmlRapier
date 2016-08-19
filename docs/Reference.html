@@ -81,4 +81,4 @@ toggler.activate(load);</pre>Here 3 toggles are added to a group. Then the toggl
 <h4>Services</h4>
 <p>This library has no concrete concept of services or how you should make them (or indeed if you should make them at all). However, it is reccomended for any advanced server communication to create a module likely with service in its name that accesses the server and does work. You can also put events in them like loadStarted, loadComplete that can easily be bound to ui elements to make work more visible.</p>
 <h4>Promises</h4>
-<p>Promises are awesome for async code. Use them, the library will slowly move in the direction of using promises for all async code, its pretty close now. The library includes a promise polyfill so you can use them on IE and other browsers that don&#39;t support them natively.</p>
+<p>Promises are used whenever possible for async code. The chaining and error handling they provide fit in very well with this library. HtmlRapier also includes a promise polyfill so you can use them on IE and other browsers that don&#39;t support them natively.</p>
