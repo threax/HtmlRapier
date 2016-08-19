@@ -62,6 +62,9 @@ function (exports, module, typeId, domquery) {
         if (variant === undefined) {
             variant = getDefaultVariant();
         }
+        else if (typeId.isFunction(variant)) {
+            variant = variant(data);
+        }
         return doCreateComponent(name, data, parentComponent, null, variant, createdCallback);
     }
     exports.single = single;

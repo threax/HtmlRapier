@@ -1,0 +1,15 @@
+<h1>Todo List</h1>
+<p>Add Items to the Todo List. You can mark them important by checking the important box.</p>
+<p>&nbsp;</p>
+<div data-hr-controller="todo">
+	<ol data-hr-model="items"><template>
+		<li>{{itemText}}</li>
+		</template><template data-hr-variant="important">
+		<li style="background-color: red;">{{itemText}}</li>
+		</template>
+		<li>&nbsp;</li>
+		<li>&nbsp;</li>
+	</ol>
+	<form data-hr-model="add" data-hr-on-submit="addItem">
+		<div class="form-group"><label for="itemText">Enter A Todo Item</label> <input class="form-control" name="itemText" type="text" /></div>
+		<div class="checkbox"><label><input name="important" type="checkbox" /> Important </label></div><button type="submit">Add</button></form></div>
