@@ -1,5 +1,15 @@
 ﻿{
   "$schema": "../../../SchemaGenerator/Schema/EdityProject.json",
   "contentMap": {
-  }
+  },
+  "compilers": [
+    {
+      "type": "Html",
+      "template": "default.html",
+      "extension": ".html",
+      "settings": {
+        "siteRoot": "/HtmlRapierDocs"
+      }
+    }
+  ]
 }
