@@ -1,6 +1,6 @@
 ﻿{
   "$schema": "../../../../SchemaGenerator/Schema/PageDefinition.json",
-  "linkedContent": [ "bootstrap", "HelloWorldDemo" ],
+  "linkedContent": [ "bootstrap", "HtmlRapier" ],
   "vars": {
     "title": "Default Page Title"
   }
