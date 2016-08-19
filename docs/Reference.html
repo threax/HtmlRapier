@@ -62,8 +62,8 @@ jsns.define(<span style="background-color: rgb(255, 240, 240);">&quot;hr.control
 	<li><strong>LateBoundEventHandler&nbsp;</strong>- <code><font face="Courier New">hr.lateboundeventhandler</font></code> - The same as EventHandler, but will queue up all fire methods until the first listener is added. This makes it easy to handle events where you might miss something fired off before you have had the chance to load. Once the first listener is bound this works like a normal EventHandler and&nbsp;no longer queues events. This also means that the&nbsp;2nd listener added to this event will not get&nbsp;the queued events.&nbsp;Likely more rare to use than EventHandler, but helpful in certain situations.</li>
 	<li><strong>PromiseEventHandler </strong>- <code><font face="Courier New">hr.promiseeventhandler</font></code> - Works like a normal event handler, but when fired will return a promise that will wait for all fired events to complete. This makes it easier to synchronize events when they use async code since the master event promise won&#39;t fulfil until any sub promises returned by the listeners have fired.</li>
 </ol>
-<h4>Rest</h4>
-<p>There is a simple rest ajax request library. This supports get, post, put and delete. It also adds an upload funciton that tries to automate creating form data. All of these functions also have a promise variation such as getPromise or postPromise. These are the reccomended versions of these functions since promises work so much better than callbacks it is likely the plain versions will be removed in the future.</p>
+<h4>Http</h4>
+<p>There is also a simple http module that lets you do get, post, put and delete with&nbsp;plain javascript objects. These functions will return promises that will fill with the server data. This module also exposes an ajax function for more raw calls and a upload function to simplify sending a file.</p>
 <h4>Storage</h4>
 <p>This provides an easy interface to the session storage in the browser. This will take plain javascript objects and serialize them to/from json when they are being saved.</p>
 <h4>Toggles</h4>
