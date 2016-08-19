@@ -1,9 +1,8 @@
 ﻿"use strict";
 
 jsns.run([
-    "hr.controller",
-    "hr.iterable"
-], function (exports, module, controller, Itearable) {
+    "hr.controller"
+], function (exports, module, controller) {
     function TodoDemoController(bindings) {
         var addModel = bindings.getModel('add');
         var itemsModel = bindings.getModel('items');
