@@ -641,6 +641,32 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
     var extractedBuilders = {};
 
     var templateElements = new Iterable(Array.prototype.slice.call(document.getElementsByTagName("TEMPLATE"))).iterator();
+    //If the browser supports templates, iterate through them after creating temp ones.
+    if (browserSupportsTemplates) {
+        var topLevelTemplates = templateElements;
+        templateElements = new Iterable(function () {
+            var currentTopLevelTemplate = topLevelTemplates.next();
+            if (!currentTopLevelTemplate.done) {
+                var element = currentTopLevelTemplate.value;
+                var templateElement = document.createElement('div');
+                var variantName = element.getAttribute("data-hr-variant");
+                var componentName = element.getAttribute("data-hr-component");
+                if (variantName !== null) {
+                    templateElement.setAttribute("data-hr-variant", variantName);
+                }
+                if (componentName !== null) {
+                    templateElement.setAttribute("data-hr-component", componentName);
+                }
+                templateElement.appendChild(document.importNode(element.content, true));
+                //Remove template element
+                var parent = element.parentNode;
+                parent.insertBefore(templateElement, element);
+                parent.removeChild(element);
+                return templateElement;
+            }
+        }).iterator();
+    }
+
     var currentTemplate = templateElements.next();
     while (!currentTemplate.done) {
         var currentBuilder = extractTemplate(currentTemplate.value, currentBuilder);
@@ -660,10 +686,10 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
 
         //If the browser supports templates, need to create one to read it properly
         var templateElement = element;
-        if (browserSupportsTemplates) {
-            var templateElement = document.createElement('div');
-            templateElement.appendChild(document.importNode(element.content, true));
-        }
+        //if (browserSupportsTemplates) {
+        //    var templateElement = document.createElement('div');
+        //    templateElement.appendChild(document.importNode(element.content, true));
+        //}
 
         //Look for nested child templates, do this before taking inner html so children are removed
         while (!currentTemplate.done && element.contains(currentTemplate.value)) {
@@ -1734,6 +1760,28 @@ function (exports, module, typeId) {
                     }
                     else{
                         return {done: false, value: item};
+                    }
+                }
+            };
+        }
+        else if (typeId.isFunction(items)) {
+            return {
+                next: function () {
+                    var result = undefined;
+                    while (result === undefined) {
+                        var item = items();
+                        if (item !== undefined) { //Terminate iterator if fake generator returns undefined
+                            result = query.derive(item);
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                    if (result === undefined) {
+                        return { done: true };
+                    }
+                    else {
+                        return { done: false, value: item };
                     }
                 }
             };

@@ -80,6 +80,32 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
     var extractedBuilders = {};
 
     var templateElements = new Iterable(Array.prototype.slice.call(document.getElementsByTagName("TEMPLATE"))).iterator();
+    //If the browser supports templates, iterate through them after creating temp ones.
+    if (browserSupportsTemplates) {
+        var topLevelTemplates = templateElements;
+        templateElements = new Iterable(function () {
+            var currentTopLevelTemplate = topLevelTemplates.next();
+            if (!currentTopLevelTemplate.done) {
+                var element = currentTopLevelTemplate.value;
+                var templateElement = document.createElement('div');
+                var variantName = element.getAttribute("data-hr-variant");
+                var componentName = element.getAttribute("data-hr-component");
+                if (variantName !== null) {
+                    templateElement.setAttribute("data-hr-variant", variantName);
+                }
+                if (componentName !== null) {
+                    templateElement.setAttribute("data-hr-component", componentName);
+                }
+                templateElement.appendChild(document.importNode(element.content, true));
+                //Remove template element
+                var parent = element.parentNode;
+                parent.insertBefore(templateElement, element);
+                parent.removeChild(element);
+                return templateElement;
+            }
+        }).iterator();
+    }
+
     var currentTemplate = templateElements.next();
     while (!currentTemplate.done) {
         var currentBuilder = extractTemplate(currentTemplate.value, currentBuilder);
@@ -97,12 +123,8 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
             return currentBuilder;
         }
 
-        //If the browser supports templates, need to create one to read it properly
+        //This assignment should either be changed to only use element or something else
         var templateElement = element;
-        if (browserSupportsTemplates) {
-            var templateElement = document.createElement('div');
-            templateElement.appendChild(document.importNode(element.content, true));
-        }
 
         //Look for nested child templates, do this before taking inner html so children are removed
         while (!currentTemplate.done && element.contains(currentTemplate.value)) {
