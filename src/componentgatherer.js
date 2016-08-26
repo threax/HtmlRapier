@@ -86,6 +86,10 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
                 var element = currentTopLevelTemplate.value;
                 var templateElement = document.createElement('div');
                 templateElement.appendChild(document.importNode(element.content, true));
+                var innerTemplates = templateElement.getElementsByTagName("TEMPLATE");
+                if (innerTemplates.length > 0) {
+                    nestedElementsStack.push(new Iterable(Array.prototype.slice.call(innerTemplates)).iterator());
+                }
                 return {
                     element: element,
                     templateElement: templateElement
