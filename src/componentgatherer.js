@@ -79,32 +79,32 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
 
     var extractedBuilders = {};
 
-    var templateElements = new Iterable(Array.prototype.slice.call(document.getElementsByTagName("TEMPLATE"))).iterator();
+    var templateElements = new Iterable(Array.prototype.slice.call(document.getElementsByTagName("TEMPLATE")));
     //If the browser supports templates, iterate through them after creating temp ones.
     if (browserSupportsTemplates) {
-        var topLevelTemplates = templateElements;
+        var topLevelTemplates = templateElements.iterator();
         templateElements = new Iterable(function () {
             var currentTopLevelTemplate = topLevelTemplates.next();
             if (!currentTopLevelTemplate.done) {
                 var element = currentTopLevelTemplate.value;
                 var templateElement = document.createElement('div');
-                var variantName = element.getAttribute("data-hr-variant");
-                var componentName = element.getAttribute("data-hr-component");
-                if (variantName !== null) {
-                    templateElement.setAttribute("data-hr-variant", variantName);
-                }
-                if (componentName !== null) {
-                    templateElement.setAttribute("data-hr-component", componentName);
-                }
                 templateElement.appendChild(document.importNode(element.content, true));
-                //Remove template element
-                var parent = element.parentNode;
-                parent.insertBefore(templateElement, element);
-                parent.removeChild(element);
-                return templateElement;
+                return {
+                    element: element,
+                    templateElement: templateElement
+                };
             }
-        }).iterator();
+        });
     }
+    else {
+        templateElements = templateElements.select(function (t) {
+            return {
+                element: t,
+                templateElement: t
+            }
+        });
+    }
+    templateElements = templateElements.iterator();
 
     var currentTemplate = templateElements.next();
     while (!currentTemplate.done) {
@@ -113,7 +113,9 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
     }
 
     //Extract templates off the page
-    function extractTemplate(element, currentBuilder) {
+    function extractTemplate(elementPair, currentBuilder) {
+        var element = elementPair.element;
+
         //INC HERE - This is where currentTemplate is incremented to its next value
         //This single iter is shared for all levels of the gatherer
         currentTemplate = templateElements.next();
@@ -123,11 +125,10 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
             return currentBuilder;
         }
 
-        //This assignment should either be changed to only use element or something else
-        var templateElement = element;
+        var templateElement = elementPair.templateElement;
 
         //Look for nested child templates, do this before taking inner html so children are removed
-        while (!currentTemplate.done && element.contains(currentTemplate.value)) {
+        while (!currentTemplate.done && element.contains(currentTemplate.value.element)) {
             var currentBuilder = extractTemplate(currentTemplate.value, currentBuilder);
         }
 

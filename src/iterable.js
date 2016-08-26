@@ -56,7 +56,7 @@ function (exports, module, typeId) {
                         return { done: true };
                     }
                     else{
-                        return {done: false, value: item};
+                        return { done: false, value: result };
                     }
                 }
             };
@@ -78,7 +78,7 @@ function (exports, module, typeId) {
                         return { done: true };
                     }
                     else {
-                        return { done: false, value: item };
+                        return { done: false, value: result };
                     }
                 }
             };
