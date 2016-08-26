@@ -616,12 +616,9 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
 
     var extractedBuilders = {};
 
-    var templateElements = new Iterable(Array.prototype.slice.call(document.getElementsByTagName("TEMPLATE")));
-    //If the browser supports templates, iterate through them after creating temp ones.
-    if (browserSupportsTemplates) {
-        var topLevelTemplates = templateElements.iterator();
-        templateElements = new Iterable(function () {
-            var currentTopLevelTemplate = topLevelTemplates.next();
+    function buildTemplateElements(nestedElementsStack) {
+        if (nestedElementsStack.length > 0) {
+            var currentTopLevelTemplate = nestedElementsStack[nestedElementsStack.length - 1].next();
             if (!currentTopLevelTemplate.done) {
                 var element = currentTopLevelTemplate.value;
                 var templateElement = document.createElement('div');
@@ -631,6 +628,20 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
                     templateElement: templateElement
                 };
             }
+            else {
+                nestedElementsStack.pop();
+                return buildTemplateElements(nestedElementsStack);
+            }
+        }
+    }
+
+    var templateElements = new Iterable(Array.prototype.slice.call(document.getElementsByTagName("TEMPLATE")));
+    //If the browser supports templates, iterate through them after creating temp ones.
+    if (browserSupportsTemplates) {
+        var nestedElementsStack = [];
+        nestedElementsStack.push(templateElements.iterator());
+        templateElements = new Iterable(function () {
+            return buildTemplateElements(nestedElementsStack);
         });
     }
     else {
