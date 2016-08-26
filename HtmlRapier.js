@@ -430,21 +430,18 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
         }
     }
 
-    function getToggle(name, elements, states, toggleCollection) {
-        var toggle = toggleCollection[name];
-        if (toggle === undefined) {
-            var query = '[data-hr-toggle=' + name + ']';
-            for (var eIx = 0; eIx < elements.length; ++eIx) {
-                var element = elements[eIx];
-                var toggleElement = domQuery.first(query, element);
-                if (toggleElement) {
-                    toggle = toggles.build(toggleElement, states);
-                    toggleCollection[name] = toggle;
-                    return toggle; //Found it, need to break element loop, done here if found
-                }
-                else {
-                    toggle = null;
-                }
+    function getToggle(name, elements, states) {
+        var toggle;
+        var query = '[data-hr-toggle=' + name + ']';
+        for (var eIx = 0; eIx < elements.length; ++eIx) {
+            var element = elements[eIx];
+            var toggleElement = domQuery.first(query, element);
+            if (toggleElement) {
+                toggle = toggles.build(toggleElement, states);
+                return toggle; //Found it, need to break element loop, done here if found
+            }
+            else {
+                toggle = null;
             }
         }
 
@@ -455,21 +452,18 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
         return toggle;
     }
 
-    function getModel(name, elements, modelCollection) {
-        var model = modelCollection[name];
-        if (model === undefined) {
-            var query = '[data-hr-model=' + name + ']';
-            for (var eIx = 0; eIx < elements.length; ++eIx) {
-                var element = elements[eIx];
-                var targetElement = domQuery.first(query, element);
-                if (targetElement) {
-                    model = models.build(targetElement);
-                    modelCollection[name] = model;
-                    return model; //Found it, need to break element loop, done here if found
-                }
-                else {
-                    model = null;
-                }
+    function getModel(name, elements) {
+        var model;
+        var query = '[data-hr-model=' + name + ']';
+        for (var eIx = 0; eIx < elements.length; ++eIx) {
+            var element = elements[eIx];
+            var targetElement = domQuery.first(query, element);
+            if (targetElement) {
+                model = models.build(targetElement);
+                return model; //Found it, need to break element loop, done here if found
+            }
+            else {
+                model = null;
             }
         }
 
@@ -512,9 +506,6 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
      */
     function BindingCollection(elements) {
         elements = domQuery.all(elements);
-        var dataTextElements = undefined;
-        var toggleCollection = undefined;
-        var modelCollection = undefined;
 
         /**
          * Set the listener for this binding collection. This listener will have its functions
@@ -525,27 +516,12 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
             bindEvents(elements, listener);
         }
 
-        /**
-         * Set the data for this binding collection. Will run a format text on all text nodes
-         * inside the collection. These nodes must have variables in them.
-         * @param {type} data
-         */
-        this.setData = function (data) {
-            dataTextElements = bindData(data, elements, dataTextElements);
-        }
-
         this.getToggle = function (name, states) {
-            if (toggleCollection === undefined) {
-                toggleCollection = {};
-            }
-            return getToggle(name, elements, states, toggleCollection);
+            return getToggle(name, elements, states);
         }
 
         this.getModel = function (name) {
-            if (modelCollection === undefined) {
-                modelCollection = {};
-            }
-            return getModel(name, elements, modelCollection);
+            return getModel(name, elements);
         }
 
         this.getConfig = function () {
@@ -684,12 +660,8 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
             return currentBuilder;
         }
 
-        //If the browser supports templates, need to create one to read it properly
+        //This assignment should either be changed to only use element or something else
         var templateElement = element;
-        //if (browserSupportsTemplates) {
-        //    var templateElement = document.createElement('div');
-        //    templateElement.appendChild(document.importNode(element.content, true));
-        //}
 
         //Look for nested child templates, do this before taking inner html so children are removed
         while (!currentTemplate.done && element.contains(currentTemplate.value)) {
