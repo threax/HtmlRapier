@@ -103,6 +103,7 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
     }
 
     var templateElements = new Iterable(Array.prototype.slice.call(document.getElementsByTagName("TEMPLATE")));
+    var determineIfParent;
     //If the browser supports templates, iterate through them after creating temp ones.
     if (browserSupportsTemplates) {
         var nestedElementsStack = [];
@@ -110,6 +111,10 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
         templateElements = new Iterable(function () {
             return buildTemplateElements(nestedElementsStack);
         });
+
+        determineIfParent = function (child, parent) {
+            return parent.contains(child);
+        };
     }
     else {
         templateElements = templateElements.select(function (t) {
@@ -118,6 +123,10 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
                 templateElement: t
             }
         });
+
+        determineIfParent = function (child, parent) {
+            return parent.contains(child);
+        };
     }
     templateElements = templateElements.iterator();
 
@@ -143,7 +152,7 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
         var templateElement = elementPair.templateElement;
 
         //Look for nested child templates, do this before taking inner html so children are removed
-        while (!currentTemplate.done && element.contains(currentTemplate.value.element)) {
+        while (!currentTemplate.done && determineIfParent(currentTemplate.value.element, templateElement)) {
             var currentBuilder = extractTemplate(currentTemplate.value, currentBuilder);
         }
 
@@ -177,6 +186,9 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
             var builder = new ComponentBuilder(componentString);
             extractedBuilders[componentName] = builder;
             components.register(componentName, builder.create);
+
+            console.log("Created component " + componentName + "\n" + componentString);
+
             return builder;
         }
         else {
@@ -191,6 +203,9 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
             else {
                 extractedBuilders[componentName].addVariant(variantName, new VariantBuilder(componentString));
             }
+
+            console.log("Created component " + componentName + "\n" + componentString);
+
             return currentBuilder;
         }
     }
