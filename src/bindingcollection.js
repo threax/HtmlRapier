@@ -96,6 +96,20 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
         return model;
     }
 
+    function getHandle(name, elements) {
+        var model;
+        var query = '[data-hr-handle=' + name + ']';
+        for (var eIx = 0; eIx < elements.length; ++eIx) {
+            var element = elements[eIx];
+            var targetElement = domQuery.first(query, element);
+            if (targetElement) {
+                return targetElement;
+            }
+        }
+
+        return null;
+    }
+
     function getConfig(elements) {
         var data = {};
         for (var eIx = 0; eIx < elements.length; ++eIx) {
@@ -148,6 +162,10 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
 
         this.getConfig = function () {
             return getConfig(elements);
+        }
+
+        this.getHandle = function (name) {
+            return getHandle(name, elements);
         }
 
         this.iterateControllers = function (name, cb) {
