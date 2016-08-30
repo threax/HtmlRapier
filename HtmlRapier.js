@@ -680,7 +680,7 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
         var templateElement = elementPair.templateElement;
 
         //Look for nested child templates, do this before taking inner html so children are removed
-        while (!currentTemplate.done && element.contains(currentTemplate.value.element)) {
+        while (!currentTemplate.done && templateElement.contains(currentTemplate.value.element)) {
             var currentBuilder = extractTemplate(currentTemplate.value, currentBuilder);
         }
 
