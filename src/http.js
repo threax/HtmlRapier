@@ -1,7 +1,10 @@
 ﻿"use strict";
 
-jsns.define("hr.http", null,
-function (exports, module) {
+jsns.define("hr.http", ["hr.eventhandler"],
+function (exports, module, EventHandler) {
+
+    var customizeRequestEvent = new EventHandler();
+    exports.customizeRequest = customizeRequestEvent.modifier;
 
     function extractData(xhr) {
         var data;
@@ -86,6 +89,7 @@ function (exports, module) {
             xhr.onload = function () {
                 handleResult(xhr, resolve, reject);
             };
+            customizeRequestEvent.fire(xhr, 'GET');
             xhr.send();
         });
     }
@@ -105,6 +109,7 @@ function (exports, module) {
             xhr.onload = function () {
                 handleResult(xhr, resolve, reject);
             };
+            customizeRequestEvent.fire(xhr, method);
             xhr.send(JSON.stringify(data));
         });
     }
@@ -133,6 +138,7 @@ function (exports, module) {
             xhr.onload = function () {
                 handleResult(xhr, resolve, reject);
             };
+            customizeRequestEvent.fire(xhr, 'POST');
             xhr.send(formData);
         });
     }

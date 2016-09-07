@@ -987,6 +987,57 @@ function (exports, module, BindingCollection, domQuery, ignoredNodes) {
 });
 "use strict";
 
+jsns.define("hr.doccookies", null,
+function (exports, module) {
+    //These three functions are from
+    //http://www.quirksmode.org/js/cookies.html
+    //The names were shortened
+
+    /**
+     * Create a cookie on the doucment.
+     * @param {type} name - The name of the cookie
+     * @param {type} value - The value of the cookie
+     * @param {type} days - The expiration in days for the cookie
+     */
+    function create(name, value, days) {
+        if (days) {
+            var date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            var expires = "; expires=" + date.toGMTString();
+        }
+        else var expires = "";
+        document.cookie = name + "=" + value + expires + "; path=/";
+    }
+    exports.create = create;
+
+    /**
+     * Read a cookie from the document.
+     * @param {type} name - The name of the cookie to read
+     * @returns {type} - The cookie value.
+     */
+    function read(name) {
+        var nameEQ = name + "=";
+        var ca = document.cookie.split(';');
+        for (var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+    }
+    exports.read = read;
+
+    /**
+     * Erase a cookie from the document.
+     * @param {type} name
+     */
+    function erase(name) {
+        create(name, "", -1);
+    }
+    exports.erase = erase;
+});
+"use strict";
+
 jsns.define("hr.domquery", [
     "hr.typeidentifiers"
 ],
@@ -1549,8 +1600,11 @@ function (exports, module, toggles, http) {
 });
 "use strict";
 
-jsns.define("hr.http", null,
-function (exports, module) {
+jsns.define("hr.http", ["hr.eventhandler"],
+function (exports, module, EventHandler) {
+
+    var customizeRequestEvent = new EventHandler();
+    exports.customizeRequest = customizeRequestEvent.modifier;
 
     function extractData(xhr) {
         var data;
@@ -1635,6 +1689,7 @@ function (exports, module) {
             xhr.onload = function () {
                 handleResult(xhr, resolve, reject);
             };
+            customizeRequestEvent.fire(xhr, 'GET');
             xhr.send();
         });
     }
@@ -1654,6 +1709,7 @@ function (exports, module) {
             xhr.onload = function () {
                 handleResult(xhr, resolve, reject);
             };
+            customizeRequestEvent.fire(xhr, method);
             xhr.send(JSON.stringify(data));
         });
     }
@@ -1682,6 +1738,7 @@ function (exports, module) {
             xhr.onload = function () {
                 handleResult(xhr, resolve, reject);
             };
+            customizeRequestEvent.fire(xhr, 'POST');
             xhr.send(formData);
         });
     }
@@ -2602,6 +2659,25 @@ function (exports, module, escape) {
 });
 
 
+"use strict";
+
+jsns.run([
+    "hr.http",
+    "hr.doccookies"
+],
+function (exports, module, http, docCookies) {
+    var headerName = 'X-XSRF-TOKEN';
+    var cookieName = 'X-XSRF-TOKEN';
+
+    function setHeaderName(value) {
+        headerName = value;
+    }
+    exports.setHeaderName = setHeaderName;
+
+    http.customizeRequest.add(exports, function (xhr, type) {
+        xhr.setRequestHeader(headerName, docCookies.read(cookieName));
+    });
+});
 "use strict";
 
 jsns.run([
