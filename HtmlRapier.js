@@ -378,6 +378,30 @@ var jsns = (function () {
 })();
 "use strict";
 
+jsns.define("hr.anticsrf", [
+    "hr.http",
+    "hr.doccookies"
+],
+function (exports, module, http, docCookies) {
+    function activate(headerName, cookieName) {
+        if (headerName === undefined) {
+            headerName = 'X-XSRF-TOKEN';
+        }
+        if (cookieName === undefined) {
+            cookieName = 'X-XSRF-TOKEN';
+        }
+
+        http.customizeRequest.add(exports, function (xhr, type) {
+            var cookie = docCookies.read(cookieName);
+            if (cookie) {
+                xhr.setRequestHeader(headerName, cookie);
+            }
+        });
+    }
+    exports.activate = activate;
+});
+"use strict";
+
 /**
  * @callback hr_bindingcollection_eventcallback
  */
@@ -2659,25 +2683,6 @@ function (exports, module, escape) {
 });
 
 
-"use strict";
-
-jsns.run([
-    "hr.http",
-    "hr.doccookies"
-],
-function (exports, module, http, docCookies) {
-    var headerName = 'X-XSRF-TOKEN';
-    var cookieName = 'X-XSRF-TOKEN';
-
-    function setHeaderName(value) {
-        headerName = value;
-    }
-    exports.setHeaderName = setHeaderName;
-
-    http.customizeRequest.add(exports, function (xhr, type) {
-        xhr.setRequestHeader(headerName, docCookies.read(cookieName));
-    });
-});
 "use strict";
 
 jsns.run([
