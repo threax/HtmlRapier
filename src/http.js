@@ -89,7 +89,7 @@ function (exports, module, EventHandler) {
             xhr.onload = function () {
                 handleResult(xhr, resolve, reject);
             };
-            customizeRequestEvent.fire(xhr, 'GET');
+            customizeRequestEvent.fire(xhr, url, 'GET');
             xhr.send();
         });
     }
@@ -109,7 +109,7 @@ function (exports, module, EventHandler) {
             xhr.onload = function () {
                 handleResult(xhr, resolve, reject);
             };
-            customizeRequestEvent.fire(xhr, method);
+            customizeRequestEvent.fire(xhr, url, method);
             xhr.send(JSON.stringify(data));
         });
     }
@@ -138,7 +138,7 @@ function (exports, module, EventHandler) {
             xhr.onload = function () {
                 handleResult(xhr, resolve, reject);
             };
-            customizeRequestEvent.fire(xhr, 'POST');
+            customizeRequestEvent.fire(xhr, url, 'POST');
             xhr.send(formData);
         });
     }
