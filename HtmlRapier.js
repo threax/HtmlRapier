@@ -384,28 +384,73 @@ jsns.define("hr.anticsrf", [
     "hr.uri"
 ],
 function (exports, module, http, docCookies, uri) {
-    function TokenInfo(headerName, requestToken) {
-        this.modifyRequest = function(xhr){
-            xhr.setRequestHeader(headerName, requestToken);
+    function TokenInfo(tokenUrl) {
+        var headerName;
+        var requestToken;
+        var delayedRequestPromises;
+
+        new Promise(function (resolve, reject) {
+            setTimeout(function () {
+                resolve('woot');
+            }, 10000);
+        })
+        .then(function (data) {
+            return http.post(tokenUrl);
+        })
+        .then(function (data) {
+            headerName = data.headerName;
+            requestToken = data.requestToken;
+
+            if (delayedRequestPromises !== undefined) {
+                for (var i = 0; i < delayedRequestPromises.length; ++delayedRequestPromises) {
+                    delayedRequestPromises[i].resolve();
+                }
+            }
+        })
+        .catch(function (err) {
+            if (delayedRequestPromises !== undefined) {
+                for (var i = 0; i < delayedRequestPromises.length; ++delayedRequestPromises) {
+                    delayedRequestPromises[i].reject();
+                }
+            }
+        });
+
+        this.modifyRequest = function (xhr, url, type) {
+            if (headerName !== undefined) {
+                xhr.setRequestHeader(headerName, requestToken);
+            }
+            else {
+                if (url !== tokenUrl) {
+                    if (delayedRequestPromises === undefined) {
+                        delayedRequestPromises = [];
+                    }
+                    return new Promise(function (resolve, reject) {
+                        delayedRequestPromises.push({
+                            resolve: resolve,
+                            reject: reject
+                        });
+                    })
+                    .then(function (data) {
+                        alert('started request mod');
+                        xhr.setRequestHeader(headerName, requestToken);
+                        alert('delay modified request');
+                    });
+                }
+            }
         }
     }
 
-    var tokens = {};
+    var tokens = {
+    };
     var needSetupRequest = true;
     function getToken(url) {
         var key = getKeyFromUrl(url);
         if (tokens[key] === undefined) {
-            if(needSetupRequest){
+            if (needSetupRequest) {
                 needSetupRequest = false;
                 http.customizeRequest.add(exports, customizeRequest);
             }
-            http.post(url)
-            .then(function (data) {
-                tokens[key] = new TokenInfo(data.headerName, data.requestToken);
-            })
-            .catch(function(err){
-                delete tokens[key]; //Start fetch over on next request.
-            });
+            tokens[key] = new TokenInfo(url);
         }
     }
     exports.getToken = getToken;
@@ -418,7 +463,7 @@ function (exports, module, http, docCookies, uri) {
         var key = getKeyFromUrl(url);
         var info = tokens[key];
         if (info !== undefined) {
-            info.modifyRequest(xhr);
+            return info.modifyRequest(xhr, url, type);
         }
     }
 });
