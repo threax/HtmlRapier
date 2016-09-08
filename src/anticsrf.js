@@ -11,14 +11,16 @@ function (exports, module, http, docCookies, uri) {
         var requestToken;
         var delayedRequestPromises;
 
-        new Promise(function (resolve, reject) {
-            setTimeout(function () {
-                resolve('woot');
-            }, 10000);
-        })
-        .then(function (data) {
-            return http.post(tokenUrl);
-        })
+        ////Remove this delay
+        //new Promise(function (resolve, reject) {
+        //    setTimeout(function () {
+        //        resolve('woot');
+        //    }, 10000);
+        //})
+        //.then(function (data) {
+            //return 
+        http.post(tokenUrl)
+        //})
         .then(function (data) {
             headerName = data.headerName;
             requestToken = data.requestToken;
@@ -37,11 +39,8 @@ function (exports, module, http, docCookies, uri) {
             }
         });
 
-        this.modifyRequest = function (xhr, url, type) {
-            if (headerName !== undefined) {
-                xhr.setRequestHeader(headerName, requestToken);
-            }
-            else {
+        this.modifyPromise = function (url, type) {
+            if (headerName === undefined) {
                 if (url !== tokenUrl) {
                     if (delayedRequestPromises === undefined) {
                         delayedRequestPromises = [];
@@ -51,19 +50,19 @@ function (exports, module, http, docCookies, uri) {
                             resolve: resolve,
                             reject: reject
                         });
-                    })
-                    .then(function (data) {
-                        alert('started request mod');
-                        xhr.setRequestHeader(headerName, requestToken);
-                        alert('delay modified request');
                     });
                 }
             }
         }
+
+        this.modifyRequest = function (xhr, url, type) {
+            if (url !== tokenUrl) {
+                xhr.setRequestHeader(headerName, requestToken);
+            }
+        }
     }
 
-    var tokens = {
-    };
+    var tokens = {};
     var needSetupRequest = true;
     function getToken(url) {
         var key = getKeyFromUrl(url);
@@ -71,6 +70,7 @@ function (exports, module, http, docCookies, uri) {
             if (needSetupRequest) {
                 needSetupRequest = false;
                 http.customizeRequest.add(exports, customizeRequest);
+                http.customizePromise.add(exports, customizePromise)
             }
             tokens[key] = new TokenInfo(url);
         }
@@ -81,11 +81,19 @@ function (exports, module, http, docCookies, uri) {
         return uri.parseUri(url).authority.toLowerCase();
     }
 
+    function customizePromise(url, type) {
+        var key = getKeyFromUrl(url);
+        var info = tokens[key];
+        if (info !== undefined) {
+            return info.modifyPromise(url, type);
+        }
+    }
+
     function customizeRequest(xhr, url, type) {
         var key = getKeyFromUrl(url);
         var info = tokens[key];
         if (info !== undefined) {
-            return info.modifyRequest(xhr, url, type);
+            info.modifyRequest(xhr, url, type);
         }
     }
 });

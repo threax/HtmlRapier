@@ -389,14 +389,16 @@ function (exports, module, http, docCookies, uri) {
         var requestToken;
         var delayedRequestPromises;
 
-        new Promise(function (resolve, reject) {
-            setTimeout(function () {
-                resolve('woot');
-            }, 10000);
-        })
-        .then(function (data) {
-            return http.post(tokenUrl);
-        })
+        ////Remove this delay
+        //new Promise(function (resolve, reject) {
+        //    setTimeout(function () {
+        //        resolve('woot');
+        //    }, 10000);
+        //})
+        //.then(function (data) {
+            //return 
+        http.post(tokenUrl)
+        //})
         .then(function (data) {
             headerName = data.headerName;
             requestToken = data.requestToken;
@@ -415,11 +417,8 @@ function (exports, module, http, docCookies, uri) {
             }
         });
 
-        this.modifyRequest = function (xhr, url, type) {
-            if (headerName !== undefined) {
-                xhr.setRequestHeader(headerName, requestToken);
-            }
-            else {
+        this.modifyPromise = function (url, type) {
+            if (headerName === undefined) {
                 if (url !== tokenUrl) {
                     if (delayedRequestPromises === undefined) {
                         delayedRequestPromises = [];
@@ -429,19 +428,19 @@ function (exports, module, http, docCookies, uri) {
                             resolve: resolve,
                             reject: reject
                         });
-                    })
-                    .then(function (data) {
-                        alert('started request mod');
-                        xhr.setRequestHeader(headerName, requestToken);
-                        alert('delay modified request');
                     });
                 }
             }
         }
+
+        this.modifyRequest = function (xhr, url, type) {
+            if (url !== tokenUrl) {
+                xhr.setRequestHeader(headerName, requestToken);
+            }
+        }
     }
 
-    var tokens = {
-    };
+    var tokens = {};
     var needSetupRequest = true;
     function getToken(url) {
         var key = getKeyFromUrl(url);
@@ -449,6 +448,7 @@ function (exports, module, http, docCookies, uri) {
             if (needSetupRequest) {
                 needSetupRequest = false;
                 http.customizeRequest.add(exports, customizeRequest);
+                http.customizePromise.add(exports, customizePromise)
             }
             tokens[key] = new TokenInfo(url);
         }
@@ -459,11 +459,19 @@ function (exports, module, http, docCookies, uri) {
         return uri.parseUri(url).authority.toLowerCase();
     }
 
+    function customizePromise(url, type) {
+        var key = getKeyFromUrl(url);
+        var info = tokens[key];
+        if (info !== undefined) {
+            return info.modifyPromise(url, type);
+        }
+    }
+
     function customizeRequest(xhr, url, type) {
         var key = getKeyFromUrl(url);
         var info = tokens[key];
         if (info !== undefined) {
-            return info.modifyRequest(xhr, url, type);
+            info.modifyRequest(xhr, url, type);
         }
     }
 });
@@ -1697,6 +1705,9 @@ function (exports, module, EventHandler) {
     var customizeRequestEvent = new EventHandler();
     exports.customizeRequest = customizeRequestEvent.modifier;
 
+    var customizePromiseEvent = new EventHandler();
+    exports.customizePromise = customizePromiseEvent.modifier;
+
     function extractData(xhr) {
         var data;
         var contentType = xhr.getResponseHeader('content-type');
@@ -1774,9 +1785,13 @@ function (exports, module, EventHandler) {
             url += 'noCache=' + new Date().getTime();
         }
 
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', url);
-        return setupXhr(xhr, url, 'GET');
+        return setupXhr(url, 'GET', function () {
+            return undefined;
+        }, function () {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', url);
+            return xhr;
+        });
     }
     exports.get = get;
 
@@ -1787,10 +1802,14 @@ function (exports, module, EventHandler) {
      * @param {object} data - The data to send
      */
     function ajax(url, method, data) {
-        var xhr = new XMLHttpRequest();
-        xhr.open(method, url);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        return setupXhr(xhr, url, method, JSON.stringify(data));
+        return setupXhr(url, method, function () {
+            return JSON.stringify(data);
+        }, function () {
+            var xhr = new XMLHttpRequest();
+            xhr.open(method, url);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            return xhr;
+        });
     }
     exports.ajax = ajax;
 
@@ -1801,34 +1820,56 @@ function (exports, module, EventHandler) {
      * data will be sent directly as a file.
      */
     function upload(url, data) {
-        var formData = null;
+        return setupXhr(url, 'POST', function () {
+            var formData = null;
 
-        if (data instanceof FormData) {
-            formData = data;
-        }
-        else {
-            formData = new FormData();
-            formData.append('file', data);
-        }
+            if (data instanceof FormData) {
+                formData = data;
+            }
+            else {
+                formData = new FormData();
+                formData.append('file', data);
+            }
 
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', url);
-        return setupXhr(xhr, url, 'POST', formData);
+            return formData;
+        }, function () {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', url);
+            return xhr;
+        });
     }
     exports.upload = upload;
 
-    function setupXhr(xhr, url, method, data) {
-        //Common xhr setup
-        xhr.withCredentials = true;
-
+    function setupXhr(url, method, dataBuilder, xhrBuilder) {
         //Customize requests and build up promise chain for any customizations
-        var customPromises = customizeRequestEvent.fire(xhr, url, method);
+        var customPromises = customizePromiseEvent.fire(url, method);
 
+        //Assemble final chain
+        if (customPromises === undefined || customPromises.length === 0) {
+            return buildRequestPromise(url, method, dataBuilder, xhrBuilder);
+        }
+        else {
+            return Promise.all(customPromises)
+                   .then(function (res) {
+                       return buildRequestPromise(url, method, dataBuilder, xhrBuilder);
+                   });
+        }
+    }
+
+    function buildRequestPromise(url, method, dataBuilder, xhrBuilder) {
         //Build promise for request
-        var requestPromise = new Promise(function (resolve, reject) {
+        return new Promise(function (resolve, reject) {
+            //Common xhr setup
+            var xhr = xhrBuilder();
+            xhr.withCredentials = true;
+            customizeRequestEvent.fire(xhr, url, method);
+
             xhr.onload = function () {
                 handleResult(xhr, resolve, reject);
             };
+
+            var data = dataBuilder();
+
             if (data === undefined) {
                 xhr.send();
             }
@@ -1836,16 +1877,6 @@ function (exports, module, EventHandler) {
                 xhr.send(data);
             }
         });
-
-        //Assemble final chain
-        if (customPromises === undefined || customPromises.length === 0) {
-            return requestPromise;
-        }
-        else {
-            return Promise.all(customPromises).then(function (data) {
-                return requestPromise;
-            });
-        }
     }
 });
 "use strict";

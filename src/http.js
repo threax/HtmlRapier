@@ -6,6 +6,9 @@ function (exports, module, EventHandler) {
     var customizeRequestEvent = new EventHandler();
     exports.customizeRequest = customizeRequestEvent.modifier;
 
+    var customizePromiseEvent = new EventHandler();
+    exports.customizePromise = customizePromiseEvent.modifier;
+
     function extractData(xhr) {
         var data;
         var contentType = xhr.getResponseHeader('content-type');
@@ -83,9 +86,13 @@ function (exports, module, EventHandler) {
             url += 'noCache=' + new Date().getTime();
         }
 
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', url);
-        return setupXhr(xhr, url, 'GET');
+        return setupXhr(url, 'GET', function () {
+            return undefined;
+        }, function () {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', url);
+            return xhr;
+        });
     }
     exports.get = get;
 
@@ -96,10 +103,14 @@ function (exports, module, EventHandler) {
      * @param {object} data - The data to send
      */
     function ajax(url, method, data) {
-        var xhr = new XMLHttpRequest();
-        xhr.open(method, url);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        return setupXhr(xhr, url, method, JSON.stringify(data));
+        return setupXhr(url, method, function () {
+            return JSON.stringify(data);
+        }, function () {
+            var xhr = new XMLHttpRequest();
+            xhr.open(method, url);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            return xhr;
+        });
     }
     exports.ajax = ajax;
 
@@ -110,34 +121,56 @@ function (exports, module, EventHandler) {
      * data will be sent directly as a file.
      */
     function upload(url, data) {
-        var formData = null;
+        return setupXhr(url, 'POST', function () {
+            var formData = null;
 
-        if (data instanceof FormData) {
-            formData = data;
-        }
-        else {
-            formData = new FormData();
-            formData.append('file', data);
-        }
+            if (data instanceof FormData) {
+                formData = data;
+            }
+            else {
+                formData = new FormData();
+                formData.append('file', data);
+            }
 
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', url);
-        return setupXhr(xhr, url, 'POST', formData);
+            return formData;
+        }, function () {
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', url);
+            return xhr;
+        });
     }
     exports.upload = upload;
 
-    function setupXhr(xhr, url, method, data) {
-        //Common xhr setup
-        xhr.withCredentials = true;
-
+    function setupXhr(url, method, dataBuilder, xhrBuilder) {
         //Customize requests and build up promise chain for any customizations
-        var customPromises = customizeRequestEvent.fire(xhr, url, method);
+        var customPromises = customizePromiseEvent.fire(url, method);
 
+        //Assemble final chain
+        if (customPromises === undefined || customPromises.length === 0) {
+            return buildRequestPromise(url, method, dataBuilder, xhrBuilder);
+        }
+        else {
+            return Promise.all(customPromises)
+                   .then(function (res) {
+                       return buildRequestPromise(url, method, dataBuilder, xhrBuilder);
+                   });
+        }
+    }
+
+    function buildRequestPromise(url, method, dataBuilder, xhrBuilder) {
         //Build promise for request
-        var requestPromise = new Promise(function (resolve, reject) {
+        return new Promise(function (resolve, reject) {
+            //Common xhr setup
+            var xhr = xhrBuilder();
+            xhr.withCredentials = true;
+            customizeRequestEvent.fire(xhr, url, method);
+
             xhr.onload = function () {
                 handleResult(xhr, resolve, reject);
             };
+
+            var data = dataBuilder();
+
             if (data === undefined) {
                 xhr.send();
             }
@@ -145,15 +178,5 @@ function (exports, module, EventHandler) {
                 xhr.send(data);
             }
         });
-
-        //Assemble final chain
-        if (customPromises === undefined || customPromises.length === 0) {
-            return requestPromise;
-        }
-        else {
-            return Promise.all(customPromises).then(function (data) {
-                return requestPromise;
-            });
-        }
     }
 });
