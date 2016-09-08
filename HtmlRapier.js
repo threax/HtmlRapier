@@ -384,30 +384,41 @@ jsns.define("hr.anticsrf", [
     "hr.uri"
 ],
 function (exports, module, http, docCookies, uri) {
-    function activate(host, headerName, cookieName) {
-        if (headerName === undefined) {
-            headerName = 'X-XSRF-TOKEN';
+    function TokenInfo(headerName, requestToken) {
+        this.modifyRequest = function(xhr){
+            xhr.setRequestHeader(headerName, requestToken);
         }
-        if (cookieName === undefined) {
-            cookieName = 'X-XSRF-TOKEN';
-        }
-        if (host !== undefined) {
-            var hostUri = uri.parseUri(host);
-            host = hostUri.authority.toLowerCase();
-        }
-
-        http.customizeRequest.add(exports, function (xhr, url, type) {
-            modifyRequest(host, xhr, url, type, headerName, cookieName);
-        });
     }
-    exports.activate = activate;
 
-    function modifyRequest(host, xhr, url, type, headerName, cookieName) {
-        if (host === undefined || host === uri.parseUri(url).authority.toLowerCase()) {
-            var cookie = docCookies.read(cookieName);
-            if (cookie) {
-                xhr.setRequestHeader(headerName, cookie);
+    var tokens = {};
+    var needSetupRequest = true;
+    function getToken(url) {
+        var key = getKeyFromUrl(url);
+        if (tokens[key] === undefined) {
+            if(needSetupRequest){
+                needSetupRequest = false;
+                http.customizeRequest.add(exports, customizeRequest);
             }
+            http.post(url)
+            .then(function (data) {
+                tokens[key] = new TokenInfo(data.headerName, data.requestToken);
+            })
+            .catch(function(err){
+                delete tokens[key]; //Start fetch over on next request.
+            });
+        }
+    }
+    exports.getToken = getToken;
+
+    function getKeyFromUrl(url) {
+        return uri.parseUri(url).authority.toLowerCase();
+    }
+
+    function customizeRequest(xhr, url, type) {
+        var key = getKeyFromUrl(url);
+        var info = tokens[key];
+        if (info !== undefined) {
+            info.modifyRequest(xhr);
         }
     }
 });
@@ -1718,15 +1729,9 @@ function (exports, module, EventHandler) {
             url += 'noCache=' + new Date().getTime();
         }
 
-        return new Promise(function (resolve, reject) {
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', url);
-            xhr.onload = function () {
-                handleResult(xhr, resolve, reject);
-            };
-            customizeRequestEvent.fire(xhr, url, 'GET');
-            xhr.send();
-        });
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url);
+        return setupXhr(xhr, url, 'GET');
     }
     exports.get = get;
 
@@ -1737,16 +1742,10 @@ function (exports, module, EventHandler) {
      * @param {object} data - The data to send
      */
     function ajax(url, method, data) {
-        return new Promise(function (resolve, reject) {
-            var xhr = new XMLHttpRequest();
-            xhr.open(method, url);
-            xhr.setRequestHeader('Content-Type', 'application/json');
-            xhr.onload = function () {
-                handleResult(xhr, resolve, reject);
-            };
-            customizeRequestEvent.fire(xhr, url, method);
-            xhr.send(JSON.stringify(data));
-        });
+        var xhr = new XMLHttpRequest();
+        xhr.open(method, url);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        return setupXhr(xhr, url, method, JSON.stringify(data));
     }
     exports.ajax = ajax;
 
@@ -1767,17 +1766,42 @@ function (exports, module, EventHandler) {
             formData.append('file', data);
         }
 
-        return new Promise(function (resolve, reject) {
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', url);
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', url);
+        return setupXhr(xhr, url, 'POST', formData);
+    }
+    exports.upload = upload;
+
+    function setupXhr(xhr, url, method, data) {
+        //Common xhr setup
+        xhr.withCredentials = true;
+
+        //Customize requests and build up promise chain for any customizations
+        var customPromises = customizeRequestEvent.fire(xhr, url, method);
+
+        //Build promise for request
+        var requestPromise = new Promise(function (resolve, reject) {
             xhr.onload = function () {
                 handleResult(xhr, resolve, reject);
             };
-            customizeRequestEvent.fire(xhr, url, 'POST');
-            xhr.send(formData);
+            if (data === undefined) {
+                xhr.send();
+            }
+            else {
+                xhr.send(data);
+            }
         });
+
+        //Assemble final chain
+        if (customPromises === undefined || customPromises.length === 0) {
+            return requestPromise;
+        }
+        else {
+            return Promise.all(customPromises).then(function (data) {
+                return requestPromise;
+            });
+        }
     }
-    exports.upload = upload;
 });
 "use strict";
 

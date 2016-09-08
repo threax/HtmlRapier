@@ -83,15 +83,9 @@ function (exports, module, EventHandler) {
             url += 'noCache=' + new Date().getTime();
         }
 
-        return new Promise(function (resolve, reject) {
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', url);
-            xhr.onload = function () {
-                handleResult(xhr, resolve, reject);
-            };
-            customizeRequestEvent.fire(xhr, url, 'GET');
-            xhr.send();
-        });
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', url);
+        return setupXhr(xhr, url, 'GET');
     }
     exports.get = get;
 
@@ -102,16 +96,10 @@ function (exports, module, EventHandler) {
      * @param {object} data - The data to send
      */
     function ajax(url, method, data) {
-        return new Promise(function (resolve, reject) {
-            var xhr = new XMLHttpRequest();
-            xhr.open(method, url);
-            xhr.setRequestHeader('Content-Type', 'application/json');
-            xhr.onload = function () {
-                handleResult(xhr, resolve, reject);
-            };
-            customizeRequestEvent.fire(xhr, url, method);
-            xhr.send(JSON.stringify(data));
-        });
+        var xhr = new XMLHttpRequest();
+        xhr.open(method, url);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        return setupXhr(xhr, url, method, JSON.stringify(data));
     }
     exports.ajax = ajax;
 
@@ -132,15 +120,40 @@ function (exports, module, EventHandler) {
             formData.append('file', data);
         }
 
-        return new Promise(function (resolve, reject) {
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', url);
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', url);
+        return setupXhr(xhr, url, 'POST', formData);
+    }
+    exports.upload = upload;
+
+    function setupXhr(xhr, url, method, data) {
+        //Common xhr setup
+        xhr.withCredentials = true;
+
+        //Customize requests and build up promise chain for any customizations
+        var customPromises = customizeRequestEvent.fire(xhr, url, method);
+
+        //Build promise for request
+        var requestPromise = new Promise(function (resolve, reject) {
             xhr.onload = function () {
                 handleResult(xhr, resolve, reject);
             };
-            customizeRequestEvent.fire(xhr, url, 'POST');
-            xhr.send(formData);
+            if (data === undefined) {
+                xhr.send();
+            }
+            else {
+                xhr.send(data);
+            }
         });
+
+        //Assemble final chain
+        if (customPromises === undefined || customPromises.length === 0) {
+            return requestPromise;
+        }
+        else {
+            return Promise.all(customPromises).then(function (data) {
+                return requestPromise;
+            });
+        }
     }
-    exports.upload = upload;
 });

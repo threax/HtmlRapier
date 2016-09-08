@@ -6,30 +6,41 @@ jsns.define("hr.anticsrf", [
     "hr.uri"
 ],
 function (exports, module, http, docCookies, uri) {
-    function activate(host, headerName, cookieName) {
-        if (headerName === undefined) {
-            headerName = 'X-XSRF-TOKEN';
+    function TokenInfo(headerName, requestToken) {
+        this.modifyRequest = function(xhr){
+            xhr.setRequestHeader(headerName, requestToken);
         }
-        if (cookieName === undefined) {
-            cookieName = 'X-XSRF-TOKEN';
-        }
-        if (host !== undefined) {
-            var hostUri = uri.parseUri(host);
-            host = hostUri.authority.toLowerCase();
-        }
-
-        http.customizeRequest.add(exports, function (xhr, url, type) {
-            modifyRequest(host, xhr, url, type, headerName, cookieName);
-        });
     }
-    exports.activate = activate;
 
-    function modifyRequest(host, xhr, url, type, headerName, cookieName) {
-        if (host === undefined || host === uri.parseUri(url).authority.toLowerCase()) {
-            var cookie = docCookies.read(cookieName);
-            if (cookie) {
-                xhr.setRequestHeader(headerName, cookie);
+    var tokens = {};
+    var needSetupRequest = true;
+    function getToken(url) {
+        var key = getKeyFromUrl(url);
+        if (tokens[key] === undefined) {
+            if(needSetupRequest){
+                needSetupRequest = false;
+                http.customizeRequest.add(exports, customizeRequest);
             }
+            http.post(url)
+            .then(function (data) {
+                tokens[key] = new TokenInfo(data.headerName, data.requestToken);
+            })
+            .catch(function(err){
+                delete tokens[key]; //Start fetch over on next request.
+            });
+        }
+    }
+    exports.getToken = getToken;
+
+    function getKeyFromUrl(url) {
+        return uri.parseUri(url).authority.toLowerCase();
+    }
+
+    function customizeRequest(xhr, url, type) {
+        var key = getKeyFromUrl(url);
+        var info = tokens[key];
+        if (info !== undefined) {
+            info.modifyRequest(xhr);
         }
     }
 });
