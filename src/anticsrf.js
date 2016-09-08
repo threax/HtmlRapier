@@ -11,15 +11,7 @@ function (exports, module, http, docCookies, uri) {
         var requestToken;
         var delayedRequestPromises;
 
-        ////Remove this delay
-        new Promise(function (resolve, reject) {
-            setTimeout(function () {
-                resolve('woot');
-            }, 10000);
-        })
-        .then(function (data) {
-            return http.post(tokenUrl);
-        })
+        http.post(tokenUrl)
         .then(function (data) {
             headerName = data.headerName;
             requestToken = data.requestToken;
