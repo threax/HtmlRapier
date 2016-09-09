@@ -44,6 +44,28 @@ function (exports, module, typeId) {
                 }
             };
         }
+        else if (typeId.isFunction(items)) {
+            return {
+                next: function () {
+                    var result = undefined;
+                    while (result === undefined) {
+                        var item = items();
+                        if (item !== undefined) { //Terminate iterator if fake generator returns undefined
+                            result = query.derive(item);
+                        }
+                        else {
+                            break;
+                        }
+                    }
+                    if (result === undefined) {
+                        return { done: true };
+                    }
+                    else {
+                        return { done: false, value: result };
+                    }
+                }
+            };
+        }
     }
 
     function _forEach(items, query, cb) {
