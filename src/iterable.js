@@ -4,23 +4,6 @@ jsns.define("hr.iterable", [
     "hr.typeidentifiers"
 ],
 function (exports, module, typeId) {
-
-    function Selector(selectCb) {
-        function get(item) {
-            return selectCb(item);
-        }
-        this.get = get;
-    }
-
-    function Conditional(whereCb) {
-        function get(item) {
-            if (whereCb(item)) {
-                return item;
-            }
-        }
-        this.get = get;
-    }
-
     function Query() {
         var chain = [];
 
@@ -31,8 +14,8 @@ function (exports, module, typeId) {
 
         function derive(item) {
             var result = item;
-            for (var i = 0; i < chain.length; ++i) {
-                result = chain[i].get(result);
+            for (var i = chain.length - 1; i >= 0 && result !== undefined; --i) {
+                result = chain[i](result);
             }
             return result;
         }
@@ -41,38 +24,16 @@ function (exports, module, typeId) {
 
     var defaultQuery = new Query(); //Empty query to use as default
 
-    function iterate(items, query) {
+    function _iterate(items, query) {
         var i;
         if (typeId.isArray(items)) {
             i = 0;
             return {
-                next: function(){
-                    var result = undefined;
-                    while(result === undefined && i < items.length){
-                        var item = items[i++];
-                        result = query.derive(item);
-                    }
-                    if(result === undefined){
-                        return { done: true };
-                    }
-                    else{
-                        return { done: false, value: result };
-                    }
-                }
-            };
-        }
-        else if (typeId.isFunction(items)) {
-            return {
                 next: function () {
                     var result = undefined;
-                    while (result === undefined) {
-                        var item = items();
-                        if (item !== undefined) { //Terminate iterator if fake generator returns undefined
-                            result = query.derive(item);
-                        }
-                        else {
-                            break;
-                        }
+                    while (result === undefined && i < items.length) {
+                        var item = items[i++];
+                        result = query.derive(item);
                     }
                     if (result === undefined) {
                         return { done: true };
@@ -98,38 +59,64 @@ function (exports, module, typeId) {
         }
     }
 
-    function Iterable(items) {
-        var query = defaultQuery;
+    function _build(prevBuild, get, query, cb) {
+        query.push(get);
+        return prevBuild(query, cb);
+    }
 
-        function ensureQuery() {
-            if (query === defaultQuery) {
-                query = new Query();
+    function _queryClause(build) {
+        this.select = function (s) {
+            return new Selector(s, build);
+        }
+
+        this.where = function (w) {
+            return new Conditional(w, build);
+        }
+
+        this.forEach = function (cb) {
+            build(new Query()).forEach(cb);
+        }
+
+        this.iterator = function () {
+            return build(new Query()).iterator();
+        }
+    }
+
+    function Selector(selectCb, prevBuild) {
+        _queryClause.call(this, build);
+
+        function build(query, cb) {
+            return _build(prevBuild, selectCb, query, cb);
+        }
+    }
+
+    function Conditional(whereCb, prevBuild) {
+        _queryClause.call(this, build);
+
+        function build(query, cb) {
+            return _build(prevBuild, get, query, cb);
+        }
+
+        function get(item) {
+            if (whereCb(item)) {
+                return item;
             }
         }
+    }
 
-        function where(w) {
-            ensureQuery();
-            query.push(new Conditional(w));
-            return this;
-        }
-        this.where = where;
+    function Iterable(items) {
+        _queryClause.call(this, build);
 
-        function select(s) {
-            ensureQuery();
-            query.push(new Selector(s));
-            return this;
+        function build(query) {
+            return {
+                forEach: function (cb) {
+                    _forEach(items, query, cb);
+                },
+                iterator: function () {
+                    return _iterate(items, query);
+                }
+            }
         }
-        this.select = select;
-
-        function iterator() {
-            return iterate(items, query);
-        }
-        this.iterator = iterator;
-
-        function forEach(cb) {
-            _forEach(items, query, cb);
-        }
-        this.forEach = forEach;
     }
 
     module.exports = Iterable;
