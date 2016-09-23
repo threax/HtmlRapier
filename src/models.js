@@ -44,7 +44,7 @@ function(exports, module, forms, TextStream, components, typeId, domQuery){
             if (typeId.isArray(data) || typeId.isForEachable(data)) {
                 components.repeat(component, element, data, createdCallback, variantFinderCallback);
             }
-            else if (data) {
+            else if (data !== undefined && data !== null) {
                 components.single(component, element, data, createdCallback, variantFinderCallback);
             }
         }
