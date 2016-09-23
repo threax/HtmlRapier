@@ -1521,7 +1521,21 @@ jsns.define("hr.form", [
     "hr.domquery",
     "hr.typeidentifiers"
 ],
-function(exports, module, domQuery, typeIds){
+function (exports, module, domQuery, typeIds) {
+
+    function addValue(q, name, value) {
+        if (q[name] === undefined) {
+            q[name] = value;
+        }
+        else if(!typeIds.isArray(q[name])){
+            var tmp = q[name];
+            q[name] = [tmp, value];
+        }
+        else {
+            q[name].push(value);
+        }
+    }
+
     /**
      * Serialze a form to a javascript object
      * @param {HTMLElement|string} form - A selector or form element for the form to serialize.
@@ -1550,28 +1564,28 @@ function(exports, module, domQuery, typeIds){
                         case 'reset':
                         case 'submit':
                         case 'file':
-                            q[form.elements[i].name] = form.elements[i].value;
+                            addValue(q, form.elements[i].name, form.elements[i].value);
                             break;
                         case 'checkbox':
                         case 'radio':
                             if (form.elements[i].checked) {
-                                q[form.elements[i].name] = form.elements[i].value;
+                                addValue(q, form.elements[i].name, form.elements[i].value);
                             }
                             break;
                     }
                     break;
                 case 'TEXTAREA':
-                    q[form.elements[i].name] = form.elements[i].value;
+                    addValue(q, form.elements[i].name, form.elements[i].value);
                     break;
                 case 'SELECT':
                     switch (form.elements[i].type) {
                         case 'select-one':
-                            q[form.elements[i].name] = form.elements[i].value;
+                            addValue(q, form.elements[i].name, form.elements[i].value);
                             break;
                         case 'select-multiple':
                             for (j = form.elements[i].options.length - 1; j >= 0; j = j - 1) {
                                 if (form.elements[i].options[j].selected) {
-                                    q[form.elements[i].name] = form.elements[i].options[j].value;
+                                    addValue(q, form.elements[i].name, form.elements[i].options[j].value);
                                 }
                             }
                             break;
@@ -1582,7 +1596,7 @@ function(exports, module, domQuery, typeIds){
                         case 'reset':
                         case 'submit':
                         case 'button':
-                            q[form.elements[i].name] = form.elements[i].value;
+                            addValue(q, form.elements[i].name, form.elements[i].value);
                             break;
                     }
                     break;
