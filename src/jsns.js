@@ -21,13 +21,49 @@ var jsns = (function () {
         return loaded;
     }
 
-    function Module() {
+    function setModuleLoaded(name, module) {
+        if (loaded[name] === undefined) {
+            loaded[name] = module;
+        }
+    }
+
+    function Module(name) {
+        var loadingDelayed = false;
+        var self = this;
+
         this.exports = {};
+
+        /**
+         * Figure out if this module is delay loading.
+         * @returns {bool} True if delay loading, false if fully loaded
+         */
+        this.isLoadingDelayed = function(){
+            return loadingDelayed;
+        }
+
+        /**
+         * Set this module to delay loading mode, you must call setLoaded manually
+         * after calling this function or the module will never be considered loaded.
+         * Do this if you need additional async calls to fully load your module.
+         */
+        this.delayLoading = function () {
+            loadingDelayed = true;
+        }
+
+        /**
+         * Set the module to loaded. Only needs to be called if delayLoading is called,
+         * otherwise there is no need.
+         */
+        this.loaded = function () {
+            setModuleLoaded(name, self);
+            loadRunners();
+        }
     }
 
     function checkLib(library) {
         var dependencies = library.dependencies;
         var fullyLoaded = true;
+        var module = undefined;
 
         //Check to see if depenedencies are loaded and if they aren't and can be, load them
         for (var i = 0; i < dependencies.length; ++i) {
@@ -41,10 +77,7 @@ var jsns = (function () {
 
         //If all dependencies are loaded, load this library
         if (fullyLoaded) {
-            var module = new Module();
-            if (library.name) {
-                loaded[library.name] = module;
-            }
+            module = new Module(library.name);
             var args = [module.exports, module];
 
             //Inject dependency arguments
@@ -54,9 +87,13 @@ var jsns = (function () {
             }
 
             library.factory.apply(module, args);
+
+            if (!module.isLoadingDelayed()) {
+                setModuleLoaded(library.name, module);
+            }
         }
 
-        return fullyLoaded;
+        return fullyLoaded && !module.isLoadingDelayed();
     }
 
     function Library(name, depNames, factory) {
