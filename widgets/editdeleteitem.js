@@ -15,12 +15,12 @@ function (exports, module, controller, typeId) {
             this.edit = edit;
         }
 
-        if (typeId.isFunction(context.delete)) {
-            function deleteMe(evt) {
+        if (typeId.isFunction(context.del)) {
+            function del(evt) {
                 evt.preventDefault();
-                context.delete(data);
+                context.del(data);
             }
-            this.delete = deleteMe;
+            this.del = del;
         }
     }
 

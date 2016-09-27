@@ -8,9 +8,9 @@ function (exports, module, toggles, jsonEditor, promiseUtils) {
     /**
      * This is a generic object editor that uses json-editor to edit objects.
      * The ui is determined by the html. This supports a load, main, fail
-     * lifecycle. It can also be put on a dialog.
-     * @param {type} bindings
-     * @param {type} context
+     * lifecycle. It can also be put on a dialog named 'dialog', which it will
+     * activate when required. It also consideres closing this dialog to be
+     * a cancellation.
      */
     function JsonObjectEditor(bindings, context) {
         var modeModel = bindings.getModel('mode');

@@ -4,6 +4,10 @@
 function (exports, module, controller) {
     "use strict"
 
+    /**
+     * This controller will bind data loaded to a model called 'listing'.
+     * It also defines an add function that can be called as an hr event.
+     */
     function EditableItemsListController(bindings, context) {
         var listing = bindings.getModel('listing');
 
