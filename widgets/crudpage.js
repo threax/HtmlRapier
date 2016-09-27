@@ -17,7 +17,7 @@ function (exports, module, controller, JsonObjectEditor, EditableItemsList, Edit
         var listingContext = {
             itemControllerConstructor: EditDeleteItem,
             itemControllerContext: {
-                edit: function(item){
+                edit: function (item) {
                     return edit(item, settings.update);
                 },
                 del: deleteItem
@@ -62,26 +62,33 @@ function (exports, module, controller, JsonObjectEditor, EditableItemsList, Edit
             return Promise.resolve(data)
             .then(function (data) {
                 editorContext.showMain();
-                return editorContext.edit(data);
-            })
-            .catch() //Ignore catches creating data, this means they were rejected
-            .then(function (data) {
-                editorContext.showLoad();
-                if (persistFunc === undefined) {
-                    throw new Error("Cannot save updates to item, no persistFunc given.");
-                }
-                return Promise.resolve(persistFunc(data));
-            })
-            .then(function (data) {
-                editorContext.close();
-                refreshData();
-            })
-            .catch(function (err) {
-                editorContext.showError();
-                throw err;
+                return goEdit(data, persistFunc);
             });
         }
         this.edit = edit;
+
+        function goEdit(data, persistFunc) {
+            return editorContext.edit(data)
+            .then(function (data) {
+                if (data !== undefined) {
+                    editorContext.showLoad();
+                    if (persistFunc === undefined) {
+                        throw new Error("Cannot save updates to item, no persistFunc given.");
+                    }
+                    return Promise.resolve(persistFunc(data))
+                    .then(function (data) {
+                        editorContext.close();
+                        refreshData();
+                    })
+                    .catch(function (err) {
+                        editorContext.showError(err);
+                        var modifiedData = editorContext.getData();
+                        goEdit(modifiedData, persistFunc);
+                        throw err;
+                    });
+                }
+            });
+        }
     };
 
     module.exports = CrudPage;

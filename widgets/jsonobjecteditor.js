@@ -10,12 +10,13 @@ function (exports, module, toggles, jsonEditor, promiseUtils) {
      * The ui is determined by the html. This supports a load, main, error
      * lifecycle, but it is controlled externally. It can also be put on a 
      * dialog named 'dialog', which it will activate when required. It also 
-     * consideres closing this dialog to be a cancellation and will reject
-     * its promise at that point.
+     * consideres closing this dialog to be a cancellation and will send its
+     * promise with an undefined result, which means cancel the operation.
      */
     function JsonObjectEditor(bindings, context) {
         var modeModel = bindings.getModel('mode');
         var titleModel = bindings.getModel('title');
+        var errorModel = bindings.getModel('error');
         var formModel = new jsonEditor.create(bindings.getHandle("editorHolder"), {
             schema: context.schema,
             disable_edit_json: true,
@@ -44,10 +45,15 @@ function (exports, module, toggles, jsonEditor, promiseUtils) {
         this.edit = edit;
         context.edit = edit;
 
+        function getData() {
+            return formModel.getData();
+        }
+        context.getData = getData;
+
         function submit(evt) {
             evt.preventDefault();
             if (currentPromise !== null) {
-                var data = formModel.getData();
+                var data = getData();
                 var prom = currentPromise;
                 currentPromise = null;
                 prom.resolve(data);
@@ -59,7 +65,7 @@ function (exports, module, toggles, jsonEditor, promiseUtils) {
             if (currentPromise !== null) {
                 var prom = currentPromise;
                 currentPromise = null;
-                prom.reject();
+                prom.resolve();
             }
         }
 
@@ -71,7 +77,12 @@ function (exports, module, toggles, jsonEditor, promiseUtils) {
             formToggles.activate(load);
         }
 
-        context.showError = function () {
+        context.showError = function (err) {
+            var errorMessage = "No error message";
+            if (err.message !== undefined) {
+                errorMessage = err.message;
+            }
+            errorModel.setData(errorMessage);
             formToggles.activate(error);
             main.on();
         }
