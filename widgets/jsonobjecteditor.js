@@ -7,10 +7,11 @@ function (exports, module, toggles, jsonEditor, promiseUtils) {
     "use strict"
     /**
      * This is a generic object editor that uses json-editor to edit objects.
-     * The ui is determined by the html. This supports a load, main, fail
-     * lifecycle. It can also be put on a dialog named 'dialog', which it will
-     * activate when required. It also consideres closing this dialog to be
-     * a cancellation.
+     * The ui is determined by the html. This supports a load, main, error
+     * lifecycle, but it is controlled externally. It can also be put on a 
+     * dialog named 'dialog', which it will activate when required. It also 
+     * consideres closing this dialog to be a cancellation and will reject
+     * its promise at that point.
      */
     function JsonObjectEditor(bindings, context) {
         var modeModel = bindings.getModel('mode');
@@ -24,19 +25,17 @@ function (exports, module, toggles, jsonEditor, promiseUtils) {
 
         var load = bindings.getToggle('load');
         var main = bindings.getToggle('main');
-        var fail = bindings.getToggle('fail');
-        var formToggles = new toggles.Group(load, main, fail);
+        var error = bindings.getToggle('error');
+        var formToggles = new toggles.Group(load, main, error);
         formToggles.activate(main);
 
         var currentPromise = null;
 
         function edit(data) {
             currentPromise = new promiseUtils.External();
-            formToggles.activate(main);
             titleModel.setData(data);
             modeModel.setData("Edit");
             formModel.setData(data);
-            dialog.on();
             return currentPromise.promise;
         }
         this.edit = edit;
@@ -45,12 +44,10 @@ function (exports, module, toggles, jsonEditor, promiseUtils) {
         function submit(evt) {
             evt.preventDefault();
             if (currentPromise !== null) {
-                formToggles.activate(load);
                 var data = formModel.getData();
                 var prom = currentPromise;
                 currentPromise = null;
                 prom.resolve(data);
-                dialog.off();
             }
         }
         this.submit = submit;
@@ -61,6 +58,27 @@ function (exports, module, toggles, jsonEditor, promiseUtils) {
                 currentPromise = null;
                 prom.reject();
             }
+        }
+
+        context.showMain = function () {
+            formToggles.activate(main);
+        }
+
+        context.showLoad = function () {
+            formToggles.activate(load);
+        }
+
+        context.showError = function () {
+            formToggles.activate(error);
+            main.on();
+        }
+
+        context.show = function () {
+            dialog.on();
+        }
+
+        context.close = function () {
+            dialog.off();
         }
     }
 

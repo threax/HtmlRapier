@@ -1,7 +1,8 @@
 ﻿jsns.define("hr.widgets.editableitemslist", [
     "hr.controller",
+    "hr.toggles"
 ],
-function (exports, module, controller) {
+function (exports, module, controller, toggles) {
     "use strict"
 
     /**
@@ -11,19 +12,22 @@ function (exports, module, controller) {
     function EditableItemsListController(bindings, context) {
         var listing = bindings.getModel('listing');
 
-        function update() {
-            context.getData()
-            .then(function (data) {
-                var creator = undefined;
-                if (context.itemControllerConstructor !== undefined) {
-                    creator = controller.createOnCallback(context.itemControllerConstructor, context.itemControllerContext);
-                }
+        var load = bindings.getToggle('load');
+        var main = bindings.getToggle('main');
+        var error = bindings.getToggle('error');
+        var formToggles = new toggles.Group(load, main, error);
+        formToggles.activate(main);
 
-                listing.setData(data, creator);
-            });
+        function setData(data) {
+            var creator = undefined;
+            if (context.itemControllerConstructor !== undefined) {
+                creator = controller.createOnCallback(context.itemControllerConstructor, context.itemControllerContext);
+            }
+
+            listing.setData(data, creator);
         }
-        this.update = update;
-        context.update = update;
+        this.setData = setData;
+        context.setData = setData;
 
         if (context.add !== undefined) {
             function add(evt) {
@@ -31,6 +35,18 @@ function (exports, module, controller) {
                 return context.add();
             }
             this.add = add;
+        }
+
+        context.showLoad = function () {
+            formToggles.activate(load);
+        };
+
+        context.showMain = function () {
+            formToggles.activate(main);
+        }
+
+        context.showError = function () {
+            formToggles.activate(error);
         }
     };
 

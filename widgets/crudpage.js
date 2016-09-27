@@ -20,7 +20,7 @@ function (exports, module, controller, JsonObjectEditor, EditableItemsList, Edit
                 edit: settings.update,
                 del: settings.del
             },
-            getData: settings.read,
+            getData: settings.list,
             add: settings.create
         };
         controller.create(settings.listController, EditableItemsList, listingContext);
@@ -31,16 +31,45 @@ function (exports, module, controller, JsonObjectEditor, EditableItemsList, Edit
         controller.create(settings.itemEditorController, JsonObjectEditor, editorContext);
 
         function refreshData() {
-            return listingContext.update();
+            listingContext.showLoad();
+            return Promise.resolve(settings.list())
+            .then(function (data) {
+                listingContext.setData(data);
+                listingContext.showMain();
+            })
+            .catch(function (err) {
+                listingContext.showError();
+                throw err;
+            });
         }
         this.refreshData = refreshData;
 
-        function edit(data) {
-            return editorContext.edit(data);
+        function edit(data, persistFunc) {
+            editorContext.showLoad();
+            editorContext.show();
+            return Promise.resolve(data)
+            .then(function (data) {
+                editorContext.showMain();
+                return editorContext.edit(data);
+            })
+            .catch() //Ignore catches creating data, this means they were rejected
+            .then(function (data) {
+                editorContext.showLoad();
+                if (persistFunc === undefined) {
+                    throw new Error("Cannot save updates to item, no persistFunc given.");
+                }
+                return Promise.resolve(persistFunc(data));
+            })
+            .then(function (data) {
+                editorContext.close();
+                refreshData();
+            })
+            .catch(function (err) {
+                editorContext.showError();
+                throw err;
+            });
         }
         this.edit = edit;
-
-        refreshData();
     };
 
     module.exports = CrudPage;
