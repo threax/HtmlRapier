@@ -17,7 +17,10 @@ function (exports, module, toggles, jsonEditor, promiseUtils) {
         var modeModel = bindings.getModel('mode');
         var titleModel = bindings.getModel('title');
         var formModel = new jsonEditor.create(bindings.getHandle("editorHolder"), {
-            schema: context.schema
+            schema: context.schema,
+            disable_edit_json: true,
+            disable_properties: true,
+            disable_collapse: true
         });
 
         var dialog = bindings.getToggle('dialog');
