@@ -28,7 +28,7 @@ function (exports, module, EventHandler) {
 
     //Helper function to handle results
     function handleResult(xhr, success, fail) {
-        if (xhr.status === 200) {
+        if (xhr.status > 199 && xhr.status < 300) {
             if (success !== undefined) {
                 success(extractData(xhr));
             }
