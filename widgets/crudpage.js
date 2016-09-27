@@ -18,7 +18,7 @@ function (exports, module, controller, JsonObjectEditor, EditableItemsList, Edit
             itemControllerConstructor: EditDeleteItem,
             itemControllerContext: {
                 edit: settings.update,
-                del: settings.del
+                del: deleteItem
             },
             getData: settings.list,
             add: settings.create
@@ -43,6 +43,14 @@ function (exports, module, controller, JsonObjectEditor, EditableItemsList, Edit
             });
         }
         this.refreshData = refreshData;
+
+        function deleteItem(item) {
+            listingContext.showLoad();
+            return settings.del(item)
+            .then(function (data) {
+                return refreshData();
+            });
+        }
 
         function edit(data, persistFunc) {
             editorContext.showLoad();

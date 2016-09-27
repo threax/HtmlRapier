@@ -66,7 +66,7 @@ function (exports, module, EventHandler) {
      * @param {object} data - Data to include
      */
     function del(url, data, success, fail) {
-        ajax(url, 'DELETE', data);
+        return ajax(url, 'DELETE', data);
     }
     exports.delete = del;
 
