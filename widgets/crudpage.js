@@ -17,11 +17,15 @@ function (exports, module, controller, JsonObjectEditor, EditableItemsList, Edit
         var listingContext = {
             itemControllerConstructor: EditDeleteItem,
             itemControllerContext: {
-                edit: settings.update,
+                edit: function(item){
+                    return edit(item, settings.update);
+                },
                 del: deleteItem
             },
             getData: settings.list,
-            add: settings.create
+            add: function () {
+                return edit(null, settings.create);
+            }
         };
         controller.create(settings.listController, EditableItemsList, listingContext);
 
