@@ -1,6 +1,6 @@
 ﻿jsns.define("hr.widgets.jsonobjecteditor", [
     "hr.toggles",
-    "json-editor",
+    "hr.plugins.jdorn.json-editor",
     "hr.promiseutils"
 ],
 function (exports, module, toggles, jsonEditor, promiseUtils) {
