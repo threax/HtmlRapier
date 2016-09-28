@@ -2,7 +2,8 @@
 
 jsns.run([
     "hr.toggles",
-    "hr.eventhandler"
+    "hr.eventhandler",
+    "thednp.bootstrap.native"
 ],
 function(exports, module, toggles, EventHandler){
 
