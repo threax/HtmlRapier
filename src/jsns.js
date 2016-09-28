@@ -121,9 +121,30 @@ var jsns = (function () {
         }
     }
 
+    function recursiveWaitingDebug(name, indent) {
+        var indent = '';
+        for (var i = 0; i < indent; ++i) {
+            indent += ' ';
+        }
+
+        var module = unloaded[name];
+        if (module !== undefined) {
+            console.log(indent + module.name);
+            for (var j = 0; j < module.dependencies.length; ++j) {
+                var dependency = module.dependencies[j];
+                if (!isModuleLoaded(dependency.name)) {
+                    recursiveWaitingDebug(dependency.name, indent + 4);
+                }
+            }
+        }
+        else {
+            console.log(indent + name + ' module not yet loaded.');
+        }
+    }
+
     return {
         run: function (dependencies, factory) {
-            runners.push(new Library(null, dependencies, factory));
+            runners.push(new Library("AnonRunner", dependencies, factory));
             loadRunners();
         },
 
@@ -136,11 +157,11 @@ var jsns = (function () {
             if (runners.length > 0) {
                 for (var i = 0; i < runners.length; ++i) {
                     var runner = runners[i];
-                    console.log("Runner waiting " + runner);
+                    console.log("Runner waiting " + runner.name);
                     for (var j = 0; j < runner.dependencies.length; ++j) {
                         var dependency = runner.dependencies[j];
                         if (!isModuleLoaded(dependency.name)) {
-                            console.log("  dependency " + dependency.name);
+                            recursiveWaitingDebug(dependency.name, 0);
                         }
                     }
                 }
