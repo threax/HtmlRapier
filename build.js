@@ -10,6 +10,6 @@ module.exports = function (rootDir, outDir) {
         ],
         output: "HtmlRapier",
         dest: outDir,
-        sourceRoot: __dirname + "/custom_components/HtmlRapier/src/"
+        sourceRoot: __dirname + "/src/"
     });
 }
