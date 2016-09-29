@@ -18,7 +18,6 @@
     "gulp-util": "~3.0.7",
     "gulp-plumber": "~1.1.0",
     "gulp-inject-string": "~1.1.0",
-    "gulp-jsns-module": "threax/gulp-jsns-module",
     "gulp-build-shortcuts": "threax/gulp-build-shortcuts"
   }
 }
