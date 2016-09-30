@@ -136,6 +136,8 @@ function(exports, module, forms, TextStream, components, typeId, domQuery){
 
         this.appendData = this.setData;
 
+        this.clear = function () { }
+
         this.getData = function () {
             return {};
         }
