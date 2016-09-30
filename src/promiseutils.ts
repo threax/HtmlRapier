@@ -13,7 +13,7 @@ function (exports, module, domQuery) {
      * @returns {type} 
      */
     function External(promiseFunc) {
-        var external = {};
+        var external:any = {};
 
         var promise = new Promise(function (resolve, reject) {
             external.resolve = resolve;

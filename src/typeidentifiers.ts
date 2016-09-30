@@ -2,13 +2,6 @@
 
 jsns.define("hr.typeidentifiers", null,
 function(exports, module){
-    //only implement if no native implementation is available
-    if (typeof Array.isArray === 'undefined') {
-        Array.isArray = function (obj) {
-            return Object.prototype.toString.call(obj) === '[object Array]';
-        }
-    };
-
     /**
      * Determine if a variable is an array.
      * @param test - The object to test

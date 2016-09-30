@@ -24,29 +24,39 @@ function (exports, module, typeId) {
 
     var defaultQuery = new Query(); //Empty query to use as default
 
+    class IterateResult {
+        constructor(done: boolean, value?: any) {
+            this.done = done;
+            this.value = value;
+        }
+
+        done: boolean;
+        value: any;
+    }
+
     function _iterate(items, query) {
         var i;
         if (typeId.isArray(items)) {
             i = 0;
             return {
-                next: function () {
+                next: function (): IterateResult {
                     var result = undefined;
                     while (result === undefined && i < items.length) {
                         var item = items[i++];
                         result = query.derive(item);
                     }
                     if (result === undefined) {
-                        return { done: true };
+                        return new IterateResult(true);
                     }
                     else {
-                        return { done: false, value: result };
+                        return new IterateResult(false, result);
                     }
                 }
             };
         }
         else if (typeId.isFunction(items)) {
             return {
-                next: function () {
+                next: function (): IterateResult {
                     var result = undefined;
                     while (result === undefined) {
                         var item = items();
@@ -58,10 +68,10 @@ function (exports, module, typeId) {
                         }
                     }
                     if (result === undefined) {
-                        return { done: true };
+                        return new IterateResult(true);
                     }
                     else {
-                        return { done: false, value: result };
+                        return new IterateResult(false, result);
                     }
                 }
             };

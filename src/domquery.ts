@@ -109,6 +109,12 @@ function(exports, module, typeId){
         return true;
     }
 
+    class AlwaysTrueNodeFilter implements NodeFilter {
+        acceptNode(n: Node) {
+            return NodeFilter.FILTER_ACCEPT;
+        }
+    }
+
     /**
      * Iterate a node collection using createNodeIterator. There is no query for this version
      * as it iterates everything and allows you to extract what is needed.
@@ -117,7 +123,7 @@ function(exports, module, typeId){
      * @param {NodeFilter} whatToShow - see createNodeIterator, defaults to SHOW_ALL
      */
     function iterateNodes(element, whatToShow, cb) {
-        var iter = document.createNodeIterator(element, whatToShow, alwaysTrue, false);
+        var iter = document.createNodeIterator(element, whatToShow, new AlwaysTrueNodeFilter(), false);
         var node;
         while (node = iter.nextNode()) {
             cb(node);
