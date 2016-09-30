@@ -90,18 +90,18 @@ export function serialize(form) {
  * @param {HTMLElement|string} form - The form to populate or a query string for the form.
  * @param {object} data - The data to bind to the form, form name attributes will be mapped to the keys in the object.
  */
-export function populate(form, data) {
-    form = domQuery.first(form);
-    var nameAttrs = domQuery.all('[name]', form);
+export function populate(form: HTMLElement | string, data:any) {
+    var formElement = domQuery.first(form);
+    var nameAttrs = domQuery.all('[name]', formElement);
     if (typeIds.isObject(data)) {
         for (var i = 0; i < nameAttrs.length; ++i) {
-            var element = nameAttrs[i];
+            var element = nameAttrs[i] as HTMLInputElement;
             element.value = data[element.getAttribute('name')];
         }
     }
     else if (typeIds.isFunction(data)) {
         for (var i = 0; i < nameAttrs.length; ++i) {
-            var element = nameAttrs[i];
+            var element = nameAttrs[i] as HTMLInputElement;
             switch (element.type) {
                 case 'checkbox':
                     element.checked = data(element.getAttribute('name')) === element.value;

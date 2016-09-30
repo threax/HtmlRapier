@@ -7,21 +7,23 @@ import * as typeId from './hr.typeidentifiers';
  * @param {string|HTMLElement} element - the element to detect
  * @returns {HTMLElement} - The located html element.
  */
-export function first(element, context) {
-    if (typeId.isString(element)) {
+export function first(element: HTMLElement | string, context?: HTMLElement): HTMLElement {
+    if (typeof element === 'string') {
         if (context !== undefined) {
             if (this.matches(context, element)) {
-                element = context;
+                return context;
             }
-            else {
-                element = context.querySelector(element);
+            else{
+                return context.querySelector(element) as HTMLElement;
             }
         }
         else {
-            element = document.querySelector(element);
+            return document.querySelector(element) as HTMLElement;
         }
     }
-    return element;
+    if (element instanceof Node) {
+        return element;
+    }
 };
 
 /**
@@ -31,7 +33,7 @@ export function first(element, context) {
  * @returns {array[HTMLElement]} - The results array to append to.
  * @returns {array[HTMLElement]} - The located html element. Will be the results array if one is passed otherwise a new one.
  */
-export function all(element: HTMLElement | HTMLElement[] | string, context?: HTMLElement, results?: HTMLElement[]) {
+export function all(element: HTMLElement | HTMLElement[] | string, context?: HTMLElement, results?: HTMLElement[]): HTMLElement[] {
     if (typeof element === 'string') {
         if (results === undefined) {
             results = [];

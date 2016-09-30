@@ -12,7 +12,7 @@ export function isArray(test) {
  * @param test - The object to test
  * @returns {boolean} - True if a string, false if not
  */
-export function isString(test) {
+export function isString(test): test is string {
     return typeof (test) === 'string';
 }
 

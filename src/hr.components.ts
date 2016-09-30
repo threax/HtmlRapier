@@ -83,7 +83,7 @@ export function repeat(name, parentComponent, data, createdCallback, variantFind
         insertBefore = insertBefore.nextElementSibling;
     }
 
-    var fragmentParent = document.createDocumentFragment();
+    var fragmentParent = document.createDocumentFragment() as HTMLElement;
 
     //Output
     if (typeId.isArray(data)) {
@@ -105,25 +105,25 @@ export function repeat(name, parentComponent, data, createdCallback, variantFind
 }
 
 /**
- * Remove all children from an html element.
- * @param {HTMLElement} parentComponent - The component to remove all children from
+ * Remove all children from an html element
  */
-export function empty(parentComponent) {
-    parentComponent = domquery.first(parentComponent);
-    var currentNode = parentComponent.firstChild;
+export function empty(parentComponent: HTMLElement | string) {
+
+    var parent: Node = domquery.first(parentComponent);
+    var currentNode = parent.firstChild;
     var nextNode = null;
 
     //Walk the nodes and remove any non keepers
     while (currentNode != null) {
         nextNode = currentNode.nextSibling;
-        if (currentNode.nodeType !== 1 || !currentNode.hasAttribute('data-hr-keep')) {
-            parentComponent.removeChild(currentNode);
+        if (currentNode.nodeType !== 1 || !(currentNode instanceof HTMLElement && currentNode.hasAttribute('data-hr-keep'))) {
+            parent.removeChild(currentNode);
         }
         currentNode = nextNode;
     }
 }
 
-function doCreateComponent(name, data, parentComponent, insertBeforeSibling, variant, createdCallback) {
+function doCreateComponent(name, data, parentComponent: HTMLElement | string, insertBeforeSibling, variant, createdCallback) {
     parentComponent = domquery.first(parentComponent);
     if (factory.hasOwnProperty(name)) {
         var created = factory[name](data, parentComponent, insertBeforeSibling, variant);

@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-import * as EventHandler from './hr.eventhandler';
+import {EventHandler} from './hr.eventhandler';
 
 var customizeRequestEvent = new EventHandler();
 export const customizeRequest = customizeRequestEvent.modifier;
@@ -53,7 +53,7 @@ export function post(url:string, data?:any) {
  * @param {string} url - The url to put to
  * @param {object} data - The data to put
  */
-export function put(url, data, success, fail) {
+export function put(url:string, data?:any) {
     return ajax(url, 'PUT', data);
 }
 
@@ -62,7 +62,7 @@ export function put(url, data, success, fail) {
  * @param {string} url - The url to delete to
  * @param {object} data - Data to include
  */
-export function del(url, data, success, fail) {
+export function del(url:string, data?:any) {
     return ajax(url, 'DELETE', data);
 }
 
@@ -71,7 +71,7 @@ export function del(url, data, success, fail) {
  * @param {string} url - The url to get data from
  * @param {type} [cache=false] - True to use cached results, false to always get, default false.
  */
-export function get(url, cache) {
+export function get(url: string, cache?: boolean) {
     if (cache === undefined || cache === false) {
         if (url.indexOf('?') > -1) {
             url += '&';
@@ -97,7 +97,7 @@ export function get(url, cache) {
  * @param {string} method - The method to use
  * @param {object} data - The data to send
  */
-export function ajax(url, method, data) {
+export function ajax(url: string, method: string, data?:any) {
     return setupXhr(url, method, function () {
         return JSON.stringify(data);
     }, function () {
@@ -114,7 +114,7 @@ export function ajax(url, method, data) {
  * @param {object|FormData} data - The data to upload, if this is already form data it will be used directly, otherwise
  * data will be sent directly as a file.
  */
-export function upload(url, data) {
+export function upload(url:string, data:any) {
     return setupXhr(url, 'POST', function () {
         var formData = null;
 

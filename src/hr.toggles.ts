@@ -118,12 +118,12 @@ function ClassToggle(element, next) {
 /**
  * The Group defines a collection of toggles that can be manipulated together.
  */
-export function Group() {
-    var toggles = [];
+export function Group(...toggles: any[]) {
+    //var toggles = [];
 
-    for (var i = 0; i < arguments.length; ++i) {
-        toggles.push(arguments[i]);
-    }
+    //for (var i = 0; i < arguments.length; ++i) {
+    //    toggles.push(arguments[i]);
+    //}
 
     /**
      * Add a toggle to the group.
