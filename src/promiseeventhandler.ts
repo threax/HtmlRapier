@@ -1,9 +1,9 @@
-﻿"use strict";
-
+﻿
 /**
- * This class provides a reusable way to fire events to multiple listeners.
+ * This class provides a reusable way to fire events to multiple listeners and wait for them using
+ * promises.
  */
-export function EventHandler() {
+export function PromiseEventHandler() {
     var handlers = [];
 
     function add(context, handler) {
@@ -34,24 +34,31 @@ export function EventHandler() {
 
     /**
      * Fire the event. The listeners can return values, if they do the values will be added
-     * to an array that is returned by this fuction.
-     * @returns {array|undefined} an array of all the values returned by the listeners or undefiend if
-     * no values are returned.
+     * to an array that is returned by the promise returned by this function.
+     * @returns {Promise} a promise that will resolve when all fired events resolve.
      */
     function fire() {
         var result;
-        var nextResult;
+        var promises = [];
         for (var i = 0; i < handlers.length; ++i) {
             var handlerObj = handlers[i];
-            nextResult = handlerObj.handler.apply(handlerObj.context, arguments);
-            if (nextResult !== undefined) {
-                if (result === undefined) {
-                    result = [];
-                }
-                result.push(nextResult);
-            }
+            promises.push(new Promise(function (resovle, reject) {
+                resovle(handlerObj.handler.apply(handlerObj.context, arguments));
+            })
+                .then(function (data) {
+                    if (data !== undefined) {
+                        if (result === undefined) {
+                            result = [];
+                        }
+                        result.push(data);
+                    }
+                }));
         }
-        return result;
+
+        return Promise.all(promises)
+            .then(function (data) {
+                return result;
+            });
     }
     this.fire = fire;
 }

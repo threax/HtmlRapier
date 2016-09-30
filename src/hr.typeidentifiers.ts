@@ -1,6 +1,4 @@
-﻿
-
-/**
+﻿/**
  * Determine if a variable is an array.
  * @param test - The object to test
  * @returns {boolean} - True if the object is an array

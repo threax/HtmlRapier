@@ -13,21 +13,6 @@ var ts = require('gulp-typescript');
 var es = require('event-stream');
 var path = require('path');
 
-
-//module.exports = function (rootDir, outDir) {
-//    ez.minifyConcat({
-//        libs: [
-//            __dirname + "/src/jsns.js",
-//            __dirname + "/src/polyfill.js",
-//            __dirname + "/src/**/*.js",
-//            "!**/*.intellisense.js"
-//        ],
-//        output: "HtmlRapier",
-//        dest: outDir,
-//        sourceRoot: __dirname + "/src/"
-//    });
-//}
-
 module.exports = function (rootDir, outDir) {
     return compileTs({
         libs: [
@@ -36,11 +21,11 @@ module.exports = function (rootDir, outDir) {
             "!**/*.intellisense.js"
         ],
         runners:[
-            "hr.polyfill",
+            "polyfill",
             "hr.componentgatherer"
         ],
         output: "HtmlRapier",
-        namespace: "hr.",
+        namespace: "",
         dest: outDir,
         sourceRoot: __dirname + "/src/"
     });
