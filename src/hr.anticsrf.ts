@@ -8,7 +8,7 @@ function TokenInfo(tokenUrl) {
     var delayedRequestPromises;
 
     http.post(tokenUrl)
-        .then(function (data) {
+        .then(function (data:any) {
             headerName = data.headerName;
             requestToken = data.requestToken;
 

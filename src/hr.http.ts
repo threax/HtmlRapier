@@ -44,7 +44,7 @@ function handleResult(xhr, success, fail) {
  * @param {string} url - The url to post to
  * @param {object} data - The data to post
  */
-export function post(url, data) {
+export function post(url:string, data?:any) {
     return ajax(url, 'POST', data);
 }
 

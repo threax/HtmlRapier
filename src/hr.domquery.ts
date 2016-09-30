@@ -31,8 +31,8 @@ export function first(element, context) {
  * @returns {array[HTMLElement]} - The results array to append to.
  * @returns {array[HTMLElement]} - The located html element. Will be the results array if one is passed otherwise a new one.
  */
-export function all(element, context, results) {
-    if (typeId.isString(element)) {
+export function all(element: HTMLElement | HTMLElement[] | string, context?: HTMLElement, results?: HTMLElement[]) {
+    if (typeof element === 'string') {
         if (results === undefined) {
             results = [];
         }
@@ -49,7 +49,7 @@ export function all(element, context, results) {
             nodesToArray(document.querySelectorAll(element), results);
         }
     }
-    else if (!typeId.isArray(element)) {
+    else if (element instanceof HTMLElement) {
         if (results === undefined) {
             results = [element];
         }

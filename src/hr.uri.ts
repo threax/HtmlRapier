@@ -42,19 +42,38 @@ var parseUriOptions = {
     }
 };
 
-export function parseUri(str) {
-    var o = parseUriOptions,
-        m = o.parser[o.strictMode ? "strict" : "loose"].exec(str),
-        uri = {},
-        i = 14;
+export class Uri {
+    source: string;
+    protocol: string;
+    authority: string;
+    userInfo: string;
+    user: string;
+    password: string;
+    host: string;
+    port: string;
+    relative: string;
+    path: string;
+    directory: string;
+    file: string;
+    query: string;
+    anchor: string;
 
-    while (i--) uri[o.key[i]] = m[i] || "";
+    constructor(str: string) {
+        var o = parseUriOptions;
+        var m = o.parser[o.strictMode ? "strict" : "loose"].exec(str);
+        var uri = this;
+        var i = 14;
 
-    uri[o.q.name] = {};
-    uri[o.key[12]].replace(o.q.parser, function ($0, $1, $2) {
-        if ($1) uri[o.q.name][$1] = $2;
-    });
+        while (i--) uri[o.key[i]] = m[i] || "";
 
-    return uri;
+        uri[o.q.name] = {};
+        uri[o.key[12]].replace(o.q.parser, function ($0, $1, $2) {
+            if ($1) uri[o.q.name][$1] = $2;
+        });
+    }
+}
+
+export function parseUri(str: string) {
+    return new Uri(str);
 };
 

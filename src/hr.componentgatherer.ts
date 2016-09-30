@@ -2,10 +2,10 @@
 
 import * as domquery from './hr.domquery';
 import {BindingCollection} from './hr.bindingcollection';
-import * as TextStream from './hr.textstream';
+import {TextStream} from './hr.textstream';
 import * as components from './hr.components';
 import * as ignoredNodes from './hr.ignored';
-import * as Iterable from './hr.iterable';
+import {Iterable} from './hr.iterable';
 
 var browserSupportsTemplates = 'content' in document.createElement('template');
 var anonTemplateIndex = 0;
