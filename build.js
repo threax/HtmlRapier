@@ -12,7 +12,7 @@ var plumber = require('gulp-plumber');
 var ts = require('gulp-typescript');
 var es = require('event-stream');
 var path = require('path');
-var jsnsAmdWrapper = require('./jsns-amd-wrapper.js');
+var jsnsAmdWrapper = require('jsns/amd-wrapper.js');
 
 module.exports = function (rootDir, outDir) {
     return compileJsnsTs({
