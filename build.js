@@ -20,14 +20,14 @@ module.exports = function (rootDir, outDir) {
             __dirname + "/src/**/*.ts",
             "!**/*.intellisense.js"
         ],
-        runners:[
+        runners: [
             "polyfill",
             "hr.componentgatherer"
         ],
         output: "HtmlRapier",
-        namespace: "",
         dest: outDir,
-        sourceRoot: __dirname + "/src/"
+        sourceRoot: __dirname + "/src/",
+        concat: true
     });
 }
 
@@ -36,10 +36,11 @@ function compileTs(settings) {
         function moduleStart(file) {
             var parsed = path.parse(file);
 
-            var moduleName = settings.namespace + parsed.name;
+            var moduleName = parsed.name;
 
             var header;
-            if (settings['runners'] !== undefined && settings.runners === true || settings.runners.includes(moduleName)) {
+            if (settings['runners'] !== undefined && settings.runners === true
+                || (Array.isArray(settings.runners) && settings.runners.includes(moduleName))) {
                 header = 'jsns.runAmd(';
             }
             else {
@@ -60,7 +61,7 @@ function compileTs(settings) {
     }
 
 
-    return gulp.src(settings.libs, { base: settings.base })
+    var piped = gulp.src(settings.libs, { base: settings.base })
         .pipe(sourcemaps.init())
         .pipe(ts({
             noImplicitAny: false,
@@ -69,13 +70,20 @@ function compileTs(settings) {
             isolatedModules: true,
             module: 'amd'
         }))
-        .pipe(wrap(settings.moduleStart, settings.moduleEnd))
-        .pipe(concat(settings.output + '.js'))
-        //.pipe(uglify())
-        .pipe(rename(settings.output + '.min.js'))
+        .pipe(wrap(settings.moduleStart, settings.moduleEnd));
+
+    if (settings.concat === true) {
+        piped = piped.pipe(concat(settings.output + '.js'))
+    }
+
+    //.pipe(uglify())
+    piped = piped.pipe(rename(settings.output + '.min.js'))
         .pipe(sourcemaps.write(".", { includeContent: false, sourceRoot: settings.sourceRoot }))
         .pipe(gulp.dest(settings.dest));
+
+    return piped;
 };
+module.exports.prototype.compileTs = compileTs;
 
 var stream = function (injectMethod) {
     return es.map(function (file, cb) {
