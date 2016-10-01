@@ -1,6 +1,6 @@
 "use strict";
 
-import * as typeId from './hr.typeidentifiers';
+import * as typeId from 'hr.typeidentifiers';
 
 var defaultStates = ['on', 'off']; //Reusuable states, so we don't end up creating tons of these arrays
 var togglePlugins = [];

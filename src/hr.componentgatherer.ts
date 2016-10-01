@@ -1,11 +1,11 @@
 ﻿"use strict";
 
-import * as domquery from './hr.domquery';
-import {BindingCollection} from './hr.bindingcollection';
-import {TextStream} from './hr.textstream';
-import * as components from './hr.components';
-import * as ignoredNodes from './hr.ignored';
-import {Iterable} from './hr.iterable';
+import * as domquery from 'hr.domquery';
+import {BindingCollection} from 'hr.bindingcollection';
+import {TextStream} from 'hr.textstream';
+import * as components from 'hr.components';
+import * as ignoredNodes from 'hr.ignored';
+import {Iterable} from 'hr.iterable';
 
 var browserSupportsTemplates = 'content' in document.createElement('template');
 var anonTemplateIndex = 0;

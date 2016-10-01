@@ -1,7 +1,7 @@
 ﻿"use strict";
 
-import * as domQuery from './hr.domquery';
-import * as typeIds from './hr.typeidentifiers';
+import * as domQuery from 'hr.domquery';
+import * as typeIds from 'hr.typeidentifiers';
 
 function addValue(q, name, value) {
     if (q[name] === undefined) {

@@ -1,6 +1,6 @@
-﻿import * as http from './hr.http';
-import * as docCookies from './hr.cookies';
-import * as uri from './hr.uri';
+﻿import * as http from 'hr.http';
+import * as docCookies from 'hr.cookies';
+import * as uri from 'hr.uri';
 
 function TokenInfo(tokenUrl) {
     var headerName;

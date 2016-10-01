@@ -1,7 +1,7 @@
 ﻿"use strict";
 
-import * as toggles from './hr.toggles';
-import * as http from './hr.http';
+import * as toggles from 'hr.toggles';
+import * as http from 'hr.http';
 /**
  * Create a simple ajax lifecyle for the form. This will show a loading screen
  * when fetching data and provides provisions to handle a data connection failure.

@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-import {escape} from './hr.escape';
+import {escape} from 'hr.escape';
 
 /**
  * Get an object with the values from the query string. These values

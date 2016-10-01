@@ -1,10 +1,10 @@
 "use strict";
 
-import * as forms from './hr.form';
-import {TextStream} from './hr.textstream';
-import * as components from './hr.components';
-import * as typeId from './hr.typeidentifiers';
-import * as domQuery from './hr.domquery';
+import * as forms from 'hr.form';
+import {TextStream} from 'hr.textstream';
+import * as components from 'hr.components';
+import * as typeId from 'hr.typeidentifiers';
+import * as domQuery from 'hr.domquery';
 
 function sharedClearer(i) {
     return "";

@@ -1,4 +1,4 @@
-﻿import {EventHandler as HrEventHandler} from './hr.eventhandler';
+﻿import {EventHandler as HrEventHandler} from 'hr.eventhandler';
 
 /**
  * This class will queue up the events that fire through it until

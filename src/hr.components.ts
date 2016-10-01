@@ -1,7 +1,7 @@
 ﻿"use strict";
 
-import * as typeId from './hr.typeidentifiers';
-import * as domquery from './hr.domquery';
+import * as typeId from 'hr.typeidentifiers';
+import * as domquery from 'hr.domquery';
 
 var factory = {};
 

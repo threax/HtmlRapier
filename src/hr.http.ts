@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-import {EventHandler} from './hr.eventhandler';
+import {EventHandler} from 'hr.eventhandler';
 
 var customizeRequestEvent = new EventHandler();
 export const customizeRequest = customizeRequestEvent.modifier;

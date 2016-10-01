@@ -1,8 +1,8 @@
 ﻿"use strict";
 
-import {BindingCollection} from './hr.bindingcollection';
-import * as domQuery from './hr.domquery';
-import * as ignoredNodes from './hr.ignored';
+import {BindingCollection} from 'hr.bindingcollection';
+import * as domQuery from 'hr.domquery';
+import * as ignoredNodes from 'hr.ignored';
 
 /**
  * Create controller instances for all controllers named name using the given controllerConstructor function.
@@ -29,12 +29,14 @@ export function create(name, controllerConstructor, context, parentBindings) {
     }
 }
 
+var thingy: (bindings: BindingCollection, context?: any, data?: any) => any;
+
 /**
  * This function will return a function that will create a controller when called with a BindingCollection inside.
  * This can be used in the callbacks for setData in model and when creating components.
  * @param {type} controllerConstructor
  */
-export function createOnCallback(controllerConstructor, context) {
+export function createOnCallback(controllerConstructor, context?:any) {
     return function (bindings, data) {
         var controller = new controllerConstructor(bindings, context, data);
         bindings.setListener(controller);

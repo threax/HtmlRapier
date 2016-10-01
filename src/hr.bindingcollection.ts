@@ -1,11 +1,11 @@
 ﻿"use strict";
 
-import * as escape from './hr.escape';
-import * as typeId from './hr.typeidentifiers';
-import * as domQuery from './hr.domquery';
-import * as TextStream from './hr.textstream';
-import * as toggles from './hr.toggles';
-import * as models from './hr.models';
+import * as escape from 'hr.escape';
+import * as typeId from 'hr.typeidentifiers';
+import * as domQuery from 'hr.domquery';
+import * as TextStream from 'hr.textstream';
+import * as toggles from 'hr.toggles';
+import * as models from 'hr.models';
 
 /**
  * @callback hr_bindingcollection_eventcallback

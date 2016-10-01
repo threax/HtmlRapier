@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-import {EventHandler} from './hr.eventhandler';
+import {EventHandler} from 'hr.eventhandler';
 
 export function TimedTrigger(delay) {
     if (delay === undefined) {

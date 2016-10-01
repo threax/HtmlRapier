@@ -1,7 +1,7 @@
 ﻿"use strict";
 
-import {escape} from './hr.escape';
-import * as typeId from './hr.typeidentifiers';
+import {escape} from 'hr.escape';
+import * as typeId from 'hr.typeidentifiers';
 
 function TextNode(str) {
     this.writeObject = function (data) {
