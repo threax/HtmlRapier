@@ -15,7 +15,7 @@ var path = require('path');
 var jsnsAmdWrapper = require('./jsns-amd-wrapper.js');
 
 module.exports = function (rootDir, outDir) {
-    return compileTs({
+    return compileJsnsTs({
         libs: [
             __dirname + "/src/polyfill.js",
             __dirname + "/src/**/*.ts",
@@ -32,7 +32,7 @@ module.exports = function (rootDir, outDir) {
     });
 }
 
-function compileTs(settings) {
+function compileJsnsTs(settings) {
 
     var piped = gulp.src(settings.libs, { base: settings.base })
         .pipe(sourcemaps.init())
@@ -56,4 +56,4 @@ function compileTs(settings) {
 
     return piped;
 };
-module.exports.prototype.compileTs = compileTs;
+module.exports.prototype.compileJsnsTs = compileJsnsTs;

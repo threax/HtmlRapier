@@ -60,8 +60,6 @@ module.exports = function (opt) {
     };
 
     return stream(function (file, concat) {
-        console.log('streaming ' + file.path);
-
         concat.add(null, opt.moduleStart(file, opt));
         concat.add(file.relative, file.contents, file.sourceMap);
         concat.add(null, opt.moduleEnd(file, opt));
