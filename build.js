@@ -45,10 +45,10 @@ function compileTs(settings) {
             isolatedModules: true,
             module: 'amd'
         }))
-        .pipe(jsnsAmdWrapper(settings.output + '.js', settings));
+        .pipe(jsnsAmdWrapper(settings));
 
     if (settings.concat === true) {
-        //piped = piped.pipe(concat(settings.output + '.js'))
+        piped = piped.pipe(concat(settings.output + '.js'))
     }
 
     //.pipe(uglify())
@@ -77,37 +77,4 @@ function wrap(start, end) {
         // assume start and end are strings
         return String(start(file.path)) + fileContents + String(end(file.path));
     });
-};
-
-
-var through = require('through2');
-var applySourceMap = require('vinyl-sourcemaps-apply');
-//var myTransform = require('myTransform');
-
-function myTransform(contents, options) {
-
-}
-
-function wrapAmdJsns(options) {
-
-    function transform(file, encoding, callback) {
-        // generate source maps if plugin source-map present 
-        if (file.sourceMap) {
-            options.makeSourceMaps = true;
-        }
-
-        // do normal plugin logic 
-        var result = myTransform(file.contents, options);
-        file.contents = new Buffer(result.code);
-
-        // apply source map to the chain 
-        if (file.sourceMap) {
-            applySourceMap(file, result.map);
-        }
-
-        this.push(file);
-        callback();
-    }
-
-    return through.obj(transform);
 };

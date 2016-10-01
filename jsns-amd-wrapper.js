@@ -9,13 +9,11 @@ var gutil = require('gulp-util');
 var PluginError = gutil.PluginError;
 var File = gutil.File;
 var Concat = require('concat-with-sourcemaps');
+var es = require('event-stream');
 
 // file can be a vinyl file object or a string
 // when a string it will construct a new one
-module.exports = function (file, opt) {
-    if (!file) {
-        throw new PluginError('jsns-amd-wrapper', 'Missing file option for jsns-amd-wrapper');
-    }
+module.exports = function (opt) {
     opt = opt || {};
 
     // to preserve existing |undefined| behaviour and to introduce |newLine: ""| for binaries
@@ -26,16 +24,7 @@ module.exports = function (file, opt) {
     var isUsingSourceMaps = false;
     var latestFile;
     var latestMod;
-    var fileName;
     var concat;
-
-    if (typeof file === 'string') {
-        fileName = file;
-    } else if (typeof file.path === 'string') {
-        fileName = path.basename(file.path);
-    } else {
-        throw new PluginError('jsns-amd-wrapper', 'Missing path in file options for jsns-amd-wrapper');
-    }
 
     if (opt['moduleStart'] === undefined) {
         opt.moduleStart = moduleStart;
@@ -45,105 +34,105 @@ module.exports = function (file, opt) {
         opt.moduleEnd = moduleEnd;
     }
 
-    function bufferContents(file, enc, cb) {
-        // ignore empty files
-        if (file.isNull()) {
-            cb();
-            return;
-        }
+    var stream = function (injectMethod) {
+        return es.map(function (file, cb) {
+            try {
 
-        // we don't do streams (yet)
-        if (file.isStream()) {
-            this.emit('error', new PluginError('jsns-amd-wrapper', 'Streaming not supported'));
-            cb();
-            return;
-        }
+                var usingSrc = false;
+                if (file.sourceMap) {
+                    usingSrc = true;
+                }
 
-        // enable sourcemap support for concat
-        // if a sourcemap initialized file comes in
-        if (file.sourceMap && isUsingSourceMaps === false) {
-            isUsingSourceMaps = true;
-        }
+                concat = new Concat(usingSrc, file.path + '.out', opt.newLine);
 
-        // set latest file if not already set,
-        // or if the current file was modified more recently.
-        if (!latestMod || file.stat && file.stat.mtime > latestMod) {
-            latestFile = file;
-            latestMod = file.stat && file.stat.mtime;
-        }
+                var newContents = injectMethod(file, concat);
+                //file.contents = new Buffer(newContents);
+                file.contents = concat.content;
 
-        console.log('begin stream ' + file.path);
+                if (usingSrc) {
+                    file.sourceMap = JSON.parse(concat.sourceMap);
+                }
 
-        // construct concat instance
-        if (!concat) {
-            console.log('created concat ' + file.path);
-            concat = new Concat(isUsingSourceMaps, fileName, opt.newLine);
-        }
+            } catch (err) {
+                return cb(new gutil.PluginError('gulp-inject-string', err));
+            }
+            cb(null, file);
+        });
+    };
 
-        // add file to concat instance
+    return stream(function (file, concat) {
+        console.log('streaming ' + opt.moduleStart(file, opt));
 
         concat.add(null, opt.moduleStart(file, opt));
         concat.add(file.relative, file.contents, file.sourceMap);
         concat.add(null, opt.moduleEnd(file, opt));
 
-        //var joinedFile = createJoinedFile();
-        //joinedFile.contents = concat.content;
-        //console.log(joinedFile.contents);
+        // assume start and end are strings
+        //return String(opt.moduleStart(file, opt)) + fileContents + String(opt.moduleEnd(file, opt));
+    });
 
-        //if (concat.sourceMapping) {
-        //    joinedFile.sourceMap = JSON.parse(concat.sourceMap);
-        //}
+    //function bufferContents(file, enc, cb) {
+    //    // ignore empty files
+    //    if (file.isNull()) {
+    //        cb();
+    //        return;
+    //    }
 
-        //this.push(joinedFile);
+    //    // we don't do streams (yet)
+    //    if (file.isStream()) {
+    //        this.emit('error', new PluginError('jsns-amd-wrapper', 'Streaming not supported'));
+    //        cb();
+    //        return;
+    //    }
 
-        cb();
-    }
+    //    // enable sourcemap support for concat
+    //    // if a sourcemap initialized file comes in
+    //    if (file.sourceMap && isUsingSourceMaps === false) {
+    //        isUsingSourceMaps = true;
+    //    }
 
-    function createJoinedFile() {
-        var joinedFile;
-        // if file opt was a file path
-        // clone everything from the latest file
-        if (typeof file === 'string') {
-            joinedFile = latestFile.clone({ contents: false });
-            joinedFile.path = path.join(latestFile.base, file);
-        } else {
-            joinedFile = new File(file);
-        }
+    //    // set latest file if not already set,
+    //    // or if the current file was modified more recently.
+    //    if (!latestMod || file.stat && file.stat.mtime > latestMod) {
+    //        latestFile = file;
+    //        latestMod = file.stat && file.stat.mtime;
+    //    }
 
-        return joinedFile;
-    }
+    //    console.log('begin stream ' + file.path);
 
-    function endStream(cb) {
-        // no files passed in, no file goes out
-        if (!latestFile || !concat) {
-            cb();
-            return;
-        }
+    //    // construct concat instance
+    //    //if (!concat) {
+    //        console.log('created concat ' + file.path);
+    //        concat = new Concat(isUsingSourceMaps, file.path + '.out', opt.newLine);
+    //    ///}
 
-        console.log('empty end stream ' + file.path);
+    //    // add file to concat instance
 
-        var joinedFile;
+    //    concat.add(null, opt.moduleStart(file, opt));
+    //    concat.add(file.relative, file.contents, file.sourceMap);
+    //    concat.add(null, opt.moduleEnd(file, opt));
 
-        // if file opt was a file path
-        // clone everything from the latest file
-        if (typeof file === 'string') {
-            joinedFile = latestFile.clone({ contents: false });
-            joinedFile.path = path.join(latestFile.base, file);
-        } else {
-            joinedFile = new File(file);
-        }
+    //    file.contents = concat.content;
 
-        joinedFile.contents = concat.content;
 
-        if (concat.sourceMapping) {
-            joinedFile.sourceMap = JSON.parse(concat.sourceMap);
-        }
+    //    if (concat.sourceMapping) {
+    //        file.sourceMap = JSON.parse(concat.sourceMap);
+    //    }
 
-        this.push(joinedFile);
-        cb();
-    }
+    //    //this.push(joinedFile);
 
-    return through.obj(bufferContents, endStream);
+    //    cb(null, file);
+    //}
+
+    //function endStream(cb) {
+    //    // no files passed in, no file goes out
+    //    if (!latestFile || !concat) {
+    //        cb();
+    //        return;
+    //    }
+    //}
+
+    //return through.obj(bufferContents, endStream);
 };
 
 function moduleStart(file, settings) {
