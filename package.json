@@ -19,6 +19,7 @@
     "gulp-plumber": "~1.1.0",
     "gulp-inject-string": "~1.1.0",
     "gulp-build-shortcuts": "threax/gulp-build-shortcuts",
-    "jsns": "^1.0.0"
+    "jsns": "^1.0.0",
+    "concat-with-sourcemaps": "^1.0.4"
   }
 }

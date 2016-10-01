@@ -12,6 +12,7 @@ var plumber = require('gulp-plumber');
 var ts = require('gulp-typescript');
 var es = require('event-stream');
 var path = require('path');
+var jsnsAmdWrapper = require('./jsns-amd-wrapper.js');
 
 module.exports = function (rootDir, outDir) {
     return compileTs({
@@ -31,35 +32,9 @@ module.exports = function (rootDir, outDir) {
     });
 }
 
+
+
 function compileTs(settings) {
-    if (settings['moduleStart'] === undefined) {
-        function moduleStart(file) {
-            var parsed = path.parse(file);
-
-            var moduleName = parsed.name;
-
-            var header;
-            if (settings['runners'] !== undefined && settings.runners === true
-                || (Array.isArray(settings.runners) && settings.runners.includes(moduleName))) {
-                header = 'jsns.runAmd(';
-            }
-            else {
-                header = 'jsns.amd("' + moduleName + '", ';
-            }
-
-            header += 'function(define) {\n';
-            return header;
-        }
-        settings.moduleStart = moduleStart;
-    }
-
-    if (settings['moduleEnd'] === undefined) {
-        function moduleEnd(file) {
-            return '});';
-        }
-        settings.moduleEnd = moduleEnd;
-    }
-
 
     var piped = gulp.src(settings.libs, { base: settings.base })
         .pipe(sourcemaps.init())
@@ -70,14 +45,15 @@ function compileTs(settings) {
             isolatedModules: true,
             module: 'amd'
         }))
-        .pipe(wrap(settings.moduleStart, settings.moduleEnd));
+        .pipe(jsnsAmdWrapper(settings.output + '.js', settings));
 
     if (settings.concat === true) {
-        piped = piped.pipe(concat(settings.output + '.js'))
+        //piped = piped.pipe(concat(settings.output + '.js'))
     }
 
     //.pipe(uglify())
-    piped = piped.pipe(rename(settings.output + '.min.js'))
+    piped = piped
+        .pipe(rename(settings.output + '.min.js'))
         .pipe(sourcemaps.write(".", { includeContent: false, sourceRoot: settings.sourceRoot }))
         .pipe(gulp.dest(settings.dest));
 
@@ -101,4 +77,37 @@ function wrap(start, end) {
         // assume start and end are strings
         return String(start(file.path)) + fileContents + String(end(file.path));
     });
+};
+
+
+var through = require('through2');
+var applySourceMap = require('vinyl-sourcemaps-apply');
+//var myTransform = require('myTransform');
+
+function myTransform(contents, options) {
+
+}
+
+function wrapAmdJsns(options) {
+
+    function transform(file, encoding, callback) {
+        // generate source maps if plugin source-map present 
+        if (file.sourceMap) {
+            options.makeSourceMaps = true;
+        }
+
+        // do normal plugin logic 
+        var result = myTransform(file.contents, options);
+        file.contents = new Buffer(result.code);
+
+        // apply source map to the chain 
+        if (file.sourceMap) {
+            applySourceMap(file, result.map);
+        }
+
+        this.push(file);
+        callback();
+    }
+
+    return through.obj(transform);
 };
