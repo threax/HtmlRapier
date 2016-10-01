@@ -39,11 +39,11 @@ function compileTs(settings) {
             var moduleName = settings.namespace + parsed.name;
 
             var header;
-            if (!settings.runners.includes(moduleName)) {
-                header = 'jsns.amd("' + moduleName + '", ';
+            if (settings['runners'] !== undefined && settings.runners === true || settings.runners.includes(moduleName)) {
+                header = 'jsns.runAmd(';
             }
             else {
-                header = 'jsns.runAmd(';
+                header = 'jsns.amd("' + moduleName + '", ';
             }
 
             header += 'function(define) {\n';
@@ -69,9 +69,6 @@ function compileTs(settings) {
             isolatedModules: true,
             module: 'amd'
         }))
-        //.pipe(gulpCallback(function (file, unused) {
-        //    console.log(' here ' + file.path);
-        //}))
         .pipe(wrap(settings.moduleStart, settings.moduleEnd))
         .pipe(concat(settings.output + '.js'))
         //.pipe(uglify())
@@ -79,29 +76,6 @@ function compileTs(settings) {
         .pipe(sourcemaps.write(".", { includeContent: false, sourceRoot: settings.sourceRoot }))
         .pipe(gulp.dest(settings.dest));
 };
-
-//var Stream = require("stream");
-
-//function gulpCallback(obj) {
-//    "use strict";
-//    var stream = new Stream.Transform({ objectMode: true });
-
-//    stream._transform = function (file, unused, callback) {
-//        obj(file, unused)
-//        callback(null, file);
-//    }
-
-//    return stream;
-//};
-
-
-
-//function wrap(start, end) {
-//    return stream(function (fileContents) {
-//        // assume start and end are strings
-//        return String(start()) + fileContents + String(end());
-//    });
-//};
 
 var stream = function (injectMethod) {
     return es.map(function (file, cb) {
