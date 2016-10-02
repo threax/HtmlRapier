@@ -3,34 +3,38 @@
 /**
  * This class provides a reusable way to fire events to multiple listeners.
  */
-export function EventHandler() {
-    var handlers = [];
+export class EventHandler {
+    private handlers = [];
 
-    function add(context, handler) {
+    add(context, handler) {
         if (context === undefined) {
             throw "context cannot be undefined";
         }
         if (handler === undefined) {
             throw "handler cannot be undefined";
         }
-        handlers.push({
+        this.handlers.push({
             handler: handler,
             context: context
         });
     }
 
-    function remove(context, handler) {
-        for (var i = 0; i < handlers.length; ++i) {
-            if (handlers[i].handler === handler && handlers[i].context === context) {
-                handlers.splice(i--, 1);
+    remove(context, handler) {
+        for (var i = 0; i < this.handlers.length; ++i) {
+            if (this.handlers[i].handler === handler && this.handlers[i].context === context) {
+                this.handlers.splice(i--, 1);
             }
         }
     }
 
-    this.modifier = {
-        add: add,
-        remove: remove
-    }
+    modifier = {
+        add: (context, handler) => {
+            this.add(context, handler);
+        },
+        remove: (context, handler) => {
+            this.remove(context, handler);
+        }
+    };
 
     /**
      * Fire the event. The listeners can return values, if they do the values will be added
@@ -38,12 +42,12 @@ export function EventHandler() {
      * @returns {array|undefined} an array of all the values returned by the listeners or undefiend if
      * no values are returned.
      */
-    function fire() {
+    fire(...args:any[]) {
         var result;
         var nextResult;
-        for (var i = 0; i < handlers.length; ++i) {
-            var handlerObj = handlers[i];
-            nextResult = handlerObj.handler.apply(handlerObj.context, arguments);
+        for (var i = 0; i < this.handlers.length; ++i) {
+            var handlerObj = this.handlers[i];
+            nextResult = handlerObj.handler.apply(handlerObj.context, args);
             if (nextResult !== undefined) {
                 if (result === undefined) {
                     result = [];
@@ -53,5 +57,4 @@ export function EventHandler() {
         }
         return result;
     }
-    this.fire = fire;
 }
