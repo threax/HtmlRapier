@@ -28,12 +28,8 @@ export class EventHandler {
     }
 
     modifier = {
-        add: (context, handler) => {
-            this.add(context, handler);
-        },
-        remove: (context, handler) => {
-            this.remove(context, handler);
-        }
+        add: (context, handler) => this.add(context, handler),
+        remove: (context, handler) => this.remove(context, handler)
     };
 
     /**
