@@ -11,7 +11,7 @@ import * as ignoredNodes from 'hr.ignored';
  * @param {type} name
  * @param {type} controllerConstructor
  */
-export function create(name, controllerConstructor, context, parentBindings) {
+export function create(name, controllerConstructor, context, parentBindings?) {
     function foundElement(element) {
         if (!ignoredNodes.isIgnored(element)) {
             var bindings = new BindingCollection(element);

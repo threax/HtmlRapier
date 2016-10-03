@@ -7,7 +7,7 @@
  * @param {type} promiseFunc
  * @returns {type} 
  */
-export function External(promiseFunc) {
+export function ExternalPromise(promiseFunc?:any) :void {
     var external: any = {};
 
     var promise = new Promise(function (resolve, reject) {
