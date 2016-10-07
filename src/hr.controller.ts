@@ -11,13 +11,16 @@ import * as ignoredNodes from 'hr.ignored';
  * @param {type} name
  * @param {type} controllerConstructor
  */
-export function create(name, controllerConstructor, context, parentBindings?) {
+export function create(name, controllerConstructor, context, parentBindings?) :any[]{
+    var createdControllers = [];
+
     function foundElement(element) {
         if (!ignoredNodes.isIgnored(element)) {
             var bindings = new BindingCollection(element);
             var controller = new controllerConstructor(bindings, context, null);
             bindings.setListener(controller);
             element.removeAttribute('data-hr-controller');
+            createdControllers.push(controller);
         }
     }
 
@@ -27,6 +30,8 @@ export function create(name, controllerConstructor, context, parentBindings?) {
     else {
         domQuery.iterate('[data-hr-controller="' + name + '"]', null, foundElement);
     }
+
+    return createdControllers;
 }
 
 /**
