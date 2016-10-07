@@ -1,9 +1,9 @@
 {
   "name": "htmlrapier",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "private": false,
   "dependencies": {
-
+    
   },
   "devDependencies": {
     "gulp": "3.9.1",
@@ -18,8 +18,8 @@
     "gulp-util": "~3.0.7",
     "gulp-plumber": "~1.1.0",
     "gulp-inject-string": "~1.1.0",
-    "gulp-build-shortcuts": "threax/gulp-build-shortcuts",
-    "jsns": "^1.0.0",
-    "concat-with-sourcemaps": "^1.0.4"
+    "threax-gulp-tk": "^1.2.2",
+    "concat-with-sourcemaps": "^1.0.4",
+    "jsns": "^1.2.4"
   }
 }
