@@ -1,471 +1,283 @@
-"use strict";
+jsns.runAmd(function(define) {
 
-var jsns = (function () {
-    var loaded = {};
-    var unloaded = {};
-    var runners = [];
-
-    function isModuleLoaded(name) {
-        return loaded[name] !== undefined;
-    }
-
-    function isModuleLoadable(name) {
-        return unloaded[name] !== undefined;
-    }
-
-    function loadModule(name){
-        var loaded = checkLib(unloaded[name]);
-        if (loaded) {
-            delete unloaded[name];
+define(["require", "exports"], function (require, exports) {
+    "use strict";
+    (function () {
+        //Startswith polyfill
+        if (!String.prototype.startsWith) {
+            String.prototype.startsWith = function (searchString, position) {
+                position = position || 0;
+                return this.substr(position, searchString.length) === searchString;
+            };
         }
-        return loaded;
-    }
-
-    function setModuleLoaded(name, module) {
-        if (loaded[name] === undefined) {
-            loaded[name] = module;
+        //Polyfill for matches
+        //https://developer.mozilla.org/en-US/docs/Web/API/Element/matches
+        if (!Element.prototype.matches) {
+            Element.prototype.matches =
+                Element.prototype.matchesSelector ||
+                    Element.prototype.mozMatchesSelector ||
+                    Element.prototype.msMatchesSelector ||
+                    Element.prototype.oMatchesSelector ||
+                    Element.prototype.webkitMatchesSelector ||
+                    function (s) {
+                        var matches = (this.document || this.ownerDocument).querySelectorAll(s), i = matches.length;
+                        while (--i >= 0 && matches.item(i) !== this) { }
+                        return i > -1;
+                    };
         }
-    }
-
-    function Module(name) {
-        var loadingDelayed = false;
-        var self = this;
-
-        this.exports = {};
-
-        /**
-         * Figure out if this module is delay loading.
-         * @returns {bool} True if delay loading, false if fully loaded
-         */
-        this.isLoadingDelayed = function(){
-            return loadingDelayed;
-        }
-
-        /**
-         * Set this module to delay loading mode, you must call setLoaded manually
-         * after calling this function or the module will never be considered loaded.
-         * Do this if you need additional async calls to fully load your module.
-         */
-        this.delayLoading = function () {
-            loadingDelayed = true;
-        }
-
-        /**
-         * Set the module to loaded. Only needs to be called if delayLoading is called,
-         * otherwise there is no need.
-         */
-        this.loaded = function () {
-            setModuleLoaded(name, self);
-            loadRunners();
-        }
-    }
-
-    function checkLib(library) {
-        var dependencies = library.dependencies;
-        var fullyLoaded = true;
-        var module = undefined;
-
-        //Check to see if depenedencies are loaded and if they aren't and can be, load them
-        for (var i = 0; i < dependencies.length; ++i) {
-            var dep = dependencies[i];
-            dep.loaded = isModuleLoaded(dep.name);
-            if (!dep.loaded && isModuleLoadable(dep.name)) {
-                dep.loaded = loadModule(dep.name);
+        //Polyfill for promise
+        //https://raw.githubusercontent.com/taylorhakes/promise-polyfill/master/promise.js
+        function promiseFill(root) {
+            // Store setTimeout reference so promise-polyfill will be unaffected by
+            // other code modifying setTimeout (like sinon.useFakeTimers())
+            var setTimeoutFunc = setTimeout;
+            function noop() { }
+            // Polyfill for Function.prototype.bind
+            function bind(fn, thisArg) {
+                return function () {
+                    fn.apply(thisArg, arguments);
+                };
             }
-            fullyLoaded = fullyLoaded && dep.loaded;
-        }
-
-        //If all dependencies are loaded, load this library
-        if (fullyLoaded) {
-            module = new Module(library.name);
-            var args = [module.exports, module];
-
-            //Inject dependency arguments
-            for (var i = 0; i < dependencies.length; ++i) {
-                var dep = dependencies[i];
-                args.push(loaded[dep.name].exports);
+            function Promise(fn) {
+                if (typeof this !== 'object')
+                    throw new TypeError('Promises must be constructed via new');
+                if (typeof fn !== 'function')
+                    throw new TypeError('not a function');
+                this._state = 0;
+                this._handled = false;
+                this._value = undefined;
+                this._deferreds = [];
+                doResolve(fn, this);
             }
-
-            library.factory.apply(module, args);
-
-            if (!module.isLoadingDelayed()) {
-                setModuleLoaded(library.name, module);
-            }
-        }
-
-        return fullyLoaded && !module.isLoadingDelayed();
-    }
-
-    function Library(name, depNames, factory) {
-        this.name = name;
-        this.factory = factory;
-        this.dependencies = [];
-
-        if (depNames) {
-            for (var i = 0; i < depNames.length; ++i) {
-                var depName = depNames[i];
-                this.dependencies.push({
-                    name: depName,
-                    loaded: isModuleLoaded(depName)
+            function handle(self, deferred) {
+                while (self._state === 3) {
+                    self = self._value;
+                }
+                if (self._state === 0) {
+                    self._deferreds.push(deferred);
+                    return;
+                }
+                self._handled = true;
+                Promise._immediateFn(function () {
+                    var cb = self._state === 1 ? deferred.onFulfilled : deferred.onRejected;
+                    if (cb === null) {
+                        (self._state === 1 ? resolve : reject)(deferred.promise, self._value);
+                        return;
+                    }
+                    var ret;
+                    try {
+                        ret = cb(self._value);
+                    }
+                    catch (e) {
+                        reject(deferred.promise, e);
+                        return;
+                    }
+                    resolve(deferred.promise, ret);
                 });
             }
-        }
-    }
-
-    function loadRunners() {
-        for (var i = 0; i < runners.length; ++i) {
-            var runner = runners[i];
-            if (checkLib(runner)) {
-                runners.splice(i--, 1);
-            }
-        }
-    }
-
-    function recursiveWaitingDebug(name, indent) {
-        var indent = '';
-        for (var i = 0; i < indent; ++i) {
-            indent += ' ';
-        }
-
-        var module = unloaded[name];
-        if (module !== undefined) {
-            console.log(indent + module.name);
-            for (var j = 0; j < module.dependencies.length; ++j) {
-                var dependency = module.dependencies[j];
-                if (!isModuleLoaded(dependency.name)) {
-                    recursiveWaitingDebug(dependency.name, indent + 4);
-                }
-            }
-        }
-        else {
-            console.log(indent + name + ' module not yet loaded.');
-        }
-    }
-
-    return {
-        run: function (dependencies, factory) {
-            runners.push(new Library("AnonRunner", dependencies, factory));
-            loadRunners();
-        },
-
-        define: function (name, dependencies, factory) {
-            unloaded[name] = new Library(name, dependencies, factory);
-            loadRunners();
-        },
-
-        debug: function () {
-            if (runners.length > 0) {
-                for (var i = 0; i < runners.length; ++i) {
-                    var runner = runners[i];
-                    console.log("Runner waiting " + runner.name);
-                    for (var j = 0; j < runner.dependencies.length; ++j) {
-                        var dependency = runner.dependencies[j];
-                        if (!isModuleLoaded(dependency.name)) {
-                            recursiveWaitingDebug(dependency.name, 0);
+            function resolve(self, newValue) {
+                try {
+                    // Promise Resolution Procedure: https://github.com/promises-aplus/promises-spec#the-promise-resolution-procedure
+                    if (newValue === self)
+                        throw new TypeError('A promise cannot be resolved with itself.');
+                    if (newValue && (typeof newValue === 'object' || typeof newValue === 'function')) {
+                        var then = newValue.then;
+                        if (newValue instanceof Promise) {
+                            self._state = 3;
+                            self._value = newValue;
+                            finale(self);
+                            return;
+                        }
+                        else if (typeof then === 'function') {
+                            doResolve(bind(then, newValue), self);
+                            return;
                         }
                     }
+                    self._state = 1;
+                    self._value = newValue;
+                    finale(self);
+                }
+                catch (e) {
+                    reject(self, e);
                 }
             }
-            else {
-                console.log("No runners remaining.");
-            }
-        }
-    }
-})();
-(function () {
-    //Startswith polyfill
-    if (!String.prototype.startsWith) {
-        String.prototype.startsWith = function (searchString, position) {
-            position = position || 0;
-            return this.substr(position, searchString.length) === searchString;
-        };
-    }
-
-    //Polyfill for matches
-    //https://developer.mozilla.org/en-US/docs/Web/API/Element/matches
-    if (!Element.prototype.matches) {
-        Element.prototype.matches =
-            Element.prototype.matchesSelector ||
-            Element.prototype.mozMatchesSelector ||
-            Element.prototype.msMatchesSelector ||
-            Element.prototype.oMatchesSelector ||
-            Element.prototype.webkitMatchesSelector ||
-            function (s) {
-                var matches = (this.document || this.ownerDocument).querySelectorAll(s),
-                    i = matches.length;
-                while (--i >= 0 && matches.item(i) !== this) { }
-                return i > -1;
-            };
-    }
-
-    //Polyfill for promise
-    //https://raw.githubusercontent.com/taylorhakes/promise-polyfill/master/promise.js
-    function promiseFill(root) {
-
-        // Store setTimeout reference so promise-polyfill will be unaffected by
-        // other code modifying setTimeout (like sinon.useFakeTimers())
-        var setTimeoutFunc = setTimeout;
-
-        function noop() { }
-
-        // Polyfill for Function.prototype.bind
-        function bind(fn, thisArg) {
-            return function () {
-                fn.apply(thisArg, arguments);
-            };
-        }
-
-        function Promise(fn) {
-            if (typeof this !== 'object') throw new TypeError('Promises must be constructed via new');
-            if (typeof fn !== 'function') throw new TypeError('not a function');
-            this._state = 0;
-            this._handled = false;
-            this._value = undefined;
-            this._deferreds = [];
-
-            doResolve(fn, this);
-        }
-
-        function handle(self, deferred) {
-            while (self._state === 3) {
-                self = self._value;
-            }
-            if (self._state === 0) {
-                self._deferreds.push(deferred);
-                return;
-            }
-            self._handled = true;
-            Promise._immediateFn(function () {
-                var cb = self._state === 1 ? deferred.onFulfilled : deferred.onRejected;
-                if (cb === null) {
-                    (self._state === 1 ? resolve : reject)(deferred.promise, self._value);
-                    return;
-                }
-                var ret;
-                try {
-                    ret = cb(self._value);
-                } catch (e) {
-                    reject(deferred.promise, e);
-                    return;
-                }
-                resolve(deferred.promise, ret);
-            });
-        }
-
-        function resolve(self, newValue) {
-            try {
-                // Promise Resolution Procedure: https://github.com/promises-aplus/promises-spec#the-promise-resolution-procedure
-                if (newValue === self) throw new TypeError('A promise cannot be resolved with itself.');
-                if (newValue && (typeof newValue === 'object' || typeof newValue === 'function')) {
-                    var then = newValue.then;
-                    if (newValue instanceof Promise) {
-                        self._state = 3;
-                        self._value = newValue;
-                        finale(self);
-                        return;
-                    } else if (typeof then === 'function') {
-                        doResolve(bind(then, newValue), self);
-                        return;
-                    }
-                }
-                self._state = 1;
+            function reject(self, newValue) {
+                self._state = 2;
                 self._value = newValue;
                 finale(self);
-            } catch (e) {
-                reject(self, e);
             }
-        }
-
-        function reject(self, newValue) {
-            self._state = 2;
-            self._value = newValue;
-            finale(self);
-        }
-
-        function finale(self) {
-            if (self._state === 2 && self._deferreds.length === 0) {
-                Promise._immediateFn(function () {
-                    if (!self._handled) {
-                        Promise._unhandledRejectionFn(self._value);
-                    }
-                });
+            function finale(self) {
+                if (self._state === 2 && self._deferreds.length === 0) {
+                    Promise._immediateFn(function () {
+                        if (!self._handled) {
+                            Promise._unhandledRejectionFn(self._value);
+                        }
+                    });
+                }
+                for (var i = 0, len = self._deferreds.length; i < len; i++) {
+                    handle(self, self._deferreds[i]);
+                }
+                self._deferreds = null;
             }
-
-            for (var i = 0, len = self._deferreds.length; i < len; i++) {
-                handle(self, self._deferreds[i]);
+            function Handler(onFulfilled, onRejected, promise) {
+                this.onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : null;
+                this.onRejected = typeof onRejected === 'function' ? onRejected : null;
+                this.promise = promise;
             }
-            self._deferreds = null;
-        }
-
-        function Handler(onFulfilled, onRejected, promise) {
-            this.onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : null;
-            this.onRejected = typeof onRejected === 'function' ? onRejected : null;
-            this.promise = promise;
-        }
-
-        /**
-         * Take a potentially misbehaving resolver function and make sure
-         * onFulfilled and onRejected are only called once.
-         *
-         * Makes no guarantees about asynchrony.
-         */
-        function doResolve(fn, self) {
-            var done = false;
-            try {
-                fn(function (value) {
-                    if (done) return;
+            /**
+             * Take a potentially misbehaving resolver function and make sure
+             * onFulfilled and onRejected are only called once.
+             *
+             * Makes no guarantees about asynchrony.
+             */
+            function doResolve(fn, self) {
+                var done = false;
+                try {
+                    fn(function (value) {
+                        if (done)
+                            return;
+                        done = true;
+                        resolve(self, value);
+                    }, function (reason) {
+                        if (done)
+                            return;
+                        done = true;
+                        reject(self, reason);
+                    });
+                }
+                catch (ex) {
+                    if (done)
+                        return;
                     done = true;
-                    resolve(self, value);
-                }, function (reason) {
-                    if (done) return;
-                    done = true;
-                    reject(self, reason);
-                });
-            } catch (ex) {
-                if (done) return;
-                done = true;
-                reject(self, ex);
+                    reject(self, ex);
+                }
             }
-        }
-
-        Promise.prototype['catch'] = function (onRejected) {
-            return this.then(null, onRejected);
-        };
-
-        Promise.prototype.then = function (onFulfilled, onRejected) {
-            var prom = new (this.constructor)(noop);
-
-            handle(this, new Handler(onFulfilled, onRejected, prom));
-            return prom;
-        };
-
-        Promise.all = function (arr) {
-            var args = Array.prototype.slice.call(arr);
-
-            return new Promise(function (resolve, reject) {
-                if (args.length === 0) return resolve([]);
-                var remaining = args.length;
-
-                function res(i, val) {
-                    try {
-                        if (val && (typeof val === 'object' || typeof val === 'function')) {
-                            var then = val.then;
-                            if (typeof then === 'function') {
-                                then.call(val, function (val) {
-                                    res(i, val);
-                                }, reject);
-                                return;
+            Promise.prototype['catch'] = function (onRejected) {
+                return this.then(null, onRejected);
+            };
+            Promise.prototype.then = function (onFulfilled, onRejected) {
+                var prom = new (this.constructor)(noop);
+                handle(this, new Handler(onFulfilled, onRejected, prom));
+                return prom;
+            };
+            Promise.all = function (arr) {
+                var args = Array.prototype.slice.call(arr);
+                return new Promise(function (resolve, reject) {
+                    if (args.length === 0)
+                        return resolve([]);
+                    var remaining = args.length;
+                    function res(i, val) {
+                        try {
+                            if (val && (typeof val === 'object' || typeof val === 'function')) {
+                                var then = val.then;
+                                if (typeof then === 'function') {
+                                    then.call(val, function (val) {
+                                        res(i, val);
+                                    }, reject);
+                                    return;
+                                }
+                            }
+                            args[i] = val;
+                            if (--remaining === 0) {
+                                resolve(args);
                             }
                         }
-                        args[i] = val;
-                        if (--remaining === 0) {
-                            resolve(args);
+                        catch (ex) {
+                            reject(ex);
                         }
-                    } catch (ex) {
-                        reject(ex);
                     }
+                    for (var i = 0; i < args.length; i++) {
+                        res(i, args[i]);
+                    }
+                });
+            };
+            Promise.resolve = function (value) {
+                if (value && typeof value === 'object' && value.constructor === Promise) {
+                    return value;
                 }
-
-                for (var i = 0; i < args.length; i++) {
-                    res(i, args[i]);
+                return new Promise(function (resolve) {
+                    resolve(value);
+                });
+            };
+            Promise.reject = function (value) {
+                return new Promise(function (resolve, reject) {
+                    reject(value);
+                });
+            };
+            Promise.race = function (values) {
+                return new Promise(function (resolve, reject) {
+                    for (var i = 0, len = values.length; i < len; i++) {
+                        values[i].then(resolve, reject);
+                    }
+                });
+            };
+            // Use polyfill for setImmediate for performance gains
+            Promise._immediateFn = (typeof setImmediate === 'function' && function (fn) { setImmediate(fn); }) ||
+                function (fn) {
+                    setTimeoutFunc(fn, 0);
+                };
+            Promise._unhandledRejectionFn = function _unhandledRejectionFn(err) {
+                if (typeof console !== 'undefined' && console) {
+                    console.warn('Possible Unhandled Promise Rejection:', err); // eslint-disable-line no-console
                 }
-            });
-        };
+            };
+            /**
+             * Set the immediate function to execute callbacks
+             * @param fn {function} Function to execute
+             * @deprecated
+             */
+            Promise._setImmediateFn = function _setImmediateFn(fn) {
+                Promise._immediateFn = fn;
+            };
+            /**
+             * Change the function to execute on unhandled rejection
+             * @param {function} fn Function to execute on unhandled rejection
+             * @deprecated
+             */
+            Promise._setUnhandledRejectionFn = function _setUnhandledRejectionFn(fn) {
+                Promise._unhandledRejectionFn = fn;
+            };
+            root.Promise = Promise;
+        }
+        ;
+        if (typeof (window.Promise) === 'undefined') {
+            promiseFill(window);
+        }
+        //IsArray polyfill
+        if (typeof Array.isArray === 'undefined') {
+            Array.isArray = function (obj) {
+                return Object.prototype.toString.call(obj) === '[object Array]';
+            };
+        }
+        ;
+    })();
+});
+});
+jsns.amd("hr.anticsrf", function(define) {
 
-        Promise.resolve = function (value) {
-            if (value && typeof value === 'object' && value.constructor === Promise) {
-                return value;
-            }
-
-            return new Promise(function (resolve) {
-                resolve(value);
-            });
-        };
-
-        Promise.reject = function (value) {
-            return new Promise(function (resolve, reject) {
-                reject(value);
-            });
-        };
-
-        Promise.race = function (values) {
-            return new Promise(function (resolve, reject) {
-                for (var i = 0, len = values.length; i < len; i++) {
-                    values[i].then(resolve, reject);
-                }
-            });
-        };
-
-        // Use polyfill for setImmediate for performance gains
-        Promise._immediateFn = (typeof setImmediate === 'function' && function (fn) { setImmediate(fn); }) ||
-          function (fn) {
-              setTimeoutFunc(fn, 0);
-          };
-
-        Promise._unhandledRejectionFn = function _unhandledRejectionFn(err) {
-            if (typeof console !== 'undefined' && console) {
-                console.warn('Possible Unhandled Promise Rejection:', err); // eslint-disable-line no-console
-            }
-        };
-
-        /**
-         * Set the immediate function to execute callbacks
-         * @param fn {function} Function to execute
-         * @deprecated
-         */
-        Promise._setImmediateFn = function _setImmediateFn(fn) {
-            Promise._immediateFn = fn;
-        };
-
-        /**
-         * Change the function to execute on unhandled rejection
-         * @param {function} fn Function to execute on unhandled rejection
-         * @deprecated
-         */
-        Promise._setUnhandledRejectionFn = function _setUnhandledRejectionFn(fn) {
-            Promise._unhandledRejectionFn = fn;
-        };
-
-        root.Promise = Promise;
-
-    };
-
-    if (typeof (window.Promise) === 'undefined') {
-        promiseFill(window);
-    }
-})();
-"use strict";
-
-jsns.define("hr.anticsrf", [
-    "hr.http",
-    "hr.doccookies",
-    "hr.uri"
-],
-function (exports, module, http, docCookies, uri) {
+define(["require", "exports", 'hr.http', 'hr.uri'], function (require, exports, http, uri) {
+    "use strict";
     function TokenInfo(tokenUrl) {
         var headerName;
         var requestToken;
         var delayedRequestPromises;
-
         http.post(tokenUrl)
-        .then(function (data) {
+            .then(function (data) {
             headerName = data.headerName;
             requestToken = data.requestToken;
-
             if (delayedRequestPromises !== undefined) {
                 for (var i = 0; i < delayedRequestPromises.length; ++delayedRequestPromises) {
                     delayedRequestPromises[i].resolve();
                 }
             }
         })
-        .catch(function (err) {
+            .catch(function (err) {
             if (delayedRequestPromises !== undefined) {
                 for (var i = 0; i < delayedRequestPromises.length; ++delayedRequestPromises) {
                     delayedRequestPromises[i].reject();
                 }
             }
         });
-
         this.modifyPromise = function (url, type) {
             if (headerName === undefined) {
                 if (url !== tokenUrl) {
@@ -480,15 +292,13 @@ function (exports, module, http, docCookies, uri) {
                     });
                 }
             }
-        }
-
+        };
         this.modifyRequest = function (xhr, url, type) {
             if (url !== tokenUrl) {
                 xhr.setRequestHeader(headerName, requestToken);
             }
-        }
+        };
     }
-
     var tokens = {};
     var needSetupRequest = true;
     function getToken(url) {
@@ -496,18 +306,16 @@ function (exports, module, http, docCookies, uri) {
         if (tokens[key] === undefined) {
             if (needSetupRequest) {
                 needSetupRequest = false;
-                http.customizeRequest.add(exports, customizeRequest);
-                http.customizePromise.add(exports, customizePromise)
+                http.customizeRequest.add(null, customizeRequest);
+                http.customizePromise.add(null, customizePromise);
             }
             tokens[key] = new TokenInfo(url);
         }
     }
     exports.getToken = getToken;
-
     function getKeyFromUrl(url) {
         return uri.parseUri(url).authority.toLowerCase();
     }
-
     function customizePromise(url, type) {
         var key = getKeyFromUrl(url);
         var info = tokens[key];
@@ -515,7 +323,6 @@ function (exports, module, http, docCookies, uri) {
             return info.modifyPromise(url, type);
         }
     }
-
     function customizeRequest(xhr, url, type) {
         var key = getKeyFromUrl(url);
         var info = tokens[key];
@@ -524,41 +331,31 @@ function (exports, module, http, docCookies, uri) {
         }
     }
 });
-"use strict";
+});
+jsns.amd("hr.bindingcollection", function(define) {
 
-/**
- * @callback hr_bindingcollection_eventcallback
- */
-
-/**
- * @callback hr_iter
- * @param {array} items - the items to iterate
- * @param {hr_iter_cb} - the function to transform each object
- * @returns the transformed item and null when all items are iterated
- */
-
-/**
- * @typedef {object} hr_bindingcollection
- */
-
-jsns.define("hr.bindingcollection", [
-    "hr.escape",
-    "hr.typeidentifiers",
-    "hr.domquery",
-    "hr.textstream",
-    "hr.toggles",
-    "hr.models"
-],
-function (exports, module, escape, typeId, domQuery, TextStream, toggles, models) {
+define(["require", "exports", 'hr.domquery', 'hr.toggles', 'hr.models'], function (require, exports, domQuery, toggles, models) {
+    "use strict";
+    /**
+     * @callback hr_bindingcollection_eventcallback
+     */
+    /**
+     * @callback hr_iter
+     * @param {array} items - the items to iterate
+     * @param {hr_iter_cb} - the function to transform each object
+     * @returns the transformed item and null when all items are iterated
+     */
+    /**
+     * @typedef {object} hr_bindingcollection
+     */
     function EventRunner(name, listener) {
         this.execute = function (evt) {
             var cb = listener[name];
             if (cb) {
                 cb.call(this, evt);
             }
-        }
+        };
     }
-
     function bindEvents(elements, listener) {
         for (var eIx = 0; eIx < elements.length; ++eIx) {
             var element = elements[eIx];
@@ -577,7 +374,6 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
             });
         }
     }
-
     function getToggle(name, elements, states) {
         var toggle;
         var query = '[data-hr-toggle=' + name + ']';
@@ -592,14 +388,11 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
                 toggle = null;
             }
         }
-
         if (toggle === null) {
             toggle = toggles.build(null, states);
         }
-
         return toggle;
     }
-
     function getModel(name, elements) {
         var model;
         var query = '[data-hr-model=' + name + ']';
@@ -614,14 +407,11 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
                 model = null;
             }
         }
-
         if (model === null) {
             model = new models.NullModel();
         }
-
         return model;
     }
-
     function getHandle(name, elements) {
         var model;
         var query = '[data-hr-handle=' + name + ']';
@@ -632,10 +422,8 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
                 return targetElement;
             }
         }
-
         return null;
     }
-
     function getConfig(elements) {
         var data = {};
         for (var eIx = 0; eIx < elements.length; ++eIx) {
@@ -652,7 +440,6 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
         }
         return data;
     }
-
     function iterateControllers(name, elements, cb) {
         for (var eIx = 0; eIx < elements.length; ++eIx) {
             var element = elements[eIx];
@@ -661,14 +448,12 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
             });
         }
     }
-
     /**
-     * 
+     *
      * @param {HtmlElement} elements
      */
     function BindingCollection(elements) {
         elements = domQuery.all(elements);
-
         /**
          * Set the listener for this binding collection. This listener will have its functions
          * fired when a matching event is fired.
@@ -676,96 +461,73 @@ function (exports, module, escape, typeId, domQuery, TextStream, toggles, models
          */
         this.setListener = function (listener) {
             bindEvents(elements, listener);
-        }
-
+        };
         this.getToggle = function (name, states) {
             return getToggle(name, elements, states);
-        }
-
+        };
         this.getModel = function (name) {
             return getModel(name, elements);
-        }
-
+        };
         this.getConfig = function () {
             return getConfig(elements);
-        }
-
+        };
         this.getHandle = function (name) {
             return getHandle(name, elements);
-        }
-
+        };
         this.iterateControllers = function (name, cb) {
             iterateControllers(name, elements, cb);
-        }
-    };
-
-    module.exports = BindingCollection;
+        };
+    }
+    exports.BindingCollection = BindingCollection;
+    ;
 });
-"use strict";
+});
+jsns.runAmd(function(define) {
 
-//Auto find components on the page and build them as components
-jsns.run([
-    "hr.domquery",
-    "hr.bindingcollection",
-    "hr.textstream",
-    "hr.components",
-    "hr.ignored",
-    "hr.iterable"
-],
-function (exports, module, domquery, BindingCollection, TextStream, components, ignoredNodes, Iterable) {
+define(["require", "exports", 'hr.bindingcollection', 'hr.textstream', 'hr.components', 'hr.ignored', 'hr.iterable'], function (require, exports, hr_bindingcollection_1, hr_textstream_1, components, ignoredNodes, hr_iterable_1) {
+    "use strict";
     var browserSupportsTemplates = 'content' in document.createElement('template');
     var anonTemplateIndex = 0;
-
     //Component creation function
     function createItem(data, componentStringStream, parentComponent, insertBeforeSibling) {
         var itemMarkup = componentStringStream.format(data);
         var newItems = str2DOMElement(itemMarkup);
         var arrayedItems = [];
-
         for (var i = 0; i < newItems.length; ++i) {
             var newItem = newItems[i];
             parentComponent.insertBefore(newItem, insertBeforeSibling);
             arrayedItems.push(newItem);
         }
-
-        return new BindingCollection(arrayedItems);
+        return new hr_bindingcollection_1.BindingCollection(arrayedItems);
     }
-
     function VariantBuilder(componentString) {
         var tokenizedString;
         var currentBuildFunc = tokenize;
-
         function tokenize(data, parentComponent, insertBeforeSibling) {
-            tokenizedString = new TextStream(componentString);
+            tokenizedString = new hr_textstream_1.TextStream(componentString);
             currentBuildFunc = build;
             return build(data, parentComponent, insertBeforeSibling);
         }
-
         function build(data, parentComponent, insertBeforeSibling) {
             return createItem(data, tokenizedString, parentComponent, insertBeforeSibling);
         }
-
         function create(data, parentComponent, insertBeforeSibling) {
             return currentBuildFunc(data, parentComponent, insertBeforeSibling);
         }
         this.create = create;
     }
-
     function ComponentBuilder(componentString) {
         var variants = {};
         var tokenizedString;
         var currentBuildFunc = tokenize;
-
         function tokenize(data, parentComponent, insertBeforeSibling) {
-            tokenizedString = new TextStream(componentString);
+            tokenizedString = new hr_textstream_1.TextStream(componentString);
             currentBuildFunc = build;
             return build(data, parentComponent, insertBeforeSibling);
         }
-
         function build(data, parentComponent, insertBeforeSibling) {
             return createItem(data, tokenizedString, parentComponent, insertBeforeSibling);
         }
-
         function create(data, parentComponent, insertBeforeSibling, variant) {
             if (variant !== null && variants.hasOwnProperty(variant)) {
                 return variants[variant].create(data, parentComponent, insertBeforeSibling);
@@ -773,15 +535,12 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
             return currentBuildFunc(data, parentComponent, insertBeforeSibling);
         }
         this.create = create;
-
         function addVariant(name, variantBuilder) {
             variants[name] = variantBuilder;
         }
         this.addVariant = addVariant;
     }
-
     var extractedBuilders = {};
-
     function buildTemplateElements(nestedElementsStack) {
         if (nestedElementsStack.length > 0) {
             var currentTopLevelTemplate = nestedElementsStack[nestedElementsStack.length - 1].next();
@@ -791,7 +550,7 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
                 templateElement.appendChild(document.importNode(element.content, true));
                 var innerTemplates = templateElement.getElementsByTagName("TEMPLATE");
                 if (innerTemplates.length > 0) {
-                    nestedElementsStack.push(new Iterable(Array.prototype.slice.call(innerTemplates)).iterator());
+                    nestedElementsStack.push(new hr_iterable_1.Iterable(Array.prototype.slice.call(innerTemplates)).iterator());
                 }
                 return {
                     element: element,
@@ -804,13 +563,12 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
             }
         }
     }
-
-    var templateElements = new Iterable(Array.prototype.slice.call(document.getElementsByTagName("TEMPLATE")));
+    var templateElements = new hr_iterable_1.Iterable(Array.prototype.slice.call(document.getElementsByTagName("TEMPLATE")));
     //If the browser supports templates, iterate through them after creating temp ones.
     if (browserSupportsTemplates) {
         var nestedElementsStack = [];
         nestedElementsStack.push(templateElements.iterator());
-        templateElements = new Iterable(function () {
+        templateElements = new hr_iterable_1.Iterable(function () {
             return buildTemplateElements(nestedElementsStack);
         });
     }
@@ -819,42 +577,32 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
             return {
                 element: t,
                 templateElement: t
-            }
+            };
         });
     }
     templateElements = templateElements.iterator();
-
     var currentTemplate = templateElements.next();
     while (!currentTemplate.done) {
         var currentBuilder = extractTemplate(currentTemplate.value, currentBuilder);
-        //The iterator is incremented below where the comment says INC HERE
     }
-
     //Extract templates off the page
     function extractTemplate(elementPair, currentBuilder) {
         var element = elementPair.element;
-
         //INC HERE - This is where currentTemplate is incremented to its next value
         //This single iter is shared for all levels of the gatherer
         currentTemplate = templateElements.next();
-
         //Check to see if this is an ignored element, and quickly exit if it is
         if (ignoredNodes.isIgnored(element)) {
             return currentBuilder;
         }
-
         var templateElement = elementPair.templateElement;
-
         //Look for nested child templates, do this before taking inner html so children are removed
         while (!currentTemplate.done && templateElement.contains(currentTemplate.value.element)) {
             var currentBuilder = extractTemplate(currentTemplate.value, currentBuilder);
         }
-
         var componentString = templateElement.innerHTML.trim();
-
         //Special case for tables in ie, cannot create templates without a surrounding table element, this will eliminate that unless requested otherwise
-        if (templateElement.childElementCount === 1 && templateElement.firstElementChild.tagName === 'TABLE' && !element.hasAttribute('data-hr-keep-table'))
-        {
+        if (templateElement.childElementCount === 1 && templateElement.firstElementChild.tagName === 'TABLE' && !element.hasAttribute('data-hr-keep-table')) {
             var tableElement = templateElement.firstElementChild;
             if (tableElement.childElementCount > 0 && tableElement.firstElementChild.tagName === 'TBODY') {
                 componentString = tableElement.firstElementChild.innerHTML.trim();
@@ -863,10 +611,8 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
                 componentString = tableElement.innerHTML.trim();
             }
         }
-
         var elementParent = element.parentNode;
         elementParent.removeChild(element);
-
         var variantName = element.getAttribute("data-hr-variant");
         var componentName = element.getAttribute("data-hr-component");
         if (variantName === null) {
@@ -876,7 +622,6 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
                 componentName = 'AnonTemplate_' + anonTemplateIndex++;
                 elementParent.setAttribute("data-hr-model-component", componentName);
             }
-
             var builder = new ComponentBuilder(componentString);
             extractedBuilders[componentName] = builder;
             components.register(componentName, builder.create);
@@ -897,12 +642,10 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
             return currentBuilder;
         }
     }
-
     //Actual creation function
     var str2DOMElement = function (html) {
         //From j Query and the discussion on http://krasimirtsonev.com/blog/article/Revealing-the-magic-how-to-properly-convert-HTML-string-to-a-DOM-element
         //Modified, does not support body tags and returns collections of children
-
         var wrapMap = {
             option: [1, "<select multiple='multiple'>", "</select>"],
             legend: [1, "<fieldset>", "</fieldset>"],
@@ -930,46 +673,38 @@ function (exports, module, domquery, BindingCollection, TextStream, components, 
             while (j--) {
                 element = element.lastChild;
             }
-        } else {
+        }
+        else {
             element.innerHTML = html;
         }
-
         return element.childNodes;
-    }
+    };
 });
-"use strict";
+});
+jsns.amd("hr.components", function(define) {
 
-//Components is a bit trickier, we want part of it to run right away
-//First define the module
-jsns.define("hr.components", [
-    "hr.typeidentifiers",
-    "hr.domquery"
-],
-function (exports, module, typeId, domquery) {
+define(["require", "exports", 'hr.typeidentifiers', 'hr.domquery'], function (require, exports, typeId, domquery) {
+    "use strict";
     var factory = {};
-
     /**
      * This callback is called when a component is created
      * @callback exports.createComponent~callback
      * @param {exports.component.BindingCollection} created
      * @param {object} data
      */
-
     /**
      * This callback is called when a component is about to be created and we want its variant.
      * @callback exports.createComponent~callback
      * @param {object} data - The data to identify a variant for.
      * @return {string} the name of the variant to use or null to use the original.
      */
-
     /**
      * This callback is used to create components when they are requested.
      * @callback exports.registerComponent~callback
      * @param {exports.component.BindingCollection} created
      * @param {object} data
-     * @returns {exports.component.BindingCollection} 
+     * @returns {exports.component.BindingCollection}
      */
-
     /**
      * Register a function with the component system.
      * @param {string} name - The name of the component
@@ -979,7 +714,6 @@ function (exports, module, typeId, domquery) {
         factory[name] = createFunc;
     }
     exports.register = register;
-
     /**
      * Get the default vaule if variant is undefined.
      * @returns variant default value (null)
@@ -987,7 +721,6 @@ function (exports, module, typeId, domquery) {
     function getDefaultVariant() {
         return null;
     }
-
     /**
      * Create a new component specified by name with the data in data attached to parentComponent. You can also
      * get a callback whenever a component is created by passing a createdCallback.
@@ -995,7 +728,7 @@ function (exports, module, typeId, domquery) {
      * @param {object} data - The data to bind to the component.
      * @param {HTMLElement} parentComponent - The html element to attach the component to.
      * @param {exports.createComponent~callback} createdCallback - The callback called when the component is created.
-     * @returns {exports.component.BindingCollection} 
+     * @returns {exports.component.BindingCollection}
      */
     function single(name, parentComponent, data, createdCallback, variant) {
         if (variant === undefined) {
@@ -1007,7 +740,6 @@ function (exports, module, typeId, domquery) {
         return doCreateComponent(name, data, parentComponent, null, variant, createdCallback);
     }
     exports.single = single;
-
     /**
      * Create a component for each element in data using that element as the data for the component.
      * @param {string} name - The name of the component to create.
@@ -1027,9 +759,7 @@ function (exports, module, typeId, domquery) {
         while (insertBefore != null && !insertBefore.hasAttribute('data-hr-insert')) {
             insertBefore = insertBefore.nextElementSibling;
         }
-
         var fragmentParent = document.createDocumentFragment();
-
         //Output
         if (typeId.isArray(data)) {
             //An array, read it as fast as possible
@@ -1043,33 +773,28 @@ function (exports, module, typeId, domquery) {
             data.forEach(function (item) {
                 variant = variantFinderCallback(item);
                 doCreateComponent(name, item, fragmentParent, null, variant, createdCallback);
-            })
+            });
         }
-
         parentComponent.insertBefore(fragmentParent, insertBefore);
     }
     exports.repeat = repeat;
-
     /**
-     * Remove all children from an html element.
-     * @param {HTMLElement} parentComponent - The component to remove all children from
+     * Remove all children from an html element
      */
     function empty(parentComponent) {
-        parentComponent = domquery.first(parentComponent);
-        var currentNode = parentComponent.firstChild;
+        var parent = domquery.first(parentComponent);
+        var currentNode = parent.firstChild;
         var nextNode = null;
-
         //Walk the nodes and remove any non keepers
         while (currentNode != null) {
             nextNode = currentNode.nextSibling;
-            if (currentNode.nodeType !== 1 || !currentNode.hasAttribute('data-hr-keep')) {
-                parentComponent.removeChild(currentNode);
+            if (currentNode.nodeType !== 1 || !(currentNode instanceof HTMLElement && currentNode.hasAttribute('data-hr-keep'))) {
+                parent.removeChild(currentNode);
             }
             currentNode = nextNode;
         }
     }
     exports.empty = empty;
-
     function doCreateComponent(name, data, parentComponent, insertBeforeSibling, variant, createdCallback) {
         parentComponent = domquery.first(parentComponent);
         if (factory.hasOwnProperty(name)) {
@@ -1080,18 +805,15 @@ function (exports, module, typeId, domquery) {
             return created;
         }
         else {
-            console.log("Failed to create component '" + name + "', cannot find factory, did you forget to define it on the page?")
+            console.log("Failed to create component '" + name + "', cannot find factory, did you forget to define it on the page?");
         }
     }
 });
-"use strict";
+});
+jsns.amd("hr.controller", function(define) {
 
-jsns.define("hr.controller", [
-    "hr.bindingcollection",
-    "hr.domquery",
-    "hr.ignored",
-],
-function (exports, module, BindingCollection, domQuery, ignoredNodes) {
+define(["require", "exports", 'hr.bindingcollection', 'hr.domquery', 'hr.ignored'], function (require, exports, hr_bindingcollection_1, domQuery, ignoredNodes) {
+    "use strict";
     /**
      * Create controller instances for all controllers named name using the given controllerConstructor function.
      * The created controllers will automatically be assigned as a listener to the bindings. This way the object
@@ -1100,25 +822,25 @@ function (exports, module, BindingCollection, domQuery, ignoredNodes) {
      * @param {type} controllerConstructor
      */
     function create(name, controllerConstructor, context, parentBindings) {
+        var createdControllers = [];
         function foundElement(element) {
             if (!ignoredNodes.isIgnored(element)) {
-                var bindings = new BindingCollection(element);
+                var bindings = new hr_bindingcollection_1.BindingCollection(element);
                 var controller = new controllerConstructor(bindings, context, null);
                 bindings.setListener(controller);
                 element.removeAttribute('data-hr-controller');
+                createdControllers.push(controller);
             }
         }
-
         if (parentBindings) {
             parentBindings.iterateControllers(name, foundElement);
         }
         else {
             domQuery.iterate('[data-hr-controller="' + name + '"]', null, foundElement);
         }
+        return createdControllers;
     }
-
     exports.create = create;
-
     /**
      * This function will return a function that will create a controller when called with a BindingCollection inside.
      * This can be used in the callbacks for setData in model and when creating components.
@@ -1128,19 +850,18 @@ function (exports, module, BindingCollection, domQuery, ignoredNodes) {
         return function (bindings, data) {
             var controller = new controllerConstructor(bindings, context, data);
             bindings.setListener(controller);
-        }
+        };
     }
-
     exports.createOnCallback = createOnCallback;
 });
-"use strict";
+});
+jsns.amd("hr.cookies", function(define) {
 
-jsns.define("hr.doccookies", null,
-function (exports, module) {
+define(["require", "exports"], function (require, exports) {
+    "use strict";
     //These three functions are from
     //http://www.quirksmode.org/js/cookies.html
     //The names were shortened
-
     /**
      * Create a cookie on the doucment.
      * @param {type} name - The name of the cookie
@@ -1151,13 +872,13 @@ function (exports, module) {
         if (days) {
             var date = new Date();
             date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-            var expires = "; expires=" + date.toGMTString();
+            var expires = "; expires=" + date.toUTCString();
         }
-        else var expires = "";
+        else
+            var expires = "";
         document.cookie = name + "=" + value + expires + "; path=/";
     }
     exports.create = create;
-
     /**
      * Read a cookie from the document.
      * @param {type} name - The name of the cookie to read
@@ -1168,13 +889,14 @@ function (exports, module) {
         var ca = document.cookie.split(';');
         for (var i = 0; i < ca.length; i++) {
             var c = ca[i];
-            while (c.charAt(0) == ' ') c = c.substring(1, c.length);
-            if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+            while (c.charAt(0) == ' ')
+                c = c.substring(1, c.length);
+            if (c.indexOf(nameEQ) == 0)
+                return c.substring(nameEQ.length, c.length);
         }
         return null;
     }
     exports.read = read;
-
     /**
      * Erase a cookie from the document.
      * @param {type} name
@@ -1184,35 +906,36 @@ function (exports, module) {
     }
     exports.erase = erase;
 });
-"use strict";
+});
+jsns.amd("hr.domquery", function(define) {
 
-jsns.define("hr.domquery", [
-    "hr.typeidentifiers"
-],
-function(exports, module, typeId){
+define(["require", "exports", 'hr.typeidentifiers'], function (require, exports, typeId) {
+    "use strict";
     /**
      * Derive the plain javascript element from a passed element
      * @param {string|HTMLElement} element - the element to detect
      * @returns {HTMLElement} - The located html element.
      */
     function first(element, context) {
-        if (typeId.isString(element)) {
+        if (typeof element === 'string') {
             if (context !== undefined) {
                 if (this.matches(context, element)) {
-                    element = context;
+                    return context;
                 }
                 else {
-                    element = context.querySelector(element);
+                    return context.querySelector(element);
                 }
             }
             else {
-                element = document.querySelector(element);
+                return document.querySelector(element);
             }
         }
-        return element;
-    };
+        if (element instanceof Node) {
+            return element;
+        }
+    }
     exports.first = first;
-
+    ;
     /**
      * Query all passed javascript elements
      * @param {string|HTMLElement} element - the element to detect
@@ -1221,11 +944,10 @@ function(exports, module, typeId){
      * @returns {array[HTMLElement]} - The located html element. Will be the results array if one is passed otherwise a new one.
      */
     function all(element, context, results) {
-        if (typeId.isString(element)) {
+        if (typeof element === 'string') {
             if (results === undefined) {
                 results = [];
             }
-
             if (context !== undefined) {
                 if (this.matches(context, element)) {
                     results.push(context);
@@ -1238,7 +960,7 @@ function(exports, module, typeId){
                 nodesToArray(document.querySelectorAll(element), results);
             }
         }
-        else if (!typeId.isArray(element)) {
+        else if (element instanceof HTMLElement) {
             if (results === undefined) {
                 results = [element];
             }
@@ -1257,9 +979,9 @@ function(exports, module, typeId){
             }
         }
         return results;
-    };
+    }
     exports.all = all;
-
+    ;
     /**
      * Query all passed javascript elements
      * @param {string|HTMLElement} element - the element to detect
@@ -1288,13 +1010,12 @@ function(exports, module, typeId){
                 cb(element[i]);
             }
         }
-    };
+    }
     exports.iterate = iterate;
-
+    ;
     function alwaysTrue(node) {
         return true;
     }
-
     /**
      * Iterate a node collection using createNodeIterator. There is no query for this version
      * as it iterates everything and allows you to extract what is needed.
@@ -1310,34 +1031,32 @@ function(exports, module, typeId){
         }
     }
     exports.iterateNodes = iterateNodes;
-
     /**
      * Determine if an element matches the given selector.
      * @param {type} element
      * @param {type} selector
-     * @returns {type} 
+     * @returns {type}
      */
     function matches(element, selector) {
         return element.matches(selector);
     }
     exports.matches = matches;
-
     function nodesToArray(nodes, arr) {
         for (var i = 0; i < nodes.length; ++i) {
             arr.push(nodes[i]);
         }
     }
-
     function iterateQuery(nodes, cb) {
         for (var i = 0; i < nodes.length; ++i) {
             cb(nodes[i]);
         }
     }
 });
-"use strict";
+});
+jsns.amd("hr.escape", function(define) {
 
-jsns.define("hr.escape", null,
-function(exports, module){
+define(["require", "exports"], function (require, exports) {
+    "use strict";
     /**
      * Escape text to prevent html characters from being output. Helps prevent xss, called automatically
      * by formatText. If you manually write user data consider using this function to escape it, but it is
@@ -1347,13 +1066,11 @@ function(exports, module){
      */
     function escape(text) {
         text = String(text);
-
-        var status =
-        {
+        var status = {
             textStart: 0,
             bracketStart: 0,
             output: ""
-        }
+        };
         for (var i = 0; i < text.length; ++i) {
             switch (text[i]) {
                 case '<':
@@ -1372,15 +1089,12 @@ function(exports, module){
                     break;
             }
         }
-
         if (status.textStart < text.length) {
             status.output += text.substring(status.textStart, text.length);
         }
-
         return status.output;
     }
-    module.exports = escape;
-
+    exports.escape = escape;
     //Helper function for escaping
     function outputEncoded(i, text, status, replacement) {
         status.bracketStart = i;
@@ -1388,55 +1102,58 @@ function(exports, module){
         status.textStart = i + 1;
     }
 });
-"use strict";
+});
+jsns.amd("hr.eventhandler", function(define) {
 
-jsns.define("hr.eventhandler", null,
-function (exports, module) {
-
+define(["require", "exports"], function (require, exports) {
+    "use strict";
     /**
      * This class provides a reusable way to fire events to multiple listeners.
      */
-    function EventHandler() {
-        var handlers = [];
-
-        function add(context, handler) {
+    var EventHandler = (function () {
+        function EventHandler() {
+            var _this = this;
+            this.handlers = [];
+            this.modifier = {
+                add: function (context, handler) { return _this.add(context, handler); },
+                remove: function (context, handler) { return _this.remove(context, handler); }
+            };
+        }
+        EventHandler.prototype.add = function (context, handler) {
             if (context === undefined) {
                 throw "context cannot be undefined";
             }
             if (handler === undefined) {
                 throw "handler cannot be undefined";
             }
-            handlers.push({
+            this.handlers.push({
                 handler: handler,
                 context: context
             });
-        }
-
-        function remove(context, handler) {
-            for (var i = 0; i < handlers.length; ++i) {
-                if (handlers[i].handler === handler && handlers[i].context === context) {
-                    handlers.splice(i--, 1);
+        };
+        EventHandler.prototype.remove = function (context, handler) {
+            for (var i = 0; i < this.handlers.length; ++i) {
+                if (this.handlers[i].handler === handler && this.handlers[i].context === context) {
+                    this.handlers.splice(i--, 1);
                 }
             }
-        }
-
-        this.modifier = {
-            add: add,
-            remove: remove
-        }
-
+        };
         /**
          * Fire the event. The listeners can return values, if they do the values will be added
          * to an array that is returned by this fuction.
          * @returns {array|undefined} an array of all the values returned by the listeners or undefiend if
          * no values are returned.
          */
-        function fire() {
+        EventHandler.prototype.fire = function () {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                args[_i - 0] = arguments[_i];
+            }
             var result;
             var nextResult;
-            for (var i = 0; i < handlers.length; ++i) {
-                var handlerObj = handlers[i];
-                nextResult = handlerObj.handler.apply(handlerObj.context, arguments);
+            for (var i = 0; i < this.handlers.length; ++i) {
+                var handlerObj = this.handlers[i];
+                nextResult = handlerObj.handler.apply(handlerObj.context, args);
                 if (nextResult !== undefined) {
                     if (result === undefined) {
                         result = [];
@@ -1445,147 +1162,21 @@ function (exports, module) {
                 }
             }
             return result;
-        }
-        this.fire = fire;
-    }
-
-    module.exports = EventHandler;
+        };
+        return EventHandler;
+    }());
+    exports.EventHandler = EventHandler;
 });
-
-jsns.define("hr.lateboundeventhandler", [
-    "hr.eventhandler"
-],
-function (exports, module, HrEventHandler) {
-
-    /**
-     * This class will queue up the events that fire through it until
-     * an event handler is added, at that point it will function as a normal
-     * event handler. Only the first bound event gets the queued events.
-     */
-    function LateBoundEventHandler() {
-        var eventHandler = new HrEventHandler();
-        var queuedEvents = [];
-        var currentFire = queuedFire;
-
-        function add(context, handler) {
-            eventHandler.modifier.add(context, handler);
-            if (queuedEvents !== null) {
-                currentFire = eventFire;
-                for (var i = 0; i < queuedEvents.length; ++i) {
-                    fire.apply(this, queuedEvents[i]);
-                }
-                queuedEvents = null;
-            }
-        }
-
-        function remove(context, handler) {
-            eventHandler.modifier.remove(context, handler);
-        }
-
-        this.modifier = {
-            add: add,
-            remove: remove
-        }
-
-        function queuedFire() {
-            queuedEvents.push(arguments);
-        }
-
-        function eventFire() {
-            eventHandler.fire.apply(eventHandler, arguments);
-        }
-
-        function fire() {
-            return currentFire.apply(this, arguments);
-        }
-        this.fire = fire;
-    }
-
-    module.exports = LateBoundEventHandler;
 });
+jsns.amd("hr.form", function(define) {
 
-jsns.define("hr.promiseeventhandler", null,
-function (exports, module) {
-
-    /**
-     * This class provides a reusable way to fire events to multiple listeners and wait for them using
-     * promises.
-     */
-    function PromiseEventHandler() {
-        var handlers = [];
-
-        function add(context, handler) {
-            if (context === undefined) {
-                throw "context cannot be undefined";
-            }
-            if (handler === undefined) {
-                throw "handler cannot be undefined";
-            }
-            handlers.push({
-                handler: handler,
-                context: context
-            });
-        }
-
-        function remove(context, handler) {
-            for (var i = 0; i < handlers.length; ++i) {
-                if (handlers[i].handler === handler && handlers[i].context === context) {
-                    handlers.splice(i--, 1);
-                }
-            }
-        }
-
-        this.modifier = {
-            add: add,
-            remove: remove
-        }
-
-        /**
-         * Fire the event. The listeners can return values, if they do the values will be added
-         * to an array that is returned by the promise returned by this function.
-         * @returns {Promise} a promise that will resolve when all fired events resolve.
-         */
-        function fire() {
-            var result;
-            var promises = [];
-            for (var i = 0; i < handlers.length; ++i) {
-                var handlerObj = handlers[i];
-                promises.push(new Promise(function(resovle, reject){
-                    resovle(handlerObj.handler.apply(handlerObj.context, arguments));
-                })
-                .then(function (data) {
-                    if (data !== undefined) {
-                        if (result === undefined) {
-                            result = [];
-                        }
-                        result.push(data);
-                    }
-                }));
-            }
-
-            return Promise.all(promises)
-            .then(function (data) {
-                return result;
-            });
-        }
-        this.fire = fire;
-    }
-
-    module.exports = PromiseEventHandler;
-});
-"use strict";
-
-jsns.define("hr.form", [
-    "hr.domquery",
-    "hr.typeidentifiers"
-],
-function (exports, module, domQuery, typeIds) {
-
+define(["require", "exports", 'hr.domquery', 'hr.typeidentifiers'], function (require, exports, domQuery, typeIds) {
+    "use strict";
     function addValue(q, name, value) {
         if (q[name] === undefined) {
             q[name] = value;
         }
-        else if(!typeIds.isArray(q[name])){
+        else if (!typeIds.isArray(q[name])) {
             var tmp = q[name];
             q[name] = [tmp, value];
         }
@@ -1593,7 +1184,6 @@ function (exports, module, domQuery, typeIds) {
             q[name].push(value);
         }
     }
-
     /**
      * Serialze a form to a javascript object
      * @param {HTMLElement|string} form - A selector or form element for the form to serialize.
@@ -1603,7 +1193,6 @@ function (exports, module, domQuery, typeIds) {
         //This is from https://code.google.com/archive/p/form-serialize/downloads
         //Modified to return an object instead of a query string
         form = domQuery.first(form);
-
         if (!form || form.nodeName !== "FORM") {
             return;
         }
@@ -1663,22 +1252,21 @@ function (exports, module, domQuery, typeIds) {
         return q;
     }
     exports.serialize = serialize;
-
     /**
      * Populate a form with data.
      * @param {HTMLElement|string} form - The form to populate or a query string for the form.
      * @param {object} data - The data to bind to the form, form name attributes will be mapped to the keys in the object.
      */
     function populate(form, data) {
-        form = domQuery.first(form);
-        var nameAttrs = domQuery.all('[name]', form);
+        var formElement = domQuery.first(form);
+        var nameAttrs = domQuery.all('[name]', formElement);
         if (typeIds.isObject(data)) {
             for (var i = 0; i < nameAttrs.length; ++i) {
                 var element = nameAttrs[i];
                 element.value = data[element.getAttribute('name')];
             }
         }
-        else if (typeIds.isFunction(data)){
+        else if (typeIds.isFunction(data)) {
             for (var i = 0; i < nameAttrs.length; ++i) {
                 var element = nameAttrs[i];
                 switch (element.type) {
@@ -1694,14 +1282,11 @@ function (exports, module, domQuery, typeIds) {
     }
     exports.populate = populate;
 });
-"use strict";
+});
+jsns.amd("hr.formlifecycle", function(define) {
 
-jsns.define("hr.formlifecycle", [
-    "hr.toggles",
-    "hr.http"
-],
-function (exports, module, toggles, http) {
-
+define(["require", "exports", 'hr.toggles', 'hr.http'], function (require, exports, toggles, http) {
+    "use strict";
     /**
      * Create a simple ajax lifecyle for the form. This will show a loading screen
      * when fetching data and provides provisions to handle a data connection failure.
@@ -1713,7 +1298,6 @@ function (exports, module, toggles, http) {
     function FormLifecycle(bindings) {
         var tryAgainFunc = null;
         var self = this;
-
         bindings.setListener({
             submit: function (evt) {
                 evt.preventDefault();
@@ -1724,53 +1308,47 @@ function (exports, module, toggles, http) {
                 tryAgainFunc();
             }
         });
-
         var load = bindings.getToggle('load');
         var main = bindings.getToggle('main');
         var fail = bindings.getToggle('fail');
         var formToggler = new toggles.Group(load, main, fail);
-
         var settingsModel = bindings.getModel('settings');
-
         this.populate = function () {
             formToggler.show(load);
             http.get(settingsModel.getSrc())
-            .then(function (successData) {
+                .then(function (successData) {
                 settingsModel.setData(successData);
                 formToggler.show(main);
             })
-            .catch(function (failData) {
+                .catch(function (failData) {
                 tryAgainFunc = self.populate;
                 formToggler.show(fail);
             });
-        }
-
+        };
         this.submit = function () {
             formToggler.show(load);
             var data = settingsModel.getData();
             http.post(settingsModel.getSrc(), data)
-            .then(function (successData) {
+                .then(function (successData) {
                 formToggler.show(main);
             })
-            .catch(function (failData) {
+                .catch(function (failData) {
                 tryAgainFunc = self.submit;
                 formToggler.show(fail);
             });
-        }
+        };
     }
-    module.exports = FormLifecycle;
+    exports.FormLifecycle = FormLifecycle;
 });
-"use strict";
+});
+jsns.amd("hr.http", function(define) {
 
-jsns.define("hr.http", ["hr.eventhandler"],
-function (exports, module, EventHandler) {
-
-    var customizeRequestEvent = new EventHandler();
+define(["require", "exports", 'hr.eventhandler'], function (require, exports, hr_eventhandler_1) {
+    "use strict";
+    var customizeRequestEvent = new hr_eventhandler_1.EventHandler();
     exports.customizeRequest = customizeRequestEvent.modifier;
-
-    var customizePromiseEvent = new EventHandler();
+    var customizePromiseEvent = new hr_eventhandler_1.EventHandler();
     exports.customizePromise = customizePromiseEvent.modifier;
-
     function extractData(xhr) {
         var data;
         var contentType = xhr.getResponseHeader('content-type');
@@ -1787,7 +1365,6 @@ function (exports, module, EventHandler) {
         }
         return data;
     }
-
     //Helper function to handle results
     function handleResult(xhr, success, fail) {
         if (xhr.status > 199 && xhr.status < 300) {
@@ -1801,7 +1378,6 @@ function (exports, module, EventHandler) {
             }
         }
     }
-
     /**
      * Post data to a url. Returns a promise to get the result.
      * @param {string} url - The url to post to
@@ -1811,27 +1387,24 @@ function (exports, module, EventHandler) {
         return ajax(url, 'POST', data);
     }
     exports.post = post;
-
     /**
      * Put data to a url. Returns a promise with the result.
      * @param {string} url - The url to put to
      * @param {object} data - The data to put
      */
-    function put(url, data, success, fail) {
+    function put(url, data) {
         return ajax(url, 'PUT', data);
     }
     exports.put = put;
-
     /**
      * Delete data at a url. Returns a promise with the result.
      * @param {string} url - The url to delete to
      * @param {object} data - Data to include
      */
-    function del(url, data, success, fail) {
+    function del(url, data) {
         return ajax(url, 'DELETE', data);
     }
-    exports.delete = del;
-
+    exports.del = del;
     /**
      * Get data from a url. Returns a promise with the result.
      * @param {string} url - The url to get data from
@@ -1847,7 +1420,6 @@ function (exports, module, EventHandler) {
             }
             url += 'noCache=' + new Date().getTime();
         }
-
         return setupXhr(url, 'GET', function () {
             return undefined;
         }, function () {
@@ -1857,7 +1429,6 @@ function (exports, module, EventHandler) {
         });
     }
     exports.get = get;
-
     /**
      * A more raw ajax call if needed.
      * @param {string} url - The url to call
@@ -1875,7 +1446,6 @@ function (exports, module, EventHandler) {
         });
     }
     exports.ajax = ajax;
-
     /**
      * Upload a file to a url
      * @param {string} url - The url to upload to
@@ -1885,7 +1455,6 @@ function (exports, module, EventHandler) {
     function upload(url, data) {
         return setupXhr(url, 'POST', function () {
             var formData = null;
-
             if (data instanceof FormData) {
                 formData = data;
             }
@@ -1893,7 +1462,6 @@ function (exports, module, EventHandler) {
                 formData = new FormData();
                 formData.append('file', data);
             }
-
             return formData;
         }, function () {
             var xhr = new XMLHttpRequest();
@@ -1902,23 +1470,20 @@ function (exports, module, EventHandler) {
         });
     }
     exports.upload = upload;
-
     function setupXhr(url, method, dataBuilder, xhrBuilder) {
         //Customize requests and build up promise chain for any customizations
         var customPromises = customizePromiseEvent.fire(url, method);
-
         //Assemble final chain
         if (customPromises === undefined || customPromises.length === 0) {
             return buildRequestPromise(url, method, dataBuilder, xhrBuilder);
         }
         else {
             return Promise.all(customPromises)
-                   .then(function (res) {
-                       return buildRequestPromise(url, method, dataBuilder, xhrBuilder);
-                   });
+                .then(function (res) {
+                return buildRequestPromise(url, method, dataBuilder, xhrBuilder);
+            });
         }
     }
-
     function buildRequestPromise(url, method, dataBuilder, xhrBuilder) {
         //Build promise for request
         return new Promise(function (resolve, reject) {
@@ -1926,13 +1491,10 @@ function (exports, module, EventHandler) {
             var xhr = xhrBuilder();
             xhr.withCredentials = true;
             customizeRequestEvent.fire(xhr, url, method);
-
             xhr.onload = function () {
                 handleResult(xhr, resolve, reject);
             };
-
             var data = dataBuilder();
-
             if (data === undefined) {
                 xhr.send();
             }
@@ -1942,16 +1504,14 @@ function (exports, module, EventHandler) {
         });
     }
 });
-"use strict";
+});
+jsns.amd("hr.ignored", function(define) {
 
-//This module defines html nodes that are ignored and a way to check to see if a node is ignored or the
-//child of an ignored node. Ignored nodes are defined with the data-hr-ignored attribute.
-jsns.define("hr.ignored", [
-    "hr.domquery"
-],
-function (exports, module, domQuery) {
+define(["require", "exports", 'hr.domquery'], function (require, exports, domQuery) {
+    "use strict";
+    //This module defines html nodes that are ignored and a way to check to see if a node is ignored or the
+    //child of an ignored node. Ignored nodes are defined with the data-hr-ignored attribute.
     var ignoredNodes = domQuery.all('[data-hr-ignored]');
-
     function isIgnored(node) {
         for (var i = 0; i < ignoredNodes.length; ++i) {
             if (ignoredNodes[i].contains(node)) {
@@ -1962,20 +1522,17 @@ function (exports, module, domQuery) {
     }
     exports.isIgnored = isIgnored;
 });
-"use strict";
+});
+jsns.amd("hr.iterable", function(define) {
 
-jsns.define("hr.iterable", [
-    "hr.typeidentifiers"
-],
-function (exports, module, typeId) {
+define(["require", "exports", 'hr.typeidentifiers'], function (require, exports, typeId) {
+    "use strict";
     function Query() {
         var chain = [];
-
         function push(c) {
             chain.push(c);
         }
         this.push = push;
-
         function derive(item) {
             var result = item;
             for (var i = chain.length - 1; i >= 0 && result !== undefined; --i) {
@@ -1985,9 +1542,14 @@ function (exports, module, typeId) {
         }
         this.derive = derive;
     }
-
     var defaultQuery = new Query(); //Empty query to use as default
-
+    var IterateResult = (function () {
+        function IterateResult(done, value) {
+            this.done = done;
+            this.value = value;
+        }
+        return IterateResult;
+    }());
     function _iterate(items, query) {
         var i;
         if (typeId.isArray(items)) {
@@ -2000,10 +1562,10 @@ function (exports, module, typeId) {
                         result = query.derive(item);
                     }
                     if (result === undefined) {
-                        return { done: true };
+                        return new IterateResult(true);
                     }
                     else {
-                        return { done: false, value: result };
+                        return new IterateResult(false, result);
                     }
                 }
             };
@@ -2014,7 +1576,7 @@ function (exports, module, typeId) {
                     var result = undefined;
                     while (result === undefined) {
                         var item = items();
-                        if (item !== undefined) { //Terminate iterator if fake generator returns undefined
+                        if (item !== undefined) {
                             result = query.derive(item);
                         }
                         else {
@@ -2022,16 +1584,15 @@ function (exports, module, typeId) {
                         }
                     }
                     if (result === undefined) {
-                        return { done: true };
+                        return new IterateResult(true);
                     }
                     else {
-                        return { done: false, value: result };
+                        return new IterateResult(false, result);
                     }
                 }
             };
         }
     }
-
     function _forEach(items, query, cb) {
         var i;
         if (typeId.isArray(items)) {
@@ -2044,55 +1605,43 @@ function (exports, module, typeId) {
             }
         }
     }
-
     function _build(prevBuild, get, query, cb) {
         query.push(get);
         return prevBuild(query, cb);
     }
-
     function _queryClause(build) {
         this.select = function (s) {
             return new Selector(s, build);
-        }
-
+        };
         this.where = function (w) {
             return new Conditional(w, build);
-        }
-
+        };
         this.forEach = function (cb) {
             build(new Query()).forEach(cb);
-        }
-
+        };
         this.iterator = function () {
             return build(new Query()).iterator();
-        }
+        };
     }
-
     function Selector(selectCb, prevBuild) {
         _queryClause.call(this, build);
-
         function build(query, cb) {
             return _build(prevBuild, selectCb, query, cb);
         }
     }
-
     function Conditional(whereCb, prevBuild) {
         _queryClause.call(this, build);
-
         function build(query, cb) {
             return _build(prevBuild, get, query, cb);
         }
-
         function get(item) {
             if (whereCb(item)) {
                 return item;
             }
         }
     }
-
     function Iterable(items) {
         _queryClause.call(this, build);
-
         function build(query) {
             return {
                 forEach: function (cb) {
@@ -2101,54 +1650,84 @@ function (exports, module, typeId) {
                 iterator: function () {
                     return _iterate(items, query);
                 }
-            }
+            };
         }
     }
-
-    module.exports = Iterable;
+    exports.Iterable = Iterable;
 });
-"use strict";
+});
+jsns.amd("hr.lateboundeventhandler", function(define) {
 
-jsns.define("hr.models", [
-    "hr.form",
-    "hr.textstream",
-    "hr.components",
-    "hr.typeidentifiers",
-    "hr.domquery"
-],
-function(exports, module, forms, TextStream, components, typeId, domQuery){
+define(["require", "exports", 'hr.eventhandler'], function (require, exports, hr_eventhandler_1) {
+    "use strict";
+    /**
+     * This class will queue up the events that fire through it until
+     * an event handler is added, at that point it will function as a normal
+     * event handler. Only the first bound event gets the queued events.
+     */
+    function LateBoundEventHandler() {
+        var eventHandler = new hr_eventhandler_1.EventHandler();
+        var queuedEvents = [];
+        var currentFire = queuedFire;
+        function add(context, handler) {
+            eventHandler.modifier.add(context, handler);
+            if (queuedEvents !== null) {
+                currentFire = eventFire;
+                for (var i = 0; i < queuedEvents.length; ++i) {
+                    fire.apply(this, queuedEvents[i]);
+                }
+                queuedEvents = null;
+            }
+        }
+        function remove(context, handler) {
+            eventHandler.modifier.remove(context, handler);
+        }
+        this.modifier = {
+            add: add,
+            remove: remove
+        };
+        function queuedFire() {
+            queuedEvents.push(arguments);
+        }
+        function eventFire() {
+            eventHandler.fire.apply(eventHandler, arguments);
+        }
+        function fire() {
+            return currentFire.apply(this, arguments);
+        }
+        this.fire = fire;
+    }
+    exports.LateBoundEventHandler = LateBoundEventHandler;
+});
+});
+jsns.amd("hr.models", function(define) {
 
+define(["require", "exports", 'hr.form', 'hr.textstream', 'hr.components', 'hr.typeidentifiers', 'hr.domquery'], function (require, exports, forms, hr_textstream_1, components, typeId, domQuery) {
+    "use strict";
     function sharedClearer(i) {
         return "";
     }
-
     function FormModel(form, src) {
         this.setData = function (data) {
             forms.populate(form, data);
-        }
-
+        };
         this.appendData = this.setData;
-
         function clear() {
             forms.populate(form, sharedClearer);
         }
         this.clear = clear;
-
         this.getData = function () {
             return forms.serialize(form);
-        }
-
+        };
         this.getSrc = function () {
             return src;
-        }
+        };
     }
-
     function ComponentModel(element, src, component) {
         this.setData = function (data, createdCallback, variantFinderCallback) {
             components.empty(element);
             this.appendData(data, createdCallback, variantFinderCallback);
-        }
-
+        };
         this.appendData = function (data, createdCallback, variantFinderCallback) {
             if (typeId.isArray(data) || typeId.isForEachable(data)) {
                 components.repeat(component, element, data, createdCallback, variantFinderCallback);
@@ -2156,51 +1735,41 @@ function(exports, module, forms, TextStream, components, typeId, domQuery){
             else if (data !== undefined && data !== null) {
                 components.single(component, element, data, createdCallback, variantFinderCallback);
             }
-        }
-
+        };
         function clear() {
             components.empty(element);
         }
         this.clear = clear;
-
         this.getData = function () {
             return {};
-        }
-
+        };
         this.getSrc = function () {
             return src;
-        }
+        };
     }
-
     function TextNodeModel(element, src) {
         var dataTextElements = undefined;
-
         this.setData = function (data) {
             dataTextElements = bindData(data, element, dataTextElements);
-        }
-
+        };
         function clear() {
             dataTextElements = bindData(sharedClearer, element, dataTextElements);
         }
         this.clear = clear;
-
         this.appendData = this.setData;
-
         this.getData = function () {
             return {};
-        }
-
+        };
         this.getSrc = function () {
             return src;
-        }
+        };
     }
-
     function bindData(data, element, dataTextElements) {
         //No found elements, iterate everything.
         if (dataTextElements === undefined) {
             dataTextElements = [];
             domQuery.iterateNodes(element, NodeFilter.SHOW_TEXT, function (node) {
-                var textStream = new TextStream(node.textContent);
+                var textStream = new hr_textstream_1.TextStream(node.textContent);
                 if (textStream.foundVariable()) {
                     node.textContent = textStream.format(data);
                     dataTextElements.push({
@@ -2210,17 +1779,14 @@ function(exports, module, forms, TextStream, components, typeId, domQuery){
                 }
             });
         }
-        //Already found the text elements, output those.
         else {
             for (var i = 0; i < dataTextElements.length; ++i) {
                 var node = dataTextElements[i];
                 node.node.textContent = node.stream.format(data);
             }
         }
-
         return dataTextElements;
     }
-
     function build(element) {
         var src = element.getAttribute('data-hr-model-src');
         if (element.nodeName === 'FORM' || element.nodeName == 'INPUT' || element.nodeName == 'TEXTAREA') {
@@ -2237,41 +1803,99 @@ function(exports, module, forms, TextStream, components, typeId, domQuery){
         }
     }
     exports.build = build;
-
     function NullModel() {
         this.setData = function (data) {
-
-        }
-
+        };
         this.appendData = this.setData;
-
+        this.clear = function () { };
         this.getData = function () {
             return {};
-        }
-
+        };
         this.getSrc = function () {
             return "";
-        }
+        };
     }
     exports.NullModel = NullModel;
 });
-//This module defines html nodes that are ignored and a way to check to see if a node is ignored or the
-//child of an ignored node. Ignored nodes are defined with the data-hr-ignored attribute.
-jsns.define("hr.promiseutils", [
-],
-function (exports, module, domQuery) {
-    "use strict";
+});
+jsns.amd("hr.promiseeventhandler", function(define) {
 
+define(["require", "exports"], function (require, exports) {
+    "use strict";
+    /**
+     * This class provides a reusable way to fire events to multiple listeners and wait for them using
+     * promises.
+     */
+    function PromiseEventHandler() {
+        var handlers = [];
+        function add(context, handler) {
+            if (context === undefined) {
+                throw "context cannot be undefined";
+            }
+            if (handler === undefined) {
+                throw "handler cannot be undefined";
+            }
+            handlers.push({
+                handler: handler,
+                context: context
+            });
+        }
+        function remove(context, handler) {
+            for (var i = 0; i < handlers.length; ++i) {
+                if (handlers[i].handler === handler && handlers[i].context === context) {
+                    handlers.splice(i--, 1);
+                }
+            }
+        }
+        this.modifier = {
+            add: add,
+            remove: remove
+        };
+        /**
+         * Fire the event. The listeners can return values, if they do the values will be added
+         * to an array that is returned by the promise returned by this function.
+         * @returns {Promise} a promise that will resolve when all fired events resolve.
+         */
+        function fire() {
+            var result;
+            var promises = [];
+            for (var i = 0; i < handlers.length; ++i) {
+                var handlerObj = handlers[i];
+                promises.push(new Promise(function (resovle, reject) {
+                    resovle(handlerObj.handler.apply(handlerObj.context, arguments));
+                })
+                    .then(function (data) {
+                    if (data !== undefined) {
+                        if (result === undefined) {
+                            result = [];
+                        }
+                        result.push(data);
+                    }
+                }));
+            }
+            return Promise.all(promises)
+                .then(function (data) {
+                return result;
+            });
+        }
+        this.fire = fire;
+    }
+    exports.PromiseEventHandler = PromiseEventHandler;
+});
+});
+jsns.amd("hr.promiseutils", function(define) {
+
+define(["require", "exports"], function (require, exports) {
+    "use strict";
     /**
      * This is a wrapper for a promise that exposes the resolve
      * and reject functions. You do not have to supply a callback function
      * since you will have access to the resolve and reject functions.
      * @param {type} promiseFunc
-     * @returns {type} 
+     * @returns {type}
      */
-    function External(promiseFunc) {
+    function ExternalPromise(promiseFunc) {
         var external = {};
-
         var promise = new Promise(function (resolve, reject) {
             external.resolve = resolve;
             external.reject = reject;
@@ -2279,21 +1903,19 @@ function (exports, module, domQuery) {
                 return promiseFunc(resolve, reject);
             }
         });
-
         external.promise = promise;
-
         return external;
-    };
-
-    exports.External = External;
+    }
+    exports.ExternalPromise = ExternalPromise;
+    ;
 });
-"use strict";
+});
+jsns.amd("hr.storage", function(define) {
 
-jsns.define("hr.storage", null,
-function(exports, module){
+define(["require", "exports"], function (require, exports) {
+    "use strict";
     //The instance storage, 
     var instanceStorage = {};
-
     /**
     * @description Get the sesssion data, can specify a default value.
     * @param {string} name The name of the data to recover
@@ -2304,7 +1926,6 @@ function(exports, module){
         if (defaultValue === undefined) {
             defaultValue = null;
         }
-
         var recovered = sessionStorage.getItem(name);
         if (recovered !== null) {
             recovered = JSON.parse(recovered);
@@ -2315,7 +1936,6 @@ function(exports, module){
         return recovered;
     }
     exports.getSessionJson = getSessionJson;
-
     /**
     * @description Get the sesssion data, can specify a default value.
     * @param {string} name The name of the data to store
@@ -2326,49 +1946,38 @@ function(exports, module){
     }
     exports.storeJsonInSession = storeJsonInSession;
 });
-"use strict";
+});
+jsns.amd("hr.textstream", function(define) {
 
-jsns.define("hr.textstream", [
-    "hr.escape",
-    "hr.typeidentifiers"
-],
-function (exports, module, escape, typeId) {
-
+define(["require", "exports", 'hr.escape', 'hr.typeidentifiers'], function (require, exports, hr_escape_1, typeId) {
+    "use strict";
     function TextNode(str) {
         this.writeObject = function (data) {
             return str;
-        }
-
+        };
         this.writeFunction = this.writeObject;
     }
-
     function VariableNode(variable) {
         this.writeObject = function (data) {
-            return escape(data[variable]);
-        }
-
+            return hr_escape_1.escape(data[variable]);
+        };
         this.writeFunction = function (data) {
-            return escape(data(variable));
-        }
+            return hr_escape_1.escape(data(variable));
+        };
     }
-
     function ThisVariableNode() {
         this.writeObject = function (data) {
-            return escape(data);
-        }
-
+            return hr_escape_1.escape(data);
+        };
         this.writeFunction = function (data) {
-            return escape(data('this'));
-        }
+            return hr_escape_1.escape(data('this'));
+        };
     }
-
     function format(data, streamNodes) {
         if (data === null || data === undefined) {
             data = {};
         }
-
         var text = "";
-
         if (typeId.isFunction(data)) {
             for (var i = 0; i < streamNodes.length; ++i) {
                 text += streamNodes[i].writeFunction(data);
@@ -2379,22 +1988,19 @@ function (exports, module, escape, typeId) {
                 text += streamNodes[i].writeObject(data);
             }
         }
-
         return text;
     }
-
     /**
      * Create a text stream that when called with data will output
      * the original string with new data filled out. If the text contains
      * no variables no stream will be created.
      * @param {type} text
      * @param {type} alwaysCreate
-     * @returns {type} 
+     * @returns {type}
      */
     function TextStream(text) {
         var streamNodes = [];
         var foundVariable = false;
-
         var textStart = 0;
         var bracketStart = 0;
         var bracketEnd = 0;
@@ -2406,7 +2012,6 @@ function (exports, module, escape, typeId) {
         //This holds text we have not created a TextNode for as we parse, this way we can combine output variables with surrounding text for the stream itself
         var skippedTextBuffer = "";
         for (var i = 0; i < text.length; ++i) {
-
             if (text[i] == '{') {
                 //Count up opening brackets
                 bracketStart = i;
@@ -2414,7 +2019,6 @@ function (exports, module, escape, typeId) {
                 while (++i < text.length && text[i] == '{') {
                     ++bracketCount;
                 }
-
                 //Find closing bracket chain, ignore if mismatched or whitespace
                 bracketCheck = bracketCount;
                 while (++i < text.length) {
@@ -2422,14 +2026,11 @@ function (exports, module, escape, typeId) {
                         break;
                     }
                 }
-
                 //If the check got back to 0 we found a variable
                 if (bracketCheck == 0) {
                     leadingText = text.substring(textStart, bracketStart);
-
                     bracketEnd = i;
                     bracketVariable = text.substring(bracketStart, bracketEnd + 1);
-
                     switch (bracketCount) {
                         case 1:
                             //1 bracket, add to buffer
@@ -2451,90 +2052,73 @@ function (exports, module, escape, typeId) {
                             skippedTextBuffer += leadingText + bracketVariable.substring(1, bracketVariable.length - 1);
                             break;
                     }
-
                     textStart = i + 1;
                     foundVariable = true;
                 }
             }
         }
-
         if (textStart < text.length) {
             streamNodes.push(new TextNode(skippedTextBuffer + text.substring(textStart, text.length)));
         }
-
         this.format = function (data) {
             return format(data, streamNodes);
-        }
-
+        };
         this.foundVariable = function () {
             return foundVariable;
-        }
+        };
     }
-    module.exports = TextStream;
+    exports.TextStream = TextStream;
 });
-"use strict";
+});
+jsns.amd("hr.timedtrigger", function(define) {
 
-jsns.define("hr.timedtrigger", [
-    "hr.eventhandler"
-],
-function (exports, module, EventHandler) {
+define(["require", "exports", 'hr.eventhandler'], function (require, exports, hr_eventhandler_1) {
+    "use strict";
     function TimedTrigger(delay) {
         if (delay === undefined) {
             delay = 400;
         }
-        
         var _delay = delay;
         var holder;
-        var handler = new EventHandler();
+        var handler = new hr_eventhandler_1.EventHandler();
         var args;
-        
         this.handler = handler.modifier;
-
         function setDelay(delay) {
             _delay = delay;
         }
         this.setDelay = setDelay;
-
         function cancel() {
             clearTimeout(holder);
             args = undefined;
         }
         this.cancel = cancel;
-
         function fire() {
             cancel();
             holder = window.setTimeout(fireHandler, _delay);
             args = arguments;
         }
         this.fire = fire;
-
         function addListener(context, listener) {
             handler.modifier.add(context, listener);
         }
         this.addListener = addListener;
-
         function removeListener(context, listener) {
             handler.modifier.remove(context, listener);
         }
         this.removeListener = removeListener;
-
         function fireHandler() {
             handler.fire.apply(handler, args);
         }
-
     }
-
-    module.exports = TimedTrigger;
+    exports.TimedTrigger = TimedTrigger;
 });
-"use strict";
+});
+jsns.amd("hr.toggles", function(define) {
 
-jsns.define("hr.toggles", [
-    "hr.typeidentifiers"
-],
-function(exports, module, typeId){
+define(["require", "exports", 'hr.typeidentifiers'], function (require, exports, typeId) {
+    "use strict";
     var defaultStates = ['on', 'off']; //Reusuable states, so we don't end up creating tons of these arrays
     var togglePlugins = [];
-
     /**
      * Add a toggle plugin that can create additional items on the toggle chain.
      * @param {type} plugin
@@ -2543,7 +2127,6 @@ function(exports, module, typeId){
         togglePlugins.push(plugin);
     }
     exports.addTogglePlugin = addTogglePlugin;
-
     /**
      * This function will apply a state on a toggle in a safe manner while maintaining
      * the chain.
@@ -2564,7 +2147,6 @@ function(exports, module, typeId){
             }
         }
     }
-
     /**
      * Create a toggle function on the toggle.
      * @param {type} name - The name of the state.
@@ -2576,10 +2158,8 @@ function(exports, module, typeId){
             var next = toggle.applyState(value);
             safeApplyState(next, name);
         }
-
         toggle[name] = activate;
     }
-
     /**
      * A simple toggler that does nothing. Used to shim correctly if no toggles are defined for a toggle element.
      */
@@ -2589,13 +2169,11 @@ function(exports, module, typeId){
         }
         this.applyState = applyState;
     }
-
     /**
      * A toggler that toggles style for an element
      */
     function StyleToggle(element, next) {
         var originalStyles = element.style.cssText || "";
-
         function applyState(style) {
             if (style) {
                 element.style.cssText = originalStyles + style;
@@ -2607,16 +2185,14 @@ function(exports, module, typeId){
         }
         this.applyState = applyState;
     }
-
     /**
-    * A toggler that toggles classes for an element. Supports animations using an 
+    * A toggler that toggles classes for an element. Supports animations using an
     * idle attribute (data-hr-class-idle) that if present will have its classes
     * applied to the element when any animations have completed.
     */
     function ClassToggle(element, next) {
         var originalClasses = element.getAttribute("class") || "";
         var idleClass = element.getAttribute('data-hr-class-idle');
-
         function applyState(classes) {
             if (classes) {
                 element.setAttribute("class", originalClasses + ' ' + classes);
@@ -2628,7 +2204,6 @@ function(exports, module, typeId){
             return next;
         }
         this.applyState = applyState;
-
         function startAnimation() {
             if (idleClass) {
                 element.classList.remove(idleClass);
@@ -2638,24 +2213,24 @@ function(exports, module, typeId){
                 element.addEventListener('animationend', stopAnimation);
             }
         }
-
         function stopAnimation() {
             element.removeEventListener('transitionend', stopAnimation);
             element.removeEventListener('animationend', stopAnimation);
             element.classList.add(idleClass);
         }
     }
-
     /**
      * The Group defines a collection of toggles that can be manipulated together.
      */
     function Group() {
+        //var toggles = [];
         var toggles = [];
-
-        for (var i = 0; i < arguments.length; ++i) {
-            toggles.push(arguments[i]);
+        for (var _i = 0; _i < arguments.length; _i++) {
+            toggles[_i - 0] = arguments[_i];
         }
-
+        //for (var i = 0; i < arguments.length; ++i) {
+        //    toggles.push(arguments[i]);
+        //}
         /**
          * Add a toggle to the group.
          * @param toggle - The toggle to add.
@@ -2664,9 +2239,8 @@ function(exports, module, typeId){
             toggles.push(toggle);
         }
         this.add = add;
-
         /**
-         * This function will set all toggles in the group (including the passed one if its in the group) 
+         * This function will set all toggles in the group (including the passed one if its in the group)
          * to the hideState and then will set the passed toggle to showState.
          * @param toggle - The toggle to set.
          * @param {string} [showState] - The state to set the passed toggle to.
@@ -2676,11 +2250,9 @@ function(exports, module, typeId){
             if (showState === undefined) {
                 showState = 'on';
             }
-
             if (hideState === undefined) {
                 hideState = 'off';
             }
-
             for (var i = 0; i < toggles.length; ++i) {
                 safeApplyState(toggles[i], hideState);
             }
@@ -2690,7 +2262,6 @@ function(exports, module, typeId){
         this.show = activate; //Deprecated version
     }
     exports.Group = Group;
-
     /**
      * Extract all the states from a given element to build a single toggle in the chain.
      * You pass in the prefix and states you want to extract as well as the constructor
@@ -2720,11 +2291,10 @@ function(exports, module, typeId){
         }
         return nextToggle;
     }
-
     /**
      * Build a toggle chain from the given element
      * @param {string} element - The element to build toggles for
-     * @param {string[]} [states] - The states the toggle needs, will create functions on 
+     * @param {string[]} [states] - The states the toggle needs, will create functions on
      * the toggle for each one. If this is undefined will default to "on" and "off".
      * @returns A new ToggleChain with the defined states as functions
      */
@@ -2733,22 +2303,18 @@ function(exports, module, typeId){
             states = defaultStates;
         }
         var toggle = null;
-
         if (element !== null) {
             toggle = extractStates(element, states, 'data-hr-style-', StyleToggle, toggle);
             toggle = extractStates(element, states, 'data-hr-class-', ClassToggle, toggle);
-
             //Now toggle plugin chain
             for (var i = 0; i < togglePlugins.length; ++i) {
                 toggle = togglePlugins[i](element, states, toggle);
             }
         }
-
         //If we get all the way here with no toggle, use the null toggle.
         if (toggle === null) {
             toggle = new NullToggle(toggle);
         }
-
         //Make sure the top level toggle defines all the required funcitons
         //This trashes any properties that are not functions that are also state
         //names, or creates them if they don't exist. This allows the user to just
@@ -2759,11 +2325,9 @@ function(exports, module, typeId){
                 createToggleState(state, null, toggle);
             }
         }
-
         return toggle;
     }
     exports.build = build;
-
     /**
      * Determine if a given toggle is a null toggle.
      * @param toggle - the toggle to check
@@ -2774,27 +2338,20 @@ function(exports, module, typeId){
     }
     exports.isNullToggle = isNullToggle;
 });
-"use strict";
+});
+jsns.amd("hr.typeidentifiers", function(define) {
 
-jsns.define("hr.typeidentifiers", null,
-function(exports, module){
-    //only implement if no native implementation is available
-    if (typeof Array.isArray === 'undefined') {
-        Array.isArray = function (obj) {
-            return Object.prototype.toString.call(obj) === '[object Array]';
-        }
-    };
-
+define(["require", "exports"], function (require, exports) {
+    "use strict";
     /**
      * Determine if a variable is an array.
      * @param test - The object to test
      * @returns {boolean} - True if the object is an array
      */
-    function isArray(test){
+    function isArray(test) {
         return Array.isArray(test);
     }
     exports.isArray = isArray;
-
     /**
      * Determine if a variable is a string.
      * @param test - The object to test
@@ -2804,7 +2361,6 @@ function(exports, module){
         return typeof (test) === 'string';
     }
     exports.isString = isString;
-
     /**
      * Determine if a variable is a function.
      * @param test - The object to test
@@ -2814,7 +2370,6 @@ function(exports, module){
         return typeof (test) === 'function';
     }
     exports.isFunction = isFunction;
-
     /**
      * Determine if a variable is an object.
      * @param test - The object to test
@@ -2824,24 +2379,22 @@ function(exports, module){
         return typeof test === 'object';
     }
     exports.isObject = isObject;
-
     function isForEachable(test) {
         return test && isFunction(test['forEach']);
     }
     exports.isForEachable = isForEachable;
 });
+});
+jsns.amd("hr.uri", function(define) {
 
-
-"use strict";
-
-jsns.define("hr.uri", ["hr.escape"],
-function (exports, module, escape) {
+define(["require", "exports", 'hr.escape'], function (require, exports, hr_escape_1) {
+    "use strict";
     /**
      * Get an object with the values from the query string. These values
      * will be sent through the escape function to help prevent xss before
      * you get the values back. All query string names will be set to lower case
      * to make looking them back up possible no matter the url case.
-     * @returns {type} 
+     * @returns {type}
      */
     function getQueryObject() {
         var qs = window.location.search.substr(1).split('&');
@@ -2852,19 +2405,16 @@ function (exports, module, escape) {
                 val[pair[0].toLowerCase()] = "";
             }
             else if (pair.length > 0) {
-                val[pair[0].toLowerCase()] = escape(decodeURIComponent(pair[1].replace(/\+/g, ' ')));
+                val[pair[0].toLowerCase()] = hr_escape_1.escape(decodeURIComponent(pair[1].replace(/\+/g, ' ')));
             }
         }
         return val;
     }
-
     exports.getQueryObject = getQueryObject;
-
     // parseUri 1.2.2
     // (c) Steven Levithan <stevenlevithan.com>
     // MIT License
     // http://blog.stevenlevithan.com/archives/parseuri
-
     var parseUriOptions = {
         strictMode: false,
         key: ["source", "protocol", "authority", "userInfo", "user", "password", "host", "port", "relative", "path", "directory", "file", "query", "anchor"],
@@ -2877,25 +2427,28 @@ function (exports, module, escape) {
             loose: /^(?:(?![^:@]+:[^:@\/]*@)([^:\/?#.]+):)?(?:\/\/)?((?:(([^:@]*)(?::([^:@]*))?)?@)?([^:\/?#]*)(?::(\d*))?)(((\/(?:[^?#](?![^?#\/]*\.[^?#\/.]+(?:[?#]|$)))*\/?)?([^?#\/]*))(?:\?([^#]*))?(?:#(.*))?)/
         }
     };
-
+    var Uri = (function () {
+        function Uri(str) {
+            var o = parseUriOptions;
+            var m = o.parser[o.strictMode ? "strict" : "loose"].exec(str);
+            var uri = this;
+            var i = 14;
+            while (i--)
+                uri[o.key[i]] = m[i] || "";
+            uri[o.q.name] = {};
+            uri[o.key[12]].replace(o.q.parser, function ($0, $1, $2) {
+                if ($1)
+                    uri[o.q.name][$1] = $2;
+            });
+        }
+        return Uri;
+    }());
+    exports.Uri = Uri;
     function parseUri(str) {
-        var o = parseUriOptions,
-            m = o.parser[o.strictMode ? "strict" : "loose"].exec(str),
-            uri = {},
-            i = 14;
-
-        while (i--) uri[o.key[i]] = m[i] || "";
-
-        uri[o.q.name] = {};
-        uri[o.key[12]].replace(o.q.parser, function ($0, $1, $2) {
-            if ($1) uri[o.q.name][$1] = $2;
-        });
-
-        return uri;
-    };
-
+        return new Uri(str);
+    }
     exports.parseUri = parseUri;
+    ;
 });
-
-
+});
 //# sourceMappingURL=HtmlRapier.js.map
