@@ -5,7 +5,7 @@
     "removeComments": false,
     "sourceMap": true,
     "target": "es5",
-    "outDir": "dist/tsc",
+    "outDir": "obj/tsc",
     "module": "amd",
     "baseUrl": ".",
     "paths": {
@@ -19,7 +19,8 @@
   },
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "obj"
   ],
   "compileOnSave": true
 }
