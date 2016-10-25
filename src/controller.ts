@@ -3,6 +3,7 @@
 import {BindingCollection} from 'hr.bindingcollection';
 import * as domQuery from 'hr.domquery';
 import * as ignoredNodes from 'hr.ignored';
+import { EventHandler } from 'hr.eventhandler';
 
 /**
  * Create controller instances for all controllers named name using the given controllerConstructor function.
@@ -40,8 +41,54 @@ export function create(name, controllerConstructor, context, parentBindings?) :a
  * @param {type} controllerConstructor
  */
 export function createOnCallback(controllerConstructor, context?:any) {
-    return function (bindings, data) {
-        var controller = new controllerConstructor(bindings, context, data);
-        bindings.setListener(controller);
+    var builder = new ControllerBuilder(controllerConstructor);
+    builder.context = context;
+    return builder.createOnCallback();
+}
+
+/**
+ * This class builds controllers and holds configuration data.
+ * @param {type} controllerConstructor The controller's constructor function, in typescript pass the class name.
+ * @returns A new ControllerBuilder.
+ */
+export class ControllerBuilder {
+    private controllerConstructor;
+    private _context: any;
+    private controllerCreatedEvent: EventHandler;
+
+    /**
+     * Create a new ControllerBuilder
+     * @param {type} controllerConstructor
+     */
+    constructor(controllerConstructor) {
+        this.controllerConstructor = controllerConstructor;
+        this.controllerCreatedEvent = new EventHandler();
+    }
+
+    /**
+     * The value to pass to a controller's context variable.
+     * @returns The context.
+     */
+    get context(): any {
+        return this._context;
+    }
+    set context(value:any) {
+        this._context = value;
+    }
+
+    get controllerCreated() {
+        return this.controllerCreatedEvent.modifier;
+    }
+
+    /**
+     * This will create a callback function that will create a new controller when it is called.
+     * @returns
+     */
+    createOnCallback() {
+        return (bindings, data) => {
+            var controller = new this.controllerConstructor(bindings, this.context, data);
+            bindings.setListener(controller);
+            this.controllerCreatedEvent.fire(controller);
+        }
     }
 }

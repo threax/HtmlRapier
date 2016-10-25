@@ -1,5 +1,10 @@
 ﻿"use strict";
 
+interface EventModifier {
+    add(context, handler);
+    remove(context, handler);
+}
+
 /**
  * This class provides a reusable way to fire events to multiple listeners.
  */
@@ -27,7 +32,7 @@ export class EventHandler {
         }
     }
 
-    modifier = {
+    modifier: EventModifier = {
         add: (context, handler) => this.add(context, handler),
         remove: (context, handler) => this.remove(context, handler)
     };
