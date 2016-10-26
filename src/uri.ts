@@ -96,16 +96,21 @@ export class Uri {
         }
 
         //Negative index, start from back
+        var part = null;
         if (i < 0) {
             if (-i < this.splitPath.length) {
-                return this.splitPath[this.splitPath.length + i];
+                part =  this.splitPath[this.splitPath.length + i];
             }
-            return null;
         }
         else if (i < this.splitPath.length) {
-            return this.splitPath[i];
+            part = this.splitPath[i];
         }
-        return null;
+
+        if(part !== null){
+            part = escape(part);
+        }
+
+        return part;
     }
 }
 
