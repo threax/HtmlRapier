@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-import {escape} from 'hr.escape';
+import { escape } from 'hr.escape';
 
 /**
  * Get an object with the values from the query string. These values
@@ -58,9 +58,20 @@ export class Uri {
     query: string;
     anchor: string;
 
-    constructor(str: string) {
+    private splitPath: string[];
+
+    /**
+     * Constructor. Optionally takes the url to parse, otherwise uses current
+     * page url.
+     * @param {string} url?
+     */
+    constructor(url?: string) {
+        if (url === undefined && window !== undefined) {
+            url = window.location.href;
+        }
+
         var o = parseUriOptions;
-        var m = o.parser[o.strictMode ? "strict" : "loose"].exec(str);
+        var m = o.parser[o.strictMode ? "strict" : "loose"].exec(url);
         var uri = this;
         var i = 14;
 
@@ -70,10 +81,34 @@ export class Uri {
         uri[o.key[12]].replace(o.q.parser, function ($0, $1, $2) {
             if ($1) uri[o.q.name][$1] = $2;
         });
+
+        this.path = this.path.replace('\\', '/'); //Normalize slashes
+    }
+
+    /**
+     * Get the section of the path specified by the index i.
+     * @param {number} i The index of the section of the path to get use negative numbers to start at the end.
+     * @returns
+     */
+    getPathPart(i: number): string {
+        if (this.splitPath === undefined) {
+            this.splitPath = this.path.split('/');
+        }
+
+        //Negative index, start from back
+        if (i < 0) {
+            if (-i < this.splitPath.length) {
+                return this.splitPath[this.splitPath.length + i];
+            }
+            return null;
+        }
+        else if (i < this.splitPath.length) {
+            return this.splitPath[i];
+        }
+        return null;
     }
 }
 
 export function parseUri(str: string) {
     return new Uri(str);
 };
-
