@@ -143,10 +143,10 @@ export class Uri {
      */
     build(): string {
         var query = this.query;
-        if (query.charAt(0) === '?') {
-            query = query.substr(1);
+        if (query && query.charAt(0) !== '?') {
+            query = '?' + query;
         }
-        return this.protocol + '://' + this.authority + this.directory + this.file + '?' + query;
+        return this.protocol + '://' + this.authority + this.directory + this.file + query;
     }
 }
 
