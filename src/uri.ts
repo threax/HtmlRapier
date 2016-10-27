@@ -2,29 +2,7 @@
 
 import { escape } from 'hr.escape';
 
-/**
- * Get an object with the values from the query string. These values
- * will be sent through the escape function to help prevent xss before
- * you get the values back. All query string names will be set to lower case
- * to make looking them back up possible no matter the url case.
- * @returns {type} 
- */
-export function getQueryObject() {
-    var qs = window.location.search.substr(1).split('&');
-    var val = {};
-    for (var i = 0; i < qs.length; ++i) {
-        var pair = qs[i].split('=', 2);
-        if (pair.length === 1) {
-            val[pair[0].toLowerCase()] = "";
-        }
-        else if (pair.length > 0) {
-            val[pair[0].toLowerCase()] = escape(decodeURIComponent(pair[1].replace(/\+/g, ' ')));
-        }
-    }
-    return val;
-}
-
-// parseUri 1.2.2
+// based on parseUri 1.2.2
 // (c) Steven Levithan <stevenlevithan.com>
 // MIT License
 // http://blog.stevenlevithan.com/archives/parseuri
@@ -63,26 +41,28 @@ export class Uri {
     /**
      * Constructor. Optionally takes the url to parse, otherwise uses current
      * page url.
-     * @param {string} url?
+     * @param {string} url? The url to parse, if this is not passed it will use the window's url, if null is passed no parsing will take place.
      */
     constructor(url?: string) {
         if (url === undefined && window !== undefined) {
             url = window.location.href;
         }
 
-        var o = parseUriOptions;
-        var m = o.parser[o.strictMode ? "strict" : "loose"].exec(url);
-        var uri = this;
-        var i = 14;
+        if (url !== null) {
+            var o = parseUriOptions;
+            var m = o.parser[o.strictMode ? "strict" : "loose"].exec(url);
+            var uri = this;
+            var i = 14;
 
-        while (i--) uri[o.key[i]] = m[i] || "";
+            while (i--) uri[o.key[i]] = m[i] || "";
 
-        uri[o.q.name] = {};
-        uri[o.key[12]].replace(o.q.parser, function ($0, $1, $2) {
-            if ($1) uri[o.q.name][$1] = $2;
-        });
+            uri[o.q.name] = {};
+            uri[o.key[12]].replace(o.q.parser, function ($0, $1, $2) {
+                if ($1) uri[o.q.name][$1] = $2;
+            });
 
-        this.path = this.path.replace('\\', '/'); //Normalize slashes
+            this.path = this.path.replace('\\', '/'); //Normalize slashes
+        }
     }
 
     /**
@@ -99,21 +79,96 @@ export class Uri {
         var part = null;
         if (i < 0) {
             if (-i < this.splitPath.length) {
-                part =  this.splitPath[this.splitPath.length + i];
+                part = this.splitPath[this.splitPath.length + i];
             }
         }
         else if (i < this.splitPath.length) {
             part = this.splitPath[i];
         }
 
-        if(part !== null){
+        if (part !== null) {
             part = escape(part);
         }
 
         return part;
     }
+
+    /**
+     * Set the query portion of the url to the given object's keys and values.
+     * The keys will not be altered, the values will be uri encoded.
+     * @param {type} data The object to make into a query.
+     */
+    setQueryFromObject(data: any): void {
+        var queryString = "";
+        for (var key in data) {
+            queryString += key + '=' + encodeURIComponent(data[key]) + '&';
+        }
+        if (queryString.length > 0) {
+            queryString = queryString.substr(0, queryString.length - 1);
+        }
+        this.query = queryString;
+    }
+
+    /**
+     * Create an object from the uri's query string. These values
+     * will be sent through the escape function to help prevent xss before
+     * you get the values back. All query string names will be set to lower case
+     * to make looking them back up possible no matter the url case.
+     * @returns An object version of the query string.
+     */
+    getQueryObject() {
+        var cleanQuery = this.query;
+        if (cleanQuery.charAt(0) === '?') {
+            cleanQuery = cleanQuery.substr(1);
+        }
+        var qs = cleanQuery.split('&');
+        var val = {};
+        for (var i = 0; i < qs.length; ++i) {
+            var pair = qs[i].split('=', 2);
+            if (pair.length === 1) {
+                val[pair[0].toLowerCase()] = "";
+            }
+            else if (pair.length > 0) {
+                val[pair[0].toLowerCase()] = escape(decodeURIComponent(pair[1].replace(/\+/g, ' ')));
+            }
+        }
+        return val;
+    }
+
+    /**
+     * Build the complete url from the current settings.
+     * This will do the following concatentaion:
+     * protocol + '://' + authority + directory + file + '?' + query
+     * @returns
+     */
+    build(): string {
+        var query = this.query;
+        if (query.charAt(0) === '?') {
+            query = query.substr(1);
+        }
+        return this.protocol + '://' + this.authority + this.directory + this.file + '?' + query;
+    }
 }
 
-export function parseUri(str: string) {
+/**
+ * Get an object with the values from the query string. These values
+ * will be sent through the escape function to help prevent xss before
+ * you get the values back. All query string names will be set to lower case
+ * to make looking them back up possible no matter the url case.
+ * @returns {type} The window's query as an object.
+ */
+export function getQueryObject() {
+    var url = new Uri(null);
+    url.query = window.location.search;
+    return url.getQueryObject();
+}
+
+/**
+ * Parse a uri and return a new uri object.
+ * @param {type} str The url to parse
+ * @deprecated Use the Uri class directly.
+ * @returns
+ */
+export function parseUri(str: string) : Uri {
     return new Uri(str);
 };
