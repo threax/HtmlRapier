@@ -7,21 +7,6 @@ import * as TextStream from 'hr.textstream';
 import * as toggles from 'hr.toggles';
 import * as models from 'hr.models';
 
-/**
- * @callback hr_bindingcollection_eventcallback
- */
-
-/**
- * @callback hr_iter
- * @param {array} items - the items to iterate
- * @param {hr_iter_cb} - the function to transform each object
- * @returns the transformed item and null when all items are iterated
- */
-
-/**
- * @typedef {object} hr_bindingcollection
- */
-
 function EventRunner(name, listener) {
     this.execute = function (evt) {
         var cb = listener[name];
@@ -134,39 +119,43 @@ function iterateControllers(name, elements, cb) {
     }
 }
 
-/**
- * 
- * @param {HtmlElement} elements
- */
-export function BindingCollection(elements) {
-    elements = domQuery.all(elements);
+export class BindingCollection {
+    private elements;
+
+    constructor(elements) {
+        this.elements = domQuery.all(elements);
+    }
 
     /**
      * Set the listener for this binding collection. This listener will have its functions
      * fired when a matching event is fired.
      * @param {type} listener
      */
-    this.setListener = function (listener) {
-        bindEvents(elements, listener);
+    setListener(listener:any) {
+        bindEvents(this.elements, listener);
     }
 
-    this.getToggle = function (name, states) {
-        return getToggle(name, elements, states);
+    getToggle(name:string, states?:any) {
+        return getToggle(name, this.elements, states);
     }
 
-    this.getModel = function (name) {
-        return getModel(name, elements);
+    getModel<T>(name: string, strongTypeCreator?: { new (data: any): T; }): models.TypedModel<T> {
+        var model = getModel(name, this.elements);
+        if (strongTypeCreator !== undefined) {
+            model = new models.TypedModel<T>(model, strongTypeCreator);
+        }
+        return model;
     }
 
-    this.getConfig = function () {
-        return getConfig(elements);
+    getConfig() {
+        return getConfig(this.elements);
     }
 
-    this.getHandle = function (name) {
-        return getHandle(name, elements);
+    getHandle(name:string) {
+        return getHandle(name, this.elements);
     }
 
-    this.iterateControllers = function (name, cb) {
-        iterateControllers(name, elements, cb);
+    iterateControllers(name:string, cb) {
+        iterateControllers(name, this.elements, cb);
     }
 };

@@ -1,6 +1,8 @@
 ﻿"use strict";
 
-import {BindingCollection} from 'hr.bindingcollection';
+import { BindingCollection } from 'hr.bindingcollection';
+export { BindingCollection } from 'hr.bindingcollection';
+export { TypedModel } from 'hr.models';
 import * as domQuery from 'hr.domquery';
 import * as ignoredNodes from 'hr.ignored';
 import { EventHandler } from 'hr.eventhandler';
@@ -12,7 +14,7 @@ import { EventHandler } from 'hr.eventhandler';
  * @param {type} name
  * @param {type} controllerConstructor
  */
-export function create(name, controllerConstructor, context, parentBindings?) :any[]{
+export function create(name, controllerConstructor, context, parentBindings?): any[] {
     var createdControllers = [];
 
     function foundElement(element) {
@@ -40,7 +42,7 @@ export function create(name, controllerConstructor, context, parentBindings?) :a
  * This can be used in the callbacks for setData in model and when creating components.
  * @param {type} controllerConstructor
  */
-export function createOnCallback(controllerConstructor, context?:any) {
+export function createOnCallback(controllerConstructor, context?: any) {
     var builder = new ControllerBuilder(controllerConstructor);
     builder.context = context;
     return builder.createOnCallback();
@@ -72,7 +74,7 @@ export class ControllerBuilder {
     get context(): any {
         return this._context;
     }
-    set context(value:any) {
+    set context(value: any) {
         this._context = value;
     }
 

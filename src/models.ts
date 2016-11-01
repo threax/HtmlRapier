@@ -1,7 +1,7 @@
 "use strict";
 
 import * as forms from 'hr.form';
-import {TextStream} from 'hr.textstream';
+import { TextStream } from 'hr.textstream';
 import * as components from 'hr.components';
 import * as typeId from 'hr.typeidentifiers';
 import * as domQuery from 'hr.domquery';
@@ -140,5 +140,38 @@ export function NullModel() {
 
     this.getSrc = function () {
         return "";
+    }
+}
+
+/**
+ * This class is a model that enforces its type.
+ */
+export class TypedModel<T>{
+    private childModel;
+    private strongTypeCreator;
+
+    constructor(childModel: any, strongTypeCreator: { new (data:any): T; }) {
+        this.childModel = childModel;
+        this.strongTypeCreator = strongTypeCreator;
+    }
+
+    setData(data: T) {
+        this.childModel.setData(data);
+    }
+
+    appendData(data: T) {
+        this.childModel.appendData(data);
+    }
+
+    clear() {
+        this.childModel.clear();
+    }
+
+    getData(): T {
+        return new this.strongTypeCreator(this.childModel.getData());
+    }
+
+    getSrc(): string {
+        return this.childModel.getSrc();
     }
 }
