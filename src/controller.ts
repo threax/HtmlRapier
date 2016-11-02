@@ -2,7 +2,7 @@
 
 import { BindingCollection } from 'hr.bindingcollection';
 export { BindingCollection } from 'hr.bindingcollection';
-export { TypedModel } from 'hr.models';
+export { Model } from 'hr.models';
 import * as domQuery from 'hr.domquery';
 import * as ignoredNodes from 'hr.ignored';
 import { EventHandler } from 'hr.eventhandler';

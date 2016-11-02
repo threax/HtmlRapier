@@ -109,7 +109,7 @@ function bindData(data, element, dataTextElements) {
     return dataTextElements;
 }
 
-export function build(element) {
+export function build<T>(element) : Model<T> {
     var src = element.getAttribute('data-hr-model-src');
     if (element.nodeName === 'FORM' || element.nodeName == 'INPUT' || element.nodeName == 'TEXTAREA') {
         return new FormModel(element, src);
@@ -143,6 +143,16 @@ export function NullModel() {
     }
 }
 
+export interface Model<T>{
+    setData(data: T);
+
+    appendData(data: T);
+
+    clear();
+
+    getData(): T;
+}
+
 /**
  * This interface describes a type that has a constructor that converts
  * a raw javascript object to a typed version of that object.
@@ -154,9 +164,9 @@ export interface StrongTypeConstructor<T>{
 /**
  * This class is a model that enforces its type.
  */
-export class TypedModel<T>{
-    private childModel;
-    private strongConstructor;
+export class StrongTypedModel<T> implements Model<T>{
+    protected childModel;
+    protected strongConstructor;
 
     constructor(childModel: any, strongConstructor: StrongTypeConstructor<T>) {
         this.childModel = childModel;

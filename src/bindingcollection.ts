@@ -57,14 +57,14 @@ function getToggle(name, elements, states) {
     return toggle;
 }
 
-function getModel(name, elements) {
-    var model;
+function getModel<T>(name, elements): models.Model<T> {
+    var model: models.Model<T>;
     var query = '[data-hr-model=' + name + ']';
     for (var eIx = 0; eIx < elements.length; ++eIx) {
         var element = elements[eIx];
         var targetElement = domQuery.first(query, element);
         if (targetElement) {
-            model = models.build(targetElement);
+            model = models.build<T>(targetElement);
             return model; //Found it, need to break element loop, done here if found
         }
         else {
@@ -139,10 +139,10 @@ export class BindingCollection {
         return getToggle(name, this.elements, states);
     }
 
-    getModel<T>(name: string, strongConstructor?: models.StrongTypeConstructor<T>): models.TypedModel<T> {
-        var model = getModel(name, this.elements);
+    getModel<T>(name: string, strongConstructor?: models.StrongTypeConstructor<T>): models.Model<T> {
+        var model = getModel<T>(name, this.elements);
         if (strongConstructor !== undefined) {
-            model = new models.TypedModel<T>(model, strongConstructor);
+            model = new models.StrongTypedModel<T>(model, strongConstructor);
         }
         return model;
     }
