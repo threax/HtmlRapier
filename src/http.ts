@@ -13,7 +13,8 @@ export function get<T>(url: string) : Promise<T> {
         cache: "no-cache",
         headers: {
             "Content-Type": "application/json; charset=UTF-8"
-        }
+        },
+        credentials: "include"
     }).then((response) => {
         return processResult(response);
     });
@@ -37,7 +38,8 @@ export function post<T>(url: string, data?:any) : Promise<T> {
         headers: {
             "Content-Type": "application/json; charset=UTF-8"
         },
-        body: body
+        body: body,
+        credentials: "include"
     }).then((response) => {
         return processResult(response);
     });
