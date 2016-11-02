@@ -10,9 +10,9 @@ export class ExternalPromise<T> {
     private _promise : Promise<T>;
 
     constructor(){
-        this._promise = new Promise<T>(function (resolve, reject) {
-            this.resolve = resolve;
-            this.reject = reject;
+        this._promise = new Promise<T>((resolve, reject) => {
+            this.resolveCb = resolve;
+            this.rejectCb = reject;
         });
     }
 
