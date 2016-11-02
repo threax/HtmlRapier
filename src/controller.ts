@@ -77,7 +77,7 @@ export class ControllerBuilder<ControllerType, ContextType, DataType> {
     create(name: string, parentBindings?:BindingCollection):ControllerType[]{
         var createdControllers:ControllerType[] = [];
 
-        function foundElement(element) {
+        var foundElement = (element) => {
             if (!ignoredNodes.isIgnored(element)) {
                 var bindings = new BindingCollection(element);
                 var controller = new this.controllerConstructor(bindings, this.context, null);

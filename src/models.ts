@@ -144,9 +144,9 @@ export function NullModel() {
 }
 
 export interface Model<T>{
-    setData(data: T);
+    setData(data: T, createdCallback?, variantFinderCallback?);
 
-    appendData(data: T);
+    appendData(data: T, createdCallback?, variantFinderCallback?);
 
     clear();
 
