@@ -2,6 +2,13 @@
 
 import * as typeId from 'hr.typeidentifiers';
 
+/**
+ * An interface for toggles.
+ */
+export interface Toggle {
+    applyState(value);
+}
+
 var defaultStates = ['on', 'off']; //Reusuable states, so we don't end up creating tons of these arrays
 var togglePlugins = [];
 
@@ -118,21 +125,20 @@ function ClassToggle(element, next) {
 /**
  * The Group defines a collection of toggles that can be manipulated together.
  */
-export function Group(...toggles: any[]) {
-    //var toggles = [];
+export class Group {
+    private toggles: Toggle[];
 
-    //for (var i = 0; i < arguments.length; ++i) {
-    //    toggles.push(arguments[i]);
-    //}
+    constructor(...toggles: Toggle[]){
+        this.toggles = toggles;
+    }
 
     /**
      * Add a toggle to the group.
      * @param toggle - The toggle to add.
      */
-    function add(toggle) {
-        toggles.push(toggle);
+    add(toggle:Toggle) {
+        this.toggles.push(toggle);
     }
-    this.add = add;
 
     /**
      * This function will set all toggles in the group (including the passed one if its in the group) 
@@ -141,7 +147,7 @@ export function Group(...toggles: any[]) {
      * @param {string} [showState] - The state to set the passed toggle to.
      * @param {string} [hideState] - The state to set all other toggles to.
      */
-    function activate(toggle, showState, hideState) {
+    activate(toggle, showState?:string, hideState?:string) {
         if (showState === undefined) {
             showState = 'on';
         }
@@ -150,13 +156,11 @@ export function Group(...toggles: any[]) {
             hideState = 'off';
         }
 
-        for (var i = 0; i < toggles.length; ++i) {
-            safeApplyState(toggles[i], hideState);
+        for (var i = 0; i < this.toggles.length; ++i) {
+            safeApplyState(this.toggles[i], hideState);
         }
         safeApplyState(toggle, showState);
     }
-    this.activate = activate;
-    this.show = activate; //Deprecated version
 }
 
 /**
@@ -196,7 +200,7 @@ function extractStates(element, states, attrPrefix, toggleConstructor, nextToggl
  * the toggle for each one. If this is undefined will default to "on" and "off".
  * @returns A new ToggleChain with the defined states as functions
  */
-export function build(element, states) {
+export function build(element, states): Toggle {
     if (states === undefined) {
         states = defaultStates;
     }
