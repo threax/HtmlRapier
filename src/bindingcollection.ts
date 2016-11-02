@@ -11,7 +11,7 @@ function EventRunner(name, listener) {
     this.execute = function (evt) {
         var cb = listener[name];
         if (cb) {
-            cb.call(this, evt);
+            cb.call(listener, evt);
         }
     }
 }
