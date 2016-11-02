@@ -139,10 +139,10 @@ export class BindingCollection {
         return getToggle(name, this.elements, states);
     }
 
-    getModel<T>(name: string, strongTypeCreator?: { new (data: any): T; }): models.TypedModel<T> {
+    getModel<T>(name: string, strongConstructor?: models.StrongTypeConstructor<T>): models.TypedModel<T> {
         var model = getModel(name, this.elements);
-        if (strongTypeCreator !== undefined) {
-            model = new models.TypedModel<T>(model, strongTypeCreator);
+        if (strongConstructor !== undefined) {
+            model = new models.TypedModel<T>(model, strongConstructor);
         }
         return model;
     }

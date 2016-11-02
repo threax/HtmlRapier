@@ -144,15 +144,23 @@ export function NullModel() {
 }
 
 /**
+ * This interface describes a type that has a constructor that converts
+ * a raw javascript object to a typed version of that object.
+ */
+export interface StrongTypeConstructor<T>{
+    new(data:T|any);
+}
+
+/**
  * This class is a model that enforces its type.
  */
 export class TypedModel<T>{
     private childModel;
-    private strongTypeCreator;
+    private strongConstructor;
 
-    constructor(childModel: any, strongTypeCreator: { new (data:any): T; }) {
+    constructor(childModel: any, strongConstructor: StrongTypeConstructor<T>) {
         this.childModel = childModel;
-        this.strongTypeCreator = strongTypeCreator;
+        this.strongConstructor = strongConstructor;
     }
 
     setData(data: T) {
@@ -168,7 +176,7 @@ export class TypedModel<T>{
     }
 
     getData(): T {
-        return new this.strongTypeCreator(this.childModel.getData());
+        return new this.strongConstructor(this.childModel.getData());
     }
 
     getSrc(): string {
