@@ -1,4 +1,5 @@
 ﻿var compileJsnsTs = require('threax-gulp-tk/typescript.js');
+var compileJavascript = require('threax-gulp-tk/javascript.js');
 
 module.exports = function (rootDir, outDir, settings) {
     if(settings === undefined){
@@ -15,10 +16,20 @@ module.exports = function (rootDir, outDir, settings) {
         minify = settings.minify;
     }
 
+    compileJavascript({
+        libs: [
+            __dirname + "/src/polyfill.js",
+            "!**/*.intellisense.js"
+        ],
+        output: "polyfill",
+        dest: outDir,
+        sourceRoot: __dirname + "/src/",
+        concat: concat,
+        minify: minify
+    });
 
     return compileJsnsTs({
         libs: [
-            __dirname + "/src/polyfill.js",
             __dirname + "/src/**/*.ts",
             "!**/*.intellisense.js"
         ],
