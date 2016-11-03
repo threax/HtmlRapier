@@ -18,7 +18,7 @@
     "gulp-util": "~3.0.7",
     "gulp-plumber": "~1.1.0",
     "gulp-inject-string": "~1.1.0",
-    "threax-gulp-tk": "^1.2.2",
+    "threax-gulp-tk": "^2.0.0",
     "concat-with-sourcemaps": "^1.0.4",
     "jsns": "^1.2.4"
   }
