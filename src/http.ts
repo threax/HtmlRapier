@@ -1,5 +1,17 @@
 ﻿"use strict";
 
+import {Fetcher} from 'hr.fetcher';
+import {WindowFetch} from 'hr.windowfetch';
+
+var fetcher:Fetcher = new WindowFetch();
+
+/**
+ * Set a new fetcher for all http requests to use. By default it is a WindowFetch.
+ */
+export function setFetcher(value:Fetcher){
+    fetcher = value;
+}
+
 /**
  * A simple function to get data from a url without caching. This still
  * uses fetch, but is available since this is a a pretty common operation.
@@ -8,7 +20,7 @@
  * @returns
  */
 export function get<T>(url: string) : Promise<T> {
-    return fetch(url, {
+    return fetcher.fetch(url, {
         method: "GET",
         cache: "no-cache",
         headers: {
@@ -32,7 +44,7 @@ export function post<T>(url: string, data?:any) : Promise<T> {
         body = JSON.stringify(data);
     }
 
-    return fetch(url, {
+    return fetcher.fetch(url, {
         method: "POST",
         cache: "no-cache",
         headers: {
