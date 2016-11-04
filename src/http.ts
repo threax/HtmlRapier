@@ -3,14 +3,7 @@
 import {Fetcher} from 'hr.fetcher';
 import {WindowFetch} from 'hr.windowfetch';
 
-var fetcher:Fetcher = new WindowFetch();
-
-/**
- * Set a new fetcher for all http requests to use. By default it is a WindowFetch.
- */
-export function setFetcher(value:Fetcher){
-    fetcher = value;
-}
+var defaultFetcher:Fetcher = new WindowFetch();
 
 /**
  * A simple function to get data from a url without caching. This still
@@ -19,7 +12,11 @@ export function setFetcher(value:Fetcher){
  * @param {string} url - The url to get from
  * @returns
  */
-export function get<T>(url: string) : Promise<T> {
+export function get<T>(url: string, fetcher?:Fetcher) : Promise<T> {
+    if(fetcher === undefined){
+        fetcher = defaultFetcher;
+    }
+
     return fetcher.fetch(url, {
         method: "GET",
         cache: "no-cache",
@@ -37,7 +34,11 @@ export function get<T>(url: string) : Promise<T> {
  * simplifies its usage. If you need something more advanced use
  * fetch directly.
  */
-export function post<T>(url: string, data?:any) : Promise<T> {
+export function post<T>(url: string, data?:any, fetcher?:Fetcher) : Promise<T> {
+    if(fetcher === undefined){
+        fetcher = defaultFetcher;
+    }
+
     var body = undefined;
 
     if(data !== undefined){
