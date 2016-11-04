@@ -1,4 +1,4 @@
-﻿import { Fetcher } from 'clientlibs.Fetcher';
+﻿import { Fetcher } from 'hr.Fetcher';
 
 /**
  * A fetcher that removes caching.

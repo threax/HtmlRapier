@@ -1,4 +1,4 @@
-﻿import { Fetcher } from 'clientlibs.Fetcher';
+﻿import { Fetcher } from 'hr.Fetcher';
 
 /**
  * A fetcher implementation that calls the global window fetch function.
