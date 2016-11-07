@@ -143,14 +143,35 @@ export function NullModel() {
     }
 }
 
+/**
+ * The basic interface for model instances.
+ */
 export interface Model<T>{
+    /**
+     * Set the data on the model. The model will not modify the data passed in again,
+     * you must call getData to get it back out.
+     */
     setData(data: T, createdCallback?, variantFinderCallback?);
 
+    /**
+     * Add more data to the model, does not erase existing data.
+     */
     appendData(data: T, createdCallback?, variantFinderCallback?);
 
+    /**
+     * Clear all data from the model.
+     */
     clear();
 
+    /**
+     * Get the current data from the model.
+     */
     getData(): T;
+
+    /**
+     * Get the data source for the model.
+     */
+    getSrc(): string;
 }
 
 /**
