@@ -22,7 +22,7 @@ export interface ControllerConstructor<ContextType, DataType>{
  * @param {type} name
  * @param {type} controllerConstructor
  */
-export function create<ControllerType, ContextType, DataType>(name:string, controllerConstructor:ControllerConstructor<ContextType, DataType>, context: ContextType, parentBindings?:BindingCollection): ControllerType[] {
+export function create<ControllerType, ContextType, DataType>(name:string, controllerConstructor:ControllerConstructor<ContextType, DataType>, context?: ContextType, parentBindings?:BindingCollection): ControllerType[] {
     var builder = new ControllerBuilder<ControllerType, ContextType, DataType>(controllerConstructor);
     builder.context = context;
     return builder.create(name, parentBindings);
