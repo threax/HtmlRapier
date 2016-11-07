@@ -53,14 +53,14 @@ function getDefaultVariant() {
  * @param {exports.createComponent~callback} createdCallback - The callback called when the component is created.
  * @returns {exports.component.BindingCollection} 
  */
-export function single(name, parentComponent, data, createdCallback, variant) {
-    if (variant === undefined) {
-        variant = getDefaultVariant();
+export function single(name, parentComponent, data, createdCallback, variantFinder?) {
+    if (variantFinder === undefined) {
+        variantFinder = getDefaultVariant();
     }
-    else if (typeId.isFunction(variant)) {
-        variant = variant(data);
+    else if (typeId.isFunction(variantFinder)) {
+        variantFinder = variantFinder(data);
     }
-    return doCreateComponent(name, data, parentComponent, null, variant, createdCallback);
+    return doCreateComponent(name, data, parentComponent, null, variantFinder, createdCallback);
 }
 
 /**
@@ -71,9 +71,9 @@ export function single(name, parentComponent, data, createdCallback, variant) {
  * If it is a function return the data and then return null to stop iteration.
  * @param {exports.createComponent~callback} createdCallback
  */
-export function repeat(name, parentComponent, data, createdCallback, variantFinderCallback) {
-    if (variantFinderCallback === undefined) {
-        variantFinderCallback = getDefaultVariant;
+export function repeat(name, parentComponent, data, createdCallback, variantFinder?) {
+    if (variantFinder === undefined) {
+        variantFinder = getDefaultVariant;
     }
     //Look for an insertion point
     var insertBefore = null;
@@ -89,14 +89,14 @@ export function repeat(name, parentComponent, data, createdCallback, variantFind
     if (typeId.isArray(data)) {
         //An array, read it as fast as possible
         for (var i = 0; i < data.length; ++i) {
-            variant = variantFinderCallback(data[i]);
+            variant = variantFinder(data[i]);
             doCreateComponent(name, data[i], fragmentParent, null, variant, createdCallback);
         }
     }
     else if (typeId.isForEachable(data)) {
         //Data supports a 'foreach' method, use this to iterate it
         data.forEach(function (item) {
-            variant = variantFinderCallback(item);
+            variant = variantFinder(item);
             doCreateComponent(name, item, fragmentParent, null, variant, createdCallback);
         })
     }
