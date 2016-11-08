@@ -119,6 +119,11 @@ function iterateControllers(name, elements, cb) {
     }
 }
 
+/**
+ * The BindingCollection class allows you to get access to the HtmlElements defined on your
+ * page with objects that help manipulate them. You won't get the elements directly and you
+ * should not need to, using the interfaces should be enough.
+ */
 export class BindingCollection {
     private elements;
 
@@ -135,10 +140,18 @@ export class BindingCollection {
         bindEvents(this.elements, listener);
     }
 
-    getToggle(name:string, states?:any) {
+    /**
+     * Get a named toggle. Can also provide custom states, otherwise these will default to on and off.
+     */
+    getToggle(name:string, states?:any) : toggles.Toggle {
         return getToggle(name, this.elements, states);
     }
 
+    /**
+     * Get a named model. Can also provide a StrongTypeConstructor that will be called with new to create
+     * the instance of the data pulled from the model. If you don't provide this the objects will be plain
+     * javascript objects.
+     */
     getModel<T>(name: string, strongConstructor?: models.StrongTypeConstructor<T>): models.Model<T> {
         var model = getModel<T>(name, this.elements);
         if (strongConstructor !== undefined) {
@@ -147,14 +160,24 @@ export class BindingCollection {
         return model;
     }
 
-    getConfig() {
-        return getConfig(this.elements);
+    /**
+     * Get the config for this binding collection.
+     */
+    getConfig<T>(): T {
+        return <T>getConfig(this.elements);
     }
 
+    /**
+     * Get a handle element. These are direct references to html elements for passing to third party libraries
+     * that need them. Don't use these directly if you can help it.
+     */
     getHandle(name:string) {
         return getHandle(name, this.elements);
     }
 
+    /**
+     * Iterate over all the controllers in the BindingCollection.
+     */
     iterateControllers(name:string, cb) {
         iterateControllers(name, this.elements, cb);
     }
