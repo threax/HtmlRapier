@@ -43,8 +43,10 @@ export function serialize(form) {
                     case 'button':
                     case 'reset':
                     case 'submit':
-                    case 'file':
                         addValue(q, form.elements[i].name, form.elements[i].value);
+                        break;
+                    case 'file':
+                        addValue(q, form.elements[i].name, form.elements[i].files);
                         break;
                     case 'checkbox':
                     case 'radio':
