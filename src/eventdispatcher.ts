@@ -102,31 +102,3 @@ export class PromiseEventDispatcher<TRet, TArg> extends EventDispatcher<FuncEven
             });
     }
 }
-
-/**
- * This class will queue up the events that fire through it until
- * a listener is added, at that point it will function as a normal
- * event dispatcher. Only the first bound event gets the queued events.
- * This class wraps around another event dispatcher instance that does the
- * actual work.
- */
-export class LateBoundEventDispatcherBase<TListener> extends EventDispatcher<TListener>{
-    private childListener:EventDispatcher<TListener>;
-
-    constructor(childListener:EventDispatcher<TListener>){
-        super();
-        this.childListener = childListener;
-    }
-
-    add(listener: TListener) {
-        this.childListener.add(listener);
-    }
-
-    remove(listener: TListener) {
-        this.childListener.remove(listener);
-    }
-
-    fire(...args:any[]){
-        return (<any>this.childListener).fire.apply(this.childListener, args);
-    }
-}
