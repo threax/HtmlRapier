@@ -10,7 +10,7 @@ export function getSessionObject<T>(name, defaultValue?:T):T {
     var str = sessionStorage.getItem(name);
     var recovered: T;
     if (str !== null) {
-        str = JSON.parse(str);
+        recovered = JSON.parse(str);
     }
     else {
         recovered = defaultValue;

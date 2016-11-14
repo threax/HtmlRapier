@@ -1,4 +1,5 @@
 import * as EventDispatcher from 'hr.eventdispatcher';
+import * as Iterable from 'hr.iterable';
 
 export class ObservableList<T>{
     private items:T[] = [];
@@ -28,5 +29,13 @@ export class ObservableList<T>{
 
     getItem(index:number){
         return this.items[index];
+    }
+
+    get count(){
+        return this.items.length;
+    }
+
+    get iter(): Iterable.IterableInterface<T>{
+        return new Iterable.Iterable(this.items);
     }
 }

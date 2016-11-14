@@ -2,6 +2,20 @@
 
 import * as typeId from 'hr.typeidentifiers';
 
+export interface IteratorInterface<T>{
+    next(): IterateResult<T>;
+}
+
+export interface IterableInterface<T>{
+    select(s):IterableInterface<T>;
+
+    where(w):IterableInterface<T>;
+
+    forEach(cb:(i:T)=>void);
+
+    iterator():IteratorInterface<T>;
+}
+
 function Query() {
     var chain = [];
 
@@ -22,7 +36,7 @@ function Query() {
 
 var defaultQuery = new Query(); //Empty query to use as default
 
-class IterateResult {
+class IterateResult<T> {
     constructor(done: boolean, value?: any) {
         this.done = done;
         this.value = value;
@@ -32,29 +46,29 @@ class IterateResult {
     value: any;
 }
 
-function _iterate(items, query) {
+function _iterate<T>(items, query) {
     var i;
     if (typeId.isArray(items)) {
         i = 0;
         return {
-            next: function (): IterateResult {
+            next: function (): IterateResult<T> {
                 var result = undefined;
                 while (result === undefined && i < items.length) {
                     var item = items[i++];
                     result = query.derive(item);
                 }
                 if (result === undefined) {
-                    return new IterateResult(true);
+                    return new IterateResult<T>(true);
                 }
                 else {
-                    return new IterateResult(false, result);
+                    return new IterateResult<T>(false, result);
                 }
             }
         };
     }
     else if (typeId.isFunction(items)) {
         return {
-            next: function (): IterateResult {
+            next: function (): IterateResult<T> {
                 var result = undefined;
                 while (result === undefined) {
                     var item = items();
@@ -66,10 +80,10 @@ function _iterate(items, query) {
                     }
                 }
                 if (result === undefined) {
-                    return new IterateResult(true);
+                    return new IterateResult<T>(true);
                 }
                 else {
-                    return new IterateResult(false, result);
+                    return new IterateResult<T>(false, result);
                 }
             }
         };
