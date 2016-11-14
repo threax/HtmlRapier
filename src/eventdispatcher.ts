@@ -50,7 +50,7 @@ export class ActionEventDispatcher<T> extends EventDispatcher<ActionEventListene
 /**
  * This is class is for events that return a value.
  */
-class FuncEventDispatcher<TRet, TArg> extends EventDispatcher<FuncEventListener<TRet, TArg>>{
+export class FuncEventDispatcher<TRet, TArg> extends EventDispatcher<FuncEventListener<TRet, TArg>>{
     fire(arg:TArg){
         var result : TRet[] = undefined;
         var nextResult : TRet;
@@ -110,7 +110,7 @@ export class PromiseEventDispatcher<TRet, TArg> extends EventDispatcher<FuncEven
  * This class wraps around another event dispatcher instance that does the
  * actual work.
  */
-class LateBoundEventDispatcherBase<TListener> extends EventDispatcher<TListener>{
+export class LateBoundEventDispatcherBase<TListener> extends EventDispatcher<TListener>{
     private childListener:EventDispatcher<TListener>;
 
     constructor(childListener:EventDispatcher<TListener>){
