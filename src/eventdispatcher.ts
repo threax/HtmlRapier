@@ -1,12 +1,22 @@
 "use strict";
 
+type ActionEventListener<T> = (arg:T) => void;
+type FuncEventListener<TRet, TArg> = (arg:TArg) => TRet;
+
+/**
+ * A view of EventDispatcher that only allows add and remove.
+ */
+interface EventModifier<T>{
+    add(listener: T): void;
+    remove(listener: T): void;
+}
+
 /**
  * This class provides a reusable way to fire events to multiple listeners.
  * This base class provides a view of the object that does not include a fire
- * function. This makes it easier to make an event accessible to listeners without
- * having to worry about them firing it.
+ * function.
  */
-export class EventModifier<TListener> {
+export class EventDispatcher<TListener> {
     protected listeners: TListener[] = <any>[];
 
     add(listener: TListener) {
@@ -20,102 +30,33 @@ export class EventModifier<TListener> {
             }
         }
     }
+
+    get modifier(): EventModifier<TListener>{
+        return this;
+    }
 }
 
 /**
- * This is the base class for a simple event dispatcher that does not handle event listeners returning values.
+ * This event dispatcher does not handle event listeners returning values.
  */
-class EventDispatcherBase<TListener> extends EventModifier<TListener>{
-    protected doFire(...args:any[]){
+export class ActionEventDispatcher<T> extends EventDispatcher<ActionEventListener<T>>{
+    fire(arg:T){
         for (var i = 0; i < this.listeners.length; ++i) {
-            var listener = <any>this.listeners[i];
-            listener.apply(this, args);
+            this.listeners[i](arg);
         }
     }
 }
 
 /**
- * An event dispatcher that takes no args for its fire event.
+ * This is class is for events that return a value.
  */
-export class EventDispatcher extends EventDispatcherBase<Action>{
-    /**
-     * Fire the event.
-     */
-    fire(): void {
-        this.doFire();
-    }
-}
-
-/**
- * An event dispatcher that takes 1 arg for its fire event.
- */
-export class EventDispatcher1<T1> extends EventDispatcherBase<Action1<T1>>{
-    /**
-     * Fire the event.
-     */
-    fire(arg1: T1): void {
-        this.doFire(arg1);
-    }
-}
-
-/**
- * An event dispatcher that takes 2 args for its fire event.
- */
-export class EventDispatcher2<T1, T2> extends EventDispatcherBase<Action2<T1, T2>>{
-    /**
-     * Fire the event.
-     */
-    fire(arg1: T1, arg2: T2): void {
-        this.doFire(arg1, arg2);
-    }
-}
-
-/**
- * An event dispatcher that takes 3 args for its fire event.
- */
-export class EventDispatcher3<T1, T2, T3> extends EventDispatcherBase<Action3<T1, T2, T3>>{
-    /**
-     * Fire the event.
-     */
-    fire(arg1: T1, arg2: T2, arg3: T3): void {
-        this.doFire(arg1, arg2, arg3);
-    }
-}
-
-/**
- * An event dispatcher that takes 4 args for its fire event.
- */
-export class EventDispatcher4<T1, T2, T3, T4> extends EventDispatcherBase<Action4<T1, T2, T3, T4>>{
-    /**
-     * Fire the event.
-     */
-    fire(arg1: T1, arg2: T2, arg3: T3, arg4: T4): void {
-        this.doFire(arg1, arg2, arg3, arg4);
-    }
-}
-
-/**
- * An event dispatcher that takes 5 args for its fire event.
- */
-export class EventDispatcher5<T1, T2, T3, T4, T5> extends EventDispatcherBase<Action5<T1, T2, T3, T4, T5>>{
-    /**
-     * Fire the event.
-     */
-    fire(arg1: T1, arg2: T2, arg3: T3, arg4: T4, arg5: T5): void {
-        this.doFire(arg1, arg2, arg3, arg4, arg5);
-    }
-}
-
-/**
- * This is the base class for events that return a value.
- */
-class ReturningEventDispatcherBase<TResult, TListener> extends EventModifier<TListener>{
-    protected doFire(...args:any[]){
-        var result : TResult[] = undefined;
-        var nextResult : TResult;
+class FuncEventDispatcher<TRet, TArg> extends EventDispatcher<FuncEventListener<TRet, TArg>>{
+    fire(arg:TArg){
+        var result : TRet[] = undefined;
+        var nextResult : TRet;
         for (var i = 0; i < this.listeners.length; ++i) {
-            var listener = <any>this.listeners[i];
-            nextResult = listener.apply(this, args);
+            var listener = this.listeners[i];
+            nextResult = listener(arg);
             if (nextResult !== undefined) {
                 if (result === undefined) {
                     result = [];
@@ -128,90 +69,22 @@ class ReturningEventDispatcherBase<TResult, TListener> extends EventModifier<TLi
 }
 
 /**
- * An event dispatcher that takes no args for its fire event and returns a value from those events.
+ * This event dispatcher will return a promise that will resolve when all events
+ * are finished running. Allows async work to stay in the event flow.
  */
-export class ReturningEventDispatcher<TResult> extends ReturningEventDispatcherBase<TResult, Func<TResult>>{
-    /**
-     * Fire the event.
-     */
-    fire(): TResult[]|undefined {
-        return this.doFire();
-    }
-}
-
-/**
- * An event dispatcher that takes 1 arg for its fire event and returns a value from those events.
- */
-export class ReturningEventDispatcher1<TResult, T1> extends ReturningEventDispatcherBase<TResult, Func1<TResult, T1>>{
-    /**
-     * Fire the event.
-     */
-    fire(arg1: T1): TResult[]|undefined {
-        return this.doFire(arg1);
-    }
-}
-
-/**
- * An event dispatcher that takes 2 args for its fire event and returns a value from those events.
- */
-export class ReturningEventDispatcher2<TResult, T1, T2> extends ReturningEventDispatcherBase<TResult, Func2<TResult, T1, T2>>{
-    /**
-     * Fire the event.
-     */
-    fire(arg1: T1, arg2: T2): TResult[]|undefined {
-        return this.doFire(arg1, arg2);
-    }
-}
-
-/**
- * An event dispatcher that takes 3 args for its fire event and returns a value from those events.
- */
-export class ReturningEventDispatcher3<TResult, T1, T2, T3> extends ReturningEventDispatcherBase<TResult, Func3<TResult, T1, T2, T3>>{
-    /**
-     * Fire the event.
-     */
-    fire(arg1: T1, arg2: T2, arg3: T3): TResult[]|undefined {
-        return this.doFire(arg1, arg2, arg3);
-    }
-}
-
-/**
- * An event dispatcher that takes 4 args for its fire event and returns a value from those events.
- */
-export class ReturningEventDispatcher4<TResult, T1, T2, T3, T4> extends ReturningEventDispatcherBase<TResult, Func4<TResult, T1, T2, T3, T4>>{
-    /**
-     * Fire the event.
-     */
-    fire(arg1: T1, arg2: T2, arg3: T3, arg4: T4): TResult[]|undefined {
-        return this.doFire(arg1, arg2, arg3, arg4);
-    }
-}
-
-/**
- * An event dispatcher that takes 5 args for its fire event and returns a value from those events.
- */
-export class ReturningEventDispatcher5<TResult, T1, T2, T3, T4, T5> extends ReturningEventDispatcherBase<TResult, Func5<TResult, T1, T2, T3, T4, T5>>{
-    /**
-     * Fire the event.
-     */
-    fire(arg1: T1, arg2: T2, arg3: T3, arg4: T4, arg5: T5): TResult[]|undefined {
-        return this.doFire(arg1, arg2, arg3, arg4, arg5);
-    }
-}
-
-export class PromiseEventDispatcherBase<TResult, TListener> extends EventModifier<TListener>{
+export class PromiseEventDispatcher<TRet, TArg> extends EventDispatcher<FuncEventListener<Promise<TRet>, TArg>>{
 /**
      * Fire the event. The listeners can return values, if they do the values will be added
      * to an array that is returned by the promise returned by this function.
      * @returns {Promise} a promise that will resolve when all fired events resolve.
      */
-    protected doFire(...args:any[]): Promise<TResult[]> {
-        var result: TResult[];
+    fire(arg:TArg): Promise<TRet[]> {
+        var result: TRet[];
         var promises:Promise<void>[] = [];
         for (var i = 0; i < this.listeners.length; ++i) {
-            var listener = <any>this.listeners[i];
-            promises.push(new Promise<TResult>(function (resovle, reject) {
-                resovle(listener.apply(this, args));
+            var listener = this.listeners[i];
+            promises.push(new Promise<TRet>(function (resovle, reject) {
+                resovle(listener(arg));
             })
             .then(function (data) {
                 if (data !== undefined) {
@@ -231,93 +104,16 @@ export class PromiseEventDispatcherBase<TResult, TListener> extends EventModifie
 }
 
 /**
- * An event dispatcher that takes no args for its fire event and returns a value from those events.
- */
-export class PromiseEventDispatcher<TResult> extends PromiseEventDispatcherBase<TResult, Func<Promise<TResult[]>>>{
-    /**
-     * Fire the event.
-     */
-    fire(): Promise<TResult[]> {
-        return this.doFire();
-    }
-}
-
-/**
- * An event dispatcher that takes 1 arg for its fire event and returns a 
- * promise to get values from the result of those events.
- */
-export class PromiseEventDispatcher1<TResult, T1> extends PromiseEventDispatcherBase<TResult, Func1<Promise<TResult[]>, T1>>{
-    /**
-     * Fire the event.
-     */
-    fire(arg1: T1): Promise<TResult[]> {
-        return this.doFire(arg1);
-    }
-}
-
-/**
- * An event dispatcher that takes 2 args for its fire event and returns a 
- * promise to get values from the result of those events.
- */
-export class PromiseEventDispatcher2<TResult, T1, T2> extends PromiseEventDispatcherBase<TResult, Func2<Promise<TResult[]>, T1, T2>>{
-    /**
-     * Fire the event.
-     */
-    fire(arg1: T1, arg2: T2): Promise<TResult[]> {
-        return this.doFire(arg1, arg2);
-    }
-}
-
-/**
- * An event dispatcher that takes 3 args for its fire event and returns a 
- * promise to get values from the result of those events.
- */
-export class PromiseEventDispatcher3<TResult, T1, T2, T3> extends PromiseEventDispatcherBase<TResult, Func3<Promise<TResult[]>, T1, T2, T3>>{
-    /**
-     * Fire the event.
-     */
-    fire(arg1: T1, arg2: T2, arg3: T3): Promise<TResult[]> {
-        return this.doFire(arg1, arg2, arg3);
-    }
-}
-
-/**
- * An event dispatcher that takes 4 args for its fire event and returns a 
- * promise to get values from the result of those events.
- */
-export class PromiseEventDispatcher4<TResult, T1, T2, T3, T4> extends PromiseEventDispatcherBase<TResult, Func4<Promise<TResult[]>, T1, T2, T3, T4>>{
-    /**
-     * Fire the event.
-     */
-    fire(arg1: T1, arg2: T2, arg3: T3, arg4: T4): Promise<TResult[]> {
-        return this.doFire(arg1, arg2, arg3, arg4);
-    }
-}
-
-/**
- * An event dispatcher that takes 5 args for its fire event and returns a 
- * promise to get values from the result of those events.
- */
-export class PromiseEventDispatcher5<TResult, T1, T2, T3, T4, T5> extends PromiseEventDispatcherBase<TResult, Func5<Promise<TResult[]>, T1, T2, T3, T4, T5>>{
-    /**
-     * Fire the event.
-     */
-    fire(arg1: T1, arg2: T2, arg3: T3, arg4: T4, arg5: T5): Promise<TResult[]> {
-        return this.doFire(arg1, arg2, arg3, arg4, arg5);
-    }
-}
-
-/**
  * This class will queue up the events that fire through it until
  * a listener is added, at that point it will function as a normal
  * event dispatcher. Only the first bound event gets the queued events.
  * This class wraps around another event dispatcher instance that does the
  * actual work.
  */
-class LateBoundEventDispatcherBase<TListener> extends EventModifier<TListener>{
-    private childListener:EventModifier<TListener>;
+class LateBoundEventDispatcherBase<TListener> extends EventDispatcher<TListener>{
+    private childListener:EventDispatcher<TListener>;
 
-    constructor(childListener:EventModifier<TListener>){
+    constructor(childListener:EventDispatcher<TListener>){
         super();
         this.childListener = childListener;
     }
@@ -330,109 +126,7 @@ class LateBoundEventDispatcherBase<TListener> extends EventModifier<TListener>{
         this.childListener.remove(listener);
     }
 
-    protected doFire(...args:any[]){
+    fire(...args:any[]){
         return (<any>this.childListener).fire.apply(this.childListener, args);
-    }
-}
-
-/**
- * This class will queue up the events that fire through it until
- * a listener is added, at that point it will function as a normal
- * event dispatcher. Only the first bound event gets the queued events.
- * This class wraps around another event dispatcher instance that does the
- * actual work.
- */
-class LateBoundEventDispatcher extends LateBoundEventDispatcherBase<Action>{
-    constructor(childListener:EventModifier<Action>){
-        super(childListener);
-    }
-
-    fire(){
-        return this.doFire();
-    }
-}
-
-/**
- * This class will queue up the events that fire through it until
- * a listener is added, at that point it will function as a normal
- * event dispatcher. Only the first bound event gets the queued events.
- * This class wraps around another event dispatcher instance that does the
- * actual work.
- */
-class LateBoundEventDispatcher1<T1> extends LateBoundEventDispatcherBase<Action1<T1>>{
-    constructor(childListener:EventModifier<Action1<T1>>){
-        super(childListener);
-    }
-
-    fire(arg1: T1){
-        return this.doFire(arg1);
-    }
-}
-
-/**
- * This class will queue up the events that fire through it until
- * a listener is added, at that point it will function as a normal
- * event dispatcher. Only the first bound event gets the queued events.
- * This class wraps around another event dispatcher instance that does the
- * actual work.
- */
-class LateBoundEventDispatcher2<T1, T2> extends LateBoundEventDispatcherBase<Action2<T1, T2>>{
-    constructor(childListener:EventModifier<Action2<T1, T2>>){
-        super(childListener);
-    }
-
-    fire(arg1: T1, arg2: T2){
-        return this.doFire(arg1, arg2);
-    }
-}
-
-/**
- * This class will queue up the events that fire through it until
- * a listener is added, at that point it will function as a normal
- * event dispatcher. Only the first bound event gets the queued events.
- * This class wraps around another event dispatcher instance that does the
- * actual work.
- */
-class LateBoundEventDispatcher3<T1, T2, T3> extends LateBoundEventDispatcherBase<Action3<T1, T2, T3>>{
-    constructor(childListener:EventModifier<Action3<T1, T2, T3>>){
-        super(childListener);
-    }
-
-    fire(arg1: T1, arg2: T2, arg3: T3){
-        return this.doFire(arg1, arg2, arg3);
-    }
-}
-
-/**
- * This class will queue up the events that fire through it until
- * a listener is added, at that point it will function as a normal
- * event dispatcher. Only the first bound event gets the queued events.
- * This class wraps around another event dispatcher instance that does the
- * actual work.
- */
-class LateBoundEventDispatcher4<T1, T2, T3, T4> extends LateBoundEventDispatcherBase<Action4<T1, T2, T3, T4>>{
-    constructor(childListener:EventModifier<Action4<T1, T2, T3, T4>>){
-        super(childListener);
-    }
-
-    fire(arg1: T1, arg2: T2, arg3: T3, arg4: T4){
-        return this.doFire(arg1, arg2, arg3, arg4);
-    }
-}
-
-/**
- * This class will queue up the events that fire through it until
- * a listener is added, at that point it will function as a normal
- * event dispatcher. Only the first bound event gets the queued events.
- * This class wraps around another event dispatcher instance that does the
- * actual work.
- */
-class LateBoundEventDispatcher5<T1, T2, T3, T4, T5> extends LateBoundEventDispatcherBase<Action5<T1, T2, T3, T4, T5>>{
-    constructor(childListener:EventModifier<Action5<T1, T2, T3, T4, T5>>){
-        super(childListener);
-    }
-
-    fire(arg1: T1, arg2: T2, arg3: T3, arg4: T4, arg5: T5){
-        return this.doFire(arg1, arg2, arg3, arg4, arg5);
     }
 }
