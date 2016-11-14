@@ -1,22 +1,16 @@
 ﻿"use strict";
 
-//The instance storage, 
-var instanceStorage = {};
-
 /**
-* @description Get the sesssion data, can specify a default value.
-* @param {string} name The name of the data to recover
-* @param {object} defaultValue, if not supplied is null
-* @return {object} The recovered object
-*/
-export function getSessionJson(name, defaultValue) {
-    if (defaultValue === undefined) {
-        defaultValue = null;
-    }
-
-    var recovered = sessionStorage.getItem(name);
-    if (recovered !== null) {
-        recovered = JSON.parse(recovered);
+ * Get an object from session storage.
+ * @param name The name of the object to recover.
+ * @param {T} defaultValue? - A default value if the object is not found. Will be undefined if nothing is passed in.
+ * @returns
+ */
+export function getSessionObject<T>(name, defaultValue?:T):T {
+    var str = sessionStorage.getItem(name);
+    var recovered: T;
+    if (str !== null) {
+        str = JSON.parse(str);
     }
     else {
         recovered = defaultValue;
@@ -25,10 +19,10 @@ export function getSessionJson(name, defaultValue) {
 }
 
 /**
-* @description Get the sesssion data, can specify a default value.
-* @param {string} name The name of the data to store
-* @param {object} value, if not supplied is null
-*/
-export function storeJsonInSession(name, value) {
+ * Store an object in session storage.
+ * @param name - The name of the object to store.
+ * @param {T} value - The value to store.
+ */
+export function storeObjectInSession<T>(name, value:T) {
     sessionStorage.setItem(name, JSON.stringify(value));
 }
