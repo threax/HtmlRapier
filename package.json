@@ -1,7 +1,8 @@
 {
   "name": "htmlrapier",
-  "version": "2.5.0",
+  "version": "2.5.1",
   "private": false,
+  "types": "./types/fetch.d.ts",
   "dependencies": {
     "@types/es6-promise": "0.0.32"
   },
