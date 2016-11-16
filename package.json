@@ -1,6 +1,6 @@
 {
   "name": "htmlrapier",
-  "version": "2.5.1",
+  "version": "2.5.3",
   "private": false,
   "types": "./types/fetch.d.ts",
   "dependencies": {
