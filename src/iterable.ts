@@ -7,7 +7,7 @@ export interface IteratorInterface<T>{
 }
 
 export interface IterableInterface<T>{
-    select(s):IterableInterface<T>;
+    select<NewType>(s): IterableInterface<NewType>;
 
     where(w):IterableInterface<T>;
 
