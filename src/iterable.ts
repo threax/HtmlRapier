@@ -101,6 +101,14 @@ function _forEach(items, query, cb) {
             }
         }
     }
+    else if (typeId.isFunction(items)) {
+        var item = items();
+        while (item !== undefined) {
+            item = query.derive(item);
+            cb(item);
+            item = items();
+        }
+    }
 }
 
 function _build(prevBuild, get, query, cb) {
