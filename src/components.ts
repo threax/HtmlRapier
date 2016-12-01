@@ -36,31 +36,40 @@ export function register(name, createFunc) {
     factory[name] = createFunc;
 }
 
+export interface VariantFinderCallback<T> {
+    (item: T) : string
+}
+
+export interface CreatedCallback<T> {
+    (created: any, item: T): void
+}
+
 /**
  * Get the default vaule if variant is undefined.
  * @returns variant default value (null)
  */
-function getDefaultVariant() {
+function getDefaultVariant(item:any) {
     return null;
 }
 
 /**
- * Create a new component specified by name with the data in data attached to parentComponent. You can also
- * get a callback whenever a component is created by passing a createdCallback.
- * @param {string} name - The name of the component to create.
- * @param {object} data - The data to bind to the component.
- * @param {HTMLElement} parentComponent - The html element to attach the component to.
- * @param {exports.createComponent~callback} createdCallback - The callback called when the component is created.
- * @returns {exports.component.BindingCollection} 
+ * Create a single component.
+ * @param name
+ * @param parentComponent
+ * @param {T} data
+ * @param {CreatedCallback<T>} createdCallback?
+ * @param {VariantFinderCallback<T>} variantFinder?
+ * @returns
  */
-export function single(name, parentComponent, data, createdCallback, variantFinder?) {
+export function single<T>(name: string, parentComponent, data: T, createdCallback?: CreatedCallback<T>, variantFinder?: VariantFinderCallback<T>) {
+    var variant: string;
     if (variantFinder === undefined) {
-        variantFinder = getDefaultVariant();
+        variantFinder = getDefaultVariant(data);
     }
     else if (typeId.isFunction(variantFinder)) {
-        variantFinder = variantFinder(data);
+        variant = variantFinder(data);
     }
-    return doCreateComponent(name, data, parentComponent, null, variantFinder, createdCallback);
+    return doCreateComponent(name, data, parentComponent, null, variant, createdCallback);
 }
 
 /**
@@ -71,7 +80,7 @@ export function single(name, parentComponent, data, createdCallback, variantFind
  * If it is a function return the data and then return null to stop iteration.
  * @param {exports.createComponent~callback} createdCallback
  */
-export function repeat(name, parentComponent, data, createdCallback, variantFinder?) {
+export function repeat<T>(name, parentComponent, data: T, createdCallback: CreatedCallback<T>, variantFinder?: VariantFinderCallback<T>) {
     if (variantFinder === undefined) {
         variantFinder = getDefaultVariant;
     }
@@ -88,14 +97,15 @@ export function repeat(name, parentComponent, data, createdCallback, variantFind
     //Output
     if (typeId.isArray(data)) {
         //An array, read it as fast as possible
-        for (var i = 0; i < data.length; ++i) {
-            variant = variantFinder(data[i]);
-            doCreateComponent(name, data[i], fragmentParent, null, variant, createdCallback);
+        var arrData = <any>data;
+        for (var i = 0; i < arrData.length; ++i) {
+            variant = variantFinder(arrData[i]);
+            doCreateComponent(name, arrData[i], fragmentParent, null, variant, createdCallback);
         }
     }
     else if (typeId.isForEachable(data)) {
         //Data supports a 'foreach' method, use this to iterate it
-        data.forEach(function (item) {
+        (<any>data).forEach(function (item) {
             variant = variantFinder(item);
             doCreateComponent(name, item, fragmentParent, null, variant, createdCallback);
         })
@@ -123,7 +133,7 @@ export function empty(parentComponent: HTMLElement | string) {
     }
 }
 
-function doCreateComponent(name, data, parentComponent: HTMLElement | string, insertBeforeSibling, variant, createdCallback) {
+function doCreateComponent<T>(name, data: T, parentComponent: HTMLElement | string, insertBeforeSibling, variant: string, createdCallback: CreatedCallback<T>) {
     parentComponent = domquery.first(parentComponent);
     if (factory.hasOwnProperty(name)) {
         var created = factory[name](data, parentComponent, insertBeforeSibling, variant);

@@ -5,6 +5,7 @@ import { TextStream } from 'hr.textstream';
 import * as components from 'hr.components';
 import * as typeId from 'hr.typeidentifiers';
 import * as domQuery from 'hr.domquery';
+import * as iter from 'hr.iterable';
 
 function sharedClearer(i) {
     return "";
@@ -151,12 +152,12 @@ export interface Model<T>{
      * Set the data on the model. The model will not modify the data passed in again,
      * you must call getData to get it back out.
      */
-    setData(data: T, createdCallback?, variantFinderCallback?);
+    setData(data: T | T[] | iter.IterableInterface<T>, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>);
 
     /**
      * Add more data to the model, does not erase existing data.
      */
-    appendData(data: T, createdCallback?, variantFinderCallback?);
+    appendData(data: T, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>);
 
     /**
      * Clear all data from the model.
