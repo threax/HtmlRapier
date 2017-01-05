@@ -57,10 +57,18 @@ function format(data, streamNodes) {
  * the original string with new data filled out. If the text contains
  * no variables no stream will be created.
  * @param {type} text
- * @param {type} alwaysCreate
  * @returns {type} 
  */
-export function TextStream(text) {
+export function TextStream(text: string, open?: string, close?: string) {
+    if(open === undefined){
+        open = '{';
+    }
+
+    if(close === undefined){
+        close = '}';
+    }
+
+
     var streamNodes = [];
     var foundVariable = false;
 
@@ -76,18 +84,18 @@ export function TextStream(text) {
     var skippedTextBuffer = "";
     for (var i = 0; i < text.length; ++i) {
 
-        if (text[i] == '{') {
+        if (text[i] == open) {
             //Count up opening brackets
             bracketStart = i;
             bracketCount = 1;
-            while (++i < text.length && text[i] == '{') {
+            while (++i < text.length && text[i] == open) {
                 ++bracketCount;
             }
 
             //Find closing bracket chain, ignore if mismatched or whitespace
             bracketCheck = bracketCount;
             while (++i < text.length) {
-                if ((text[i] == '}' && --bracketCheck == 0) || /\s/.test(text[i])) {
+                if ((text[i] == close && --bracketCheck == 0) || /\s/.test(text[i])) {
                     break;
                 }
             }
