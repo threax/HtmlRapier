@@ -12,18 +12,16 @@ interface EventModifier<T>{
 }
 
 /**
- * This class provides a reusable way to fire events to multiple listeners.
- * This base class provides a view of the object that does not include a fire
- * function.
+ * This event dispatcher does not handle event listeners returning values.
  */
-export class EventDispatcher<TListener> {
-    protected listeners: TListener[] = <any>[];
+export class ActionEventDispatcher<T>{
+    protected listeners: ActionEventListener<T>[] = <any>[];
 
-    add(listener: TListener) {
+    add(listener: ActionEventListener<T>) {
         this.listeners.push(listener);
     }
 
-    remove(listener: TListener) {
+    remove(listener: ActionEventListener<T>) {
         for (var i = 0; i < this.listeners.length; ++i) {
             if (this.listeners[i] === listener) {
                 this.listeners.splice(i--, 1);
@@ -31,15 +29,10 @@ export class EventDispatcher<TListener> {
         }
     }
 
-    get modifier(): EventModifier<TListener>{
+    get modifier(): EventModifier<ActionEventListener<T>>{
         return this;
     }
-}
 
-/**
- * This event dispatcher does not handle event listeners returning values.
- */
-export class ActionEventDispatcher<T> extends EventDispatcher<ActionEventListener<T>>{
     fire(arg:T){
         for (var i = 0; i < this.listeners.length; ++i) {
             this.listeners[i](arg);
@@ -50,7 +43,25 @@ export class ActionEventDispatcher<T> extends EventDispatcher<ActionEventListene
 /**
  * This is class is for events that return a value.
  */
-export class FuncEventDispatcher<TRet, TArg> extends EventDispatcher<FuncEventListener<TRet, TArg>>{
+export class FuncEventDispatcher<TRet, TArg>{
+    protected listeners: FuncEventListener<TRet, TArg>[] = <any>[];
+
+    add(listener: FuncEventListener<TRet, TArg>) {
+        this.listeners.push(listener);
+    }
+
+    remove(listener: FuncEventListener<TRet, TArg>) {
+        for (var i = 0; i < this.listeners.length; ++i) {
+            if (this.listeners[i] === listener) {
+                this.listeners.splice(i--, 1);
+            }
+        }
+    }
+
+    get modifier(): EventModifier<FuncEventListener<TRet, TArg>>{
+        return this;
+    }
+
     fire(arg:TArg){
         var result : TRet[] = undefined;
         var nextResult : TRet;
@@ -72,8 +83,26 @@ export class FuncEventDispatcher<TRet, TArg> extends EventDispatcher<FuncEventLi
  * This event dispatcher will return a promise that will resolve when all events
  * are finished running. Allows async work to stay in the event flow.
  */
-export class PromiseEventDispatcher<TRet, TArg> extends EventDispatcher<FuncEventListener<Promise<TRet>, TArg>>{
-/**
+export class PromiseEventDispatcher<TRet, TArg>{
+    protected listeners: FuncEventListener<Promise<TRet>, TArg>[] = <any>[];
+
+    add(listener: FuncEventListener<Promise<TRet>, TArg>) {
+        this.listeners.push(listener);
+    }
+
+    remove(listener: FuncEventListener<Promise<TRet>, TArg>) {
+        for (var i = 0; i < this.listeners.length; ++i) {
+            if (this.listeners[i] === listener) {
+                this.listeners.splice(i--, 1);
+            }
+        }
+    }
+
+    get modifier(): EventModifier<FuncEventListener<Promise<TRet>, TArg>>{
+        return this;
+    }
+    
+    /**
      * Fire the event. The listeners can return values, if they do the values will be added
      * to an array that is returned by the promise returned by this function.
      * @returns {Promise} a promise that will resolve when all fired events resolve.
