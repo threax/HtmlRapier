@@ -1,7 +1,7 @@
 "use strict";
 
-type ActionEventListener<T> = (arg:T) => void;
-type FuncEventListener<TRet, TArg> = (arg:TArg) => TRet;
+export type ActionEventListener<T> = (arg:T) => void;
+export type FuncEventListener<TRet, TArg> = (arg:TArg) => TRet;
 
 /**
  * A view of EventDispatcher that only allows add and remove.

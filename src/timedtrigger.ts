@@ -1,49 +1,46 @@
 ﻿"use strict";
 
-import {EventHandler} from 'hr.eventhandler';
+import {ActionEventDispatcher, ActionEventListener} from 'hr.eventdispatcher';
 
-export function TimedTrigger(delay) {
-    if (delay === undefined) {
-        delay = 400;
+export class TimedTrigger<TArg> {
+
+    private delay: number;
+    private holder;
+    private handler = new ActionEventDispatcher<TArg>();
+    private args: TArg;
+
+    constructor(delay?:number){
+        if (delay === undefined) {
+            delay = 400;
+        }
+
+        this.delay = delay;
     }
 
-    var _delay = delay;
-    var holder;
-    var handler = new EventHandler();
-    var args;
-
-    this.handler = handler.modifier;
-
-    function setDelay(delay) {
-        _delay = delay;
-    }
-    this.setDelay = setDelay;
-
-    function cancel() {
-        clearTimeout(holder);
-        args = undefined;
-    }
-    this.cancel = cancel;
-
-    function fire() {
-        cancel();
-        holder = window.setTimeout(fireHandler, _delay);
-        args = arguments;
-    }
-    this.fire = fire;
-
-    function addListener(context, listener) {
-        handler.modifier.add(context, listener);
-    }
-    this.addListener = addListener;
-
-    function removeListener(context, listener) {
-        handler.modifier.remove(context, listener);
-    }
-    this.removeListener = removeListener;
-
-    function fireHandler() {
-        handler.fire.apply(handler, args);
+    public setDelay(delay) {
+        this.delay = delay;
     }
 
+    public cancel() {
+        clearTimeout(this.holder);
+        this.args = undefined;
+    }
+
+    public fire(args: TArg) {
+        this.cancel();
+        this.holder = window.setTimeout(() => this.fireHandler(), this.delay);
+        this.args = args;
+    }
+
+    public addListener(listener: ActionEventListener<TArg>) {
+        this.handler.add(listener);
+    }
+
+    public removeListener(listener: ActionEventListener<TArg>) {
+        this.handler.remove(listener);
+    }
+
+    public fireHandler() {
+        this.handler.fire(this.args);
+    }
 }
