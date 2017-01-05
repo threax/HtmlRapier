@@ -7,6 +7,7 @@ interface EventModifier {
 
 /**
  * This class provides a reusable way to fire events to multiple listeners.
+ * It is considered deprecated, don't use it in new code use EventDispatcher instead.
  */
 export class EventHandler {
     private handlers = [];
