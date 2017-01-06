@@ -3,6 +3,7 @@
 import { BindingCollection } from 'hr.bindingcollection';
 export { BindingCollection } from 'hr.bindingcollection';
 export { Model } from 'hr.models';
+export { OnOffToggle, TypedToggle } from 'hr.toggles';
 import * as domQuery from 'hr.domquery';
 import * as ignoredNodes from 'hr.ignored';
 import { ActionEventDispatcher } from 'hr.eventdispatcher';

@@ -17,12 +17,12 @@ var togglePlugins = [];
  * you should provide the names of all your functions here.
  */
 export class TypedToggle implements Toggle {
-    protected states: ToggleStates;
+    protected states: IToggleStates;
 
     /**
      * Get the states this toggle can activate.
      */
-    public getStates(): string[] {
+    public getPossibleStates(): string[] {
         return [];
     }
 
@@ -30,7 +30,7 @@ export class TypedToggle implements Toggle {
      * Set the toggle states used by this strong toggle, should not be called outside of
      * the toggle build function.
      */
-    public setStates(toggle: ToggleStates) {
+    public setStates(toggle: IToggleStates) {
         this.states = toggle;
     }
 
@@ -53,7 +53,7 @@ export class OnOffToggle extends TypedToggle {
         this.applyState("off");
     }
 
-    public getStates() {
+    public getPossibleStates() {
         return OnOffToggle.states;
     }
 }
@@ -107,11 +107,17 @@ export function addTogglePlugin(plugin) {
     togglePlugins.push(plugin);
 }
 
+export interface IToggleStates {
+    addState(name: string, value: string);
+
+    applyState(name: string);
+}
+
 /**
  * Base class for toggle state collections. Implemented as a chain.
  * @param {ToggleStates} next
  */
-export abstract class ToggleStates {
+export abstract class ToggleStates implements IToggleStates {
     private next: ToggleStates;
     private states = {};
 
@@ -132,6 +138,31 @@ export abstract class ToggleStates {
     }
 
     protected abstract activateState(value: string): void;
+}
+
+/**
+ * This class holds multiple toggle states as a group. This handles multiple toggles
+ * with the same name by bunding them up turning them on and off together.
+ * @param {ToggleStates} next
+ */
+export class MultiToggleStates implements IToggleStates {
+    private childStates: IToggleStates[];
+
+    constructor(childStates: IToggleStates[]) {
+        this.childStates = childStates;
+    }
+
+    public addState(name: string, value: string) {
+        for (var i = 0; i < this.childStates.length; ++i) {
+            this.childStates[i].addState(name, value);
+        }
+    }
+
+    public applyState(name: string): void {
+        for (var i = 0; i < this.childStates.length; ++i) {
+            this.childStates[i].applyState(name);
+        }
+    }
 }
 
 /**
@@ -253,7 +284,7 @@ function extractStates(element, states, attrPrefix, toggleConstructor, nextToggl
  * the toggle for each one. If this is undefined will default to "on" and "off".
  * @returns A new ToggleChain with the defined states as functions
  */
-export function build(element, states): ToggleStates {
+export function build(element, states): IToggleStates {
     if (states === undefined) {
         states = defaultStates;
     }

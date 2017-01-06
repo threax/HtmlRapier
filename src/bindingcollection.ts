@@ -36,8 +36,8 @@ function bindEvents(elements, listener) {
 }
 
 function getToggle(name, elements, typedToggle: toggles.TypedToggle) {
-    var states = typedToggle.getStates();
-    var toggleArray: toggles.ToggleStates[] = [];
+    var states = typedToggle.getPossibleStates();
+    var toggleArray: toggles.IToggleStates[] = [];
     var query = '[data-hr-toggle=' + name + ']';
     //Find all the toggles in the collection with the given name
     for (var eIx = 0; eIx < elements.length; ++eIx) {
@@ -48,10 +48,16 @@ function getToggle(name, elements, typedToggle: toggles.TypedToggle) {
         }
     }
     if (toggleArray.length === 0) {
+        //Nothing, null toggle
         typedToggle.setStates(toggles.build(null, states));
     }
-    else { //Handle multiple matches here.
+    else if (toggleArray.length === 1) {
+        //One thing, use toggle state directly
         typedToggle.setStates(toggleArray[0]);
+    }
+    else {
+        //Multiple things, create a multi state and use that
+        typedToggle.setStates(new toggles.MultiToggleStates(toggleArray));
     }
 }
 
