@@ -37,7 +37,7 @@ function bindEvents(elements, listener) {
 
 function getToggle(name, elements, typedToggle: toggles.TypedToggle) {
     var states = typedToggle.getStates();
-    var toggleArray: toggles.Toggle[] = [];
+    var toggleArray: toggles.ToggleStates[] = [];
     var query = '[data-hr-toggle=' + name + ']';
     //Find all the toggles in the collection with the given name
     for (var eIx = 0; eIx < elements.length; ++eIx) {
@@ -48,10 +48,10 @@ function getToggle(name, elements, typedToggle: toggles.TypedToggle) {
         }
     }
     if (toggleArray.length === 0) {
-        typedToggle.setToggle(toggles.build(null, states));
+        typedToggle.setStates(toggles.build(null, states));
     }
     else { //Handle multiple matches here.
-        typedToggle.setToggle(toggleArray[0]);
+        typedToggle.setStates(toggleArray[0]);
     }
 }
 
