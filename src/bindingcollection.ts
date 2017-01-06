@@ -35,26 +35,24 @@ function bindEvents(elements, listener) {
     }
 }
 
-function getToggle(name, elements, states) {
-    var toggle;
+function getToggle(name, elements, typedToggle: toggles.TypedToggle) {
+    var states = typedToggle.getStates();
+    var toggleArray: toggles.Toggle[] = [];
     var query = '[data-hr-toggle=' + name + ']';
+    //Find all the toggles in the collection with the given name
     for (var eIx = 0; eIx < elements.length; ++eIx) {
         var element = elements[eIx];
-        var toggleElement = domQuery.first(query, element);
-        if (toggleElement) {
-            toggle = toggles.build(toggleElement, states);
-            return toggle; //Found it, need to break element loop, done here if found
-        }
-        else {
-            toggle = null;
+        var toggleElements = domQuery.all(query, element);
+        for (var i = 0; i < toggleElements.length; ++i) {
+            toggleArray.push(toggles.build(toggleElements[i], states));
         }
     }
-
-    if (toggle === null) {
-        toggle = toggles.build(null, states);
+    if (toggleArray.length === 0) {
+        typedToggle.setToggle(toggles.build(null, states));
     }
-
-    return toggle;
+    else { //Handle multiple matches here.
+        typedToggle.setToggle(toggleArray[0]);
+    }
 }
 
 function getModel<T>(name, elements): models.Model<T> {
@@ -136,15 +134,26 @@ export class BindingCollection {
      * fired when a matching event is fired.
      * @param {type} listener
      */
-    setListener(listener:any) {
+    setListener(listener: any) {
         bindEvents(this.elements, listener);
     }
 
     /**
-     * Get a named toggle. Can also provide custom states, otherwise these will default to on and off.
+     * Get a named toggle, this will always be an on off toggle.
      */
-    getToggle(name:string, states?:any) : toggles.Toggle {
-        return getToggle(name, this.elements, states);
+    getToggle(name: string): toggles.OnOffToggle {
+        var toggle = new toggles.OnOffToggle();
+        getToggle(name, this.elements, toggle);
+        return toggle;
+    }
+
+    /**
+     * Get a named toggle, this will use the passed in custom toggle instance. Using this you can define
+     * states other than on and off.
+     */
+    getCustomToggle<T extends toggles.TypedToggle>(name: string, toggle: T) {
+        getToggle(name, this.elements, toggle);
+        return toggle;
     }
 
     /**
@@ -171,14 +180,14 @@ export class BindingCollection {
      * Get a handle element. These are direct references to html elements for passing to third party libraries
      * that need them. Don't use these directly if you can help it.
      */
-    getHandle(name:string) {
+    getHandle(name: string) {
         return getHandle(name, this.elements);
     }
 
     /**
      * Iterate over all the controllers in the BindingCollection.
      */
-    iterateControllers(name:string, cb) {
+    iterateControllers(name: string, cb) {
         iterateControllers(name, this.elements, cb);
     }
 };

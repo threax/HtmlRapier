@@ -13,6 +13,52 @@ var defaultStates = ['on', 'off']; //Reusuable states, so we don't end up creati
 var togglePlugins = [];
 
 /**
+ * Interface for typed toggles, provides a way to get the states as a string,
+ * you should provide the names of all your functions here.
+ */
+export class TypedToggle implements Toggle {
+    protected toggle: Toggle;
+
+    /**
+     * Get the states this toggle can activate.
+     */
+    public getStates(): string[] {
+        return [];
+    }
+
+    /**
+     * Set the toggle used by this strong toggle, should not be called outside of
+     * the toggle build function.
+     */
+    public setToggle(toggle: Toggle) {
+        this.toggle = toggle;
+    }
+
+    public applyState(value) {
+        safeApplyState(this.toggle, value);
+    }
+}
+
+/**
+ * A toggle that is on and off.
+ */
+export class OnOffToggle extends TypedToggle {
+    private static states = ['on', 'off'];
+
+    public on() {
+        this.applyState("on");
+    }
+
+    public off() {
+        this.applyState("off");
+    }
+
+    public getStates() {
+        return OnOffToggle.states;
+    }
+}
+
+/**
  * Add a toggle plugin that can create additional items on the toggle chain.
  * @param {type} plugin
  */
@@ -32,7 +78,7 @@ function safeApplyState(toggle, name) {
     if (toggle) {
         var func = toggle[name];
         if (func) {
-            func();
+            func.apply(toggle);
         }
         else {
             var next = toggle.applyState(null);
@@ -57,9 +103,9 @@ function createToggleState(name, value, toggle) {
 }
 
 /**
- * A simple toggler that does nothing. Used to shim correctly if no toggles are defined for a toggle element.
+ * A simple toggle state that does nothing. Used to shim correctly if no toggles are defined for a toggle element.
  */
-function NullToggle(next) {
+function NullStates(next) {
     function applyState(value) {
         return next;
     }
@@ -69,7 +115,7 @@ function NullToggle(next) {
 /**
  * A toggler that toggles style for an element
  */
-function StyleToggle(element, next) {
+function StyleStates(element, next) {
     var originalStyles = element.style.cssText || "";
 
     function applyState(style) {
@@ -89,7 +135,7 @@ function StyleToggle(element, next) {
 * idle attribute (data-hr-class-idle) that if present will have its classes
 * applied to the element when any animations have completed.
 */
-function ClassToggle(element, next) {
+function ClassStates(element, next) {
     var originalClasses = element.getAttribute("class") || "";
     var idleClass = element.getAttribute('data-hr-class-idle');
 
@@ -128,7 +174,7 @@ function ClassToggle(element, next) {
 export class Group {
     private toggles: Toggle[];
 
-    constructor(...toggles: Toggle[]){
+    constructor(...toggles: Toggle[]) {
         this.toggles = toggles;
     }
 
@@ -136,7 +182,7 @@ export class Group {
      * Add a toggle to the group.
      * @param toggle - The toggle to add.
      */
-    add(toggle:Toggle) {
+    add(toggle: Toggle) {
         this.toggles.push(toggle);
     }
 
@@ -147,7 +193,7 @@ export class Group {
      * @param {string} [showState] - The state to set the passed toggle to.
      * @param {string} [hideState] - The state to set all other toggles to.
      */
-    activate(toggle, showState?:string, hideState?:string) {
+    activate(toggle, showState?: string, hideState?: string) {
         if (showState === undefined) {
             showState = 'on';
         }
@@ -207,8 +253,8 @@ export function build(element, states): Toggle {
     var toggle = null;
 
     if (element !== null) {
-        toggle = extractStates(element, states, 'data-hr-style-', StyleToggle, toggle);
-        toggle = extractStates(element, states, 'data-hr-class-', ClassToggle, toggle);
+        toggle = extractStates(element, states, 'data-hr-style-', StyleStates, toggle);
+        toggle = extractStates(element, states, 'data-hr-class-', ClassStates, toggle);
 
         //Now toggle plugin chain
         for (var i = 0; i < togglePlugins.length; ++i) {
@@ -218,7 +264,7 @@ export function build(element, states): Toggle {
 
     //If we get all the way here with no toggle, use the null toggle.
     if (toggle === null) {
-        toggle = new NullToggle(toggle);
+        toggle = new NullStates(toggle);
     }
 
     //Make sure the top level toggle defines all the required funcitons
@@ -240,6 +286,6 @@ export function build(element, states): Toggle {
  * @param toggle - the toggle to check
  * @returns {type} - True if toggle is a NullToggle
  */
-export function isNullToggle(toggle) {
-    return typeId.isObject(toggle) && toggle.constructor.prototype == NullToggle.prototype;
+export function isNullState(toggle) {
+    return typeId.isObject(toggle) && toggle.constructor.prototype == NullStates.prototype;
 }
