@@ -5,7 +5,7 @@
  * @param {type} next - The next fetcher in the chain.
  * @returns
  */
-export class CacheBuster implements Fetcher{
+export class CacheBuster implements Fetcher {
     private next: Fetcher;
 
     constructor(next: Fetcher) {
@@ -27,12 +27,19 @@ export class CacheBuster implements Fetcher{
 }
 
 function addTimestampQuery(url: string): string {
-    if (url.indexOf('?') > -1) {
-        url += '&';
+    var regex = /([?&]noCache=)\d*/g;
+    if (regex.test(url)) {
+        url = url.replace(regex, '$1' + new Date().getTime());
     }
     else {
-        url += '?';
+        if (url.indexOf('?') > -1) {
+            url += '&';
+        }
+        else {
+            url += '?';
+        }
+        url += 'noCache=' + new Date().getTime();
     }
-    url += 'noCache=' + new Date().getTime();
+
     return url;
 }
