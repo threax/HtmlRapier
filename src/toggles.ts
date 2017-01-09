@@ -6,7 +6,16 @@ import * as typeId from 'hr.typeidentifiers';
  * An interface for toggles.
  */
 export interface Toggle {
+    /**
+     * Apply a named state to the toggle.
+     */
     applyState(name: string);
+
+    /**
+     * Determine if this toggle is hooked up to anything. If the element or target for the
+     * toggle could not be found, this will be false.
+     */
+    isUsable(): boolean;
 }
 
 var defaultStates = ['on', 'off']; //Reusuable states, so we don't end up creating tons of these arrays
@@ -36,6 +45,10 @@ export class TypedToggle implements Toggle {
 
     public applyState(name: string) {
         this.states.applyState(name);
+    }
+
+    public isUsable(): boolean {
+        return isNullState(this.states);
     }
 }
 
@@ -313,6 +326,6 @@ export function build(element, states): IToggleStates {
  * @param toggle - the toggle to check
  * @returns {type} - True if toggle is a NullToggle
  */
-export function isNullState(toggle) {
+function isNullState(toggle) {
     return typeId.isObject(toggle) && toggle.constructor.prototype == NullStates.prototype;
 }
