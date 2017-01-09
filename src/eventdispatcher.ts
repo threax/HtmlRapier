@@ -1,5 +1,7 @@
 "use strict";
 
+import * as typeId from 'hr.typeidentifiers';
+
 export type ActionEventListener<T> = (arg:T) => void;
 export type FuncEventListener<TRet, TArg> = (arg:TArg) => TRet;
 
@@ -18,6 +20,9 @@ export class ActionEventDispatcher<T>{
     protected listeners: ActionEventListener<T>[] = <any>[];
 
     add(listener: ActionEventListener<T>) {
+        if(!typeId.isFunction(listener)){
+            throw new Error("Listener must be a function, instead got " + typeof(listener));
+        }
         this.listeners.push(listener);
     }
 
@@ -47,6 +52,9 @@ export class FuncEventDispatcher<TRet, TArg>{
     protected listeners: FuncEventListener<TRet, TArg>[] = <any>[];
 
     add(listener: FuncEventListener<TRet, TArg>) {
+        if(!typeId.isFunction(listener)){
+            throw new Error("Listener must be a function, instead got " + typeof(listener));
+        }
         this.listeners.push(listener);
     }
 
@@ -87,6 +95,9 @@ export class PromiseEventDispatcher<TRet, TArg>{
     protected listeners: FuncEventListener<Promise<TRet>, TArg>[] = <any>[];
 
     add(listener: FuncEventListener<Promise<TRet>, TArg>) {
+        if(!typeId.isFunction(listener)){
+            throw new Error("Listener must be a function, instead got " + typeof(listener));
+        }
         this.listeners.push(listener);
     }
 
