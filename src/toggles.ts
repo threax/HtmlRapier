@@ -48,7 +48,7 @@ export class TypedToggle implements Toggle {
     }
 
     public isUsable(): boolean {
-        return isNullState(this.states);
+        return !(typeId.isObject(this.states) && this.states.constructor.prototype == NullStates.prototype);
     }
 }
 
@@ -319,13 +319,4 @@ export function build(element, states): IToggleStates {
     }
 
     return toggle;
-}
-
-/**
- * Determine if a given toggle is a null toggle.
- * @param toggle - the toggle to check
- * @returns {type} - True if toggle is a NullToggle
- */
-function isNullState(toggle) {
-    return typeId.isObject(toggle) && toggle.constructor.prototype == NullStates.prototype;
 }
