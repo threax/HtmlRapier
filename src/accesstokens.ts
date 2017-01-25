@@ -1,7 +1,7 @@
 ﻿import * as http from 'hr.http';
 import * as docCookies from 'hr.cookies';
 import * as uri from 'hr.uri';
-import { Fetcher } from 'hr.Fetcher';
+import { Fetcher, RequestInfo, RequestInit, Response } from 'hr.Fetcher';
 
 //From https://github.com/auth0/jwt-decode/blob/master/lib/base64_url_decode.js
 function b64DecodeUnicode(str) {

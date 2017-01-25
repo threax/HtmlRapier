@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-import {Fetcher} from 'hr.fetcher';
+import {Fetcher, Response} from 'hr.fetcher';
 import {WindowFetch} from 'hr.windowfetch';
 
 var defaultFetcher:Fetcher = new WindowFetch();

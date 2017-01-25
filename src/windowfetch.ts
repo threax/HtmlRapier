@@ -1,4 +1,4 @@
-﻿import { Fetcher } from 'hr.Fetcher';
+﻿import { Fetcher, RequestInfo, RequestInit, Response, fetch } from 'hr.Fetcher';
 
 /**
  * A fetcher implementation that calls the global window fetch function.
