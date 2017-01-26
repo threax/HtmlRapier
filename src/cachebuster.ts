@@ -1,4 +1,4 @@
-﻿import { Fetcher, RequestInfo, RequestInit, Response, Request } from 'hr.Fetcher';
+﻿import { Fetcher, RequestInfo, RequestInit, Response, Request } from 'hr.fetcher';
 
 /**
  * A fetcher that removes caching.
