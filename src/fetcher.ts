@@ -5,7 +5,7 @@
 // Definitions by: Ryan Graham <https://github.com/ryan-codingintrigue>, Kagami Sascha Rosylight <https://github.com/saschanaz>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 
-export declare var fetch: (url: RequestInfo, init?: RequestInit) => Promise<Response>;
+export var fetch: (url: RequestInfo, init?: RequestInit) => Promise<Response> = (<any>window).fetch;
 
 export declare type HeadersInit = Headers | string[][] | { [key: string]: string };
 export declare class Headers {
