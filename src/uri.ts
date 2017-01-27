@@ -95,13 +95,16 @@ export class Uri {
 
     /**
      * Set the query portion of the url to the given object's keys and values.
-     * The keys will not be altered, the values will be uri encoded.
+     * The keys will not be altered, the values will be uri encoded. If a value
+     * in the object is null or undefined it will not be included in the query string.
      * @param {type} data The object to make into a query.
      */
     setQueryFromObject(data: any): void {
         var queryString = "";
         for (var key in data) {
-            queryString += key + '=' + encodeURIComponent(data[key]) + '&';
+            if (data[key] !== undefined && data[key] !== null) {
+                queryString += key + '=' + encodeURIComponent(data[key]) + '&';
+            }
         }
         if (queryString.length > 0) {
             queryString = queryString.substr(0, queryString.length - 1);
