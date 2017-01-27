@@ -1,5 +1,9 @@
 ﻿import { Fetcher, RequestInfo, RequestInit, Response, Request } from 'hr.fetcher';
 
+function isRequest(url: RequestInfo): url is Request {
+    return url !== undefined && url !== null && (<Request>url).url !== undefined;
+}
+
 /**
  * A fetcher that removes caching.
  * @param {type} next - The next fetcher in the chain.
@@ -14,7 +18,7 @@ export class CacheBuster implements Fetcher {
 
     fetch(url: RequestInfo, init?: RequestInit): Promise<Response> {
         if (init !== undefined && init.method == 'GET') {
-            if (url instanceof Request) {
+            if (isRequest(url)) {
                 url.url = addTimestampQuery(url.url);
             }
             else {
