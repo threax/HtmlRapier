@@ -77,11 +77,25 @@ export class OnOffToggle extends TypedToggle {
     }
 
     public toggle() {
-        if (this.currentState === "off") {
+        if (this.mode) {
+            this.off();
+        }
+        else {
             this.on();
         }
-        else if (this.currentState === "on") {
+    }
+
+    public get mode(): boolean{
+        return this.currentState === "on";
+    }
+
+    public set mode(value: boolean){
+        var currentOn = this.mode;
+        if(currentOn && !value){
             this.off();
+        }
+        else if(!currentOn && value){
+            this.on();
         }
     }
 }
