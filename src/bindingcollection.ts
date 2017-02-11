@@ -39,12 +39,14 @@ function getToggle(name, elements, typedToggle: toggles.TypedToggle) {
     var states = typedToggle.getPossibleStates();
     var toggleArray: toggles.IToggleStates[] = [];
     var query = '[data-hr-toggle=' + name + ']';
+    var startState = null;
     //Find all the toggles in the collection with the given name
     for (var eIx = 0; eIx < elements.length; ++eIx) {
         var element = elements[eIx];
         var toggleElements = domQuery.all(query, element);
         for (var i = 0; i < toggleElements.length; ++i) {
             toggleArray.push(toggles.build(toggleElements[i], states));
+            startState = startState ? startState : toggles.getStartState(toggleElements[i]);
         }
     }
     if (toggleArray.length === 0) {
@@ -58,6 +60,10 @@ function getToggle(name, elements, typedToggle: toggles.TypedToggle) {
     else {
         //Multiple things, create a multi state and use that
         typedToggle.setStates(new toggles.MultiToggleStates(toggleArray));
+    }
+
+    if (startState != null) {
+        typedToggle.applyState(startState);
     }
 }
 

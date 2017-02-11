@@ -27,6 +27,7 @@ var togglePlugins = [];
  */
 export class TypedToggle implements Toggle {
     protected states: IToggleStates;
+    private _currentState: string;
 
     /**
      * Get the states this toggle can activate.
@@ -44,11 +45,16 @@ export class TypedToggle implements Toggle {
     }
 
     public applyState(name: string) {
+        this._currentState = name;
         this.states.applyState(name);
     }
 
     public isUsable(): boolean {
         return !(typeId.isObject(this.states) && this.states.constructor.prototype == NullStates.prototype);
+    }
+
+    public get currentState() {
+        return this._currentState;
     }
 }
 
@@ -68,6 +74,15 @@ export class OnOffToggle extends TypedToggle {
 
     public getPossibleStates() {
         return OnOffToggle.states;
+    }
+
+    public toggle() {
+        if (this.currentState === "off") {
+            this.on();
+        }
+        else if (this.currentState === "on") {
+            this.off();
+        }
     }
 }
 
@@ -288,6 +303,15 @@ function extractStates(element, states, attrPrefix, toggleConstructor, nextToggl
         return toggleStates;
     }
     return nextToggle;
+}
+
+export function getStartState(element) {
+    var attr = "data-hr-state";
+    if (element.hasAttribute(attr)) {
+        var value = element.getAttribute(attr);
+        return value;
+    }
+    return null;
 }
 
 /**
