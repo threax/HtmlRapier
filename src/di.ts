@@ -1,5 +1,9 @@
 export type ResolverFunction<T> = (scope: Scope) => T | Promise<T>;
 
+//Thanks Tehau Cave at http://stackoverflow.com/questions/36886082/abstract-constructor-type-in-typescript
+//Intellisense seems to correctly detect T using this method.
+export type DiFunction<T> = Function & { prototype: T };
+
 const DiIdProperty = "__diId";
 
 enum Scopes {
@@ -42,7 +46,7 @@ export class ServiceCollection {
      * @param {ResolverFunction<T>} resolver The resolver function for the object, can return promises.
      * @returns
      */
-    public addScoped<T>(typeHandle: new (...args: any[]) => T, resolver: ResolverFunction<T>): ServiceCollection {
+    public addScoped<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T>): ServiceCollection {
         return this.add(typeHandle, Scopes.Scoped, resolver);
     }
 
@@ -52,7 +56,7 @@ export class ServiceCollection {
      * @param {ResolverFunction<T>} resolver The resolver function for the object, can return promises.
      * @returns
      */
-    public addTransient<T>(typeHandle: new (...args: any[]) => T, resolver: ResolverFunction<T>): ServiceCollection {
+    public addTransient<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T>): ServiceCollection {
         return this.add(typeHandle, Scopes.Transient, resolver);
     }
 
@@ -62,7 +66,7 @@ export class ServiceCollection {
      * @param {ResolverFunction<T>} resolver The resolver function for the object, can return promises.
      * @returns
      */
-    public addSingleton<T>(typeHandle: new (...args: any[]) => T, resolver: ResolverFunction<T>): ServiceCollection {
+    public addSingleton<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T>): ServiceCollection {
         return this.add(typeHandle, Scopes.Singleton, resolver);
     }
 
@@ -71,7 +75,7 @@ export class ServiceCollection {
      * @param {function} typeHandle The constructor function for the type that represents this injected object.
      * @param {ResolverFunction<T>} resolver The resolver function for the object, can return promises.
      */
-    private add<T>(typeHandle: new (...args: any[]) => T, scope: Scopes, resolver: ResolverFunction<T>): ServiceCollection {
+    private add<T>(typeHandle: DiFunction<T>, scope: Scopes, resolver: ResolverFunction<T>): ServiceCollection {
         if (typeHandle[DiIdProperty] === undefined) {
             typeHandle[DiIdProperty] = ServiceCollection.idIndex++;
         }
@@ -93,7 +97,7 @@ export class ServiceCollection {
      * @internal
      * @returns
      */
-    public __resolveService<T>(typeHandle: new () => T, scope: Scope): ResolveResult<T> {
+    public __resolveService<T>(typeHandle: DiFunction<T>, scope: Scope): ResolveResult<T> {
         var id = typeHandle[DiIdProperty];
         var instance = this.singletonInstances[id];
 
@@ -144,7 +148,7 @@ export class Scope {
     private services: ServiceCollection;
     private instances: any = {};
     private parentScope: Scope;
-    
+
     constructor(services: ServiceCollection, parentScope?: Scope) {
         this.services = services;
         this.parentScope = parentScope;
@@ -156,7 +160,7 @@ export class Scope {
      * @param {function} typeHandle
      * @returns
      */
-    public getService<T>(typeHandle: new (...args: any[]) => T) : Promise<T> {
+    public getService<T>(typeHandle: DiFunction<T>): Promise<T> {
         var id = typeHandle[DiIdProperty];
         var instance = this.getInstance(id);
 
@@ -180,7 +184,7 @@ export class Scope {
      * @param {function} typeHandle
      * @returns
      */
-    public getRequiredService<T>(typeHandle: new (...args: any[]) => T): Promise<T> {
+    public getRequiredService<T>(typeHandle: DiFunction<T>): Promise<T> {
         return this.getService(typeHandle)
             .then(instance => {
                 if (instance === undefined) {

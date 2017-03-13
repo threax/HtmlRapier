@@ -107,6 +107,6 @@ export interface ResponseInit {
 
 export type ResponseType = "basic" | "cors" | "default" | "error" | "opaque" | "opaqueredirect";
 
-export interface Fetcher {
-    fetch(url: RequestInfo, init?: RequestInit): Promise<Response>;
+export abstract class Fetcher {
+    abstract fetch(url: RequestInfo, init?: RequestInit): Promise<Response>;
 }

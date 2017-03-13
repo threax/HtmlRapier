@@ -47,7 +47,7 @@ function parseJwt(token:string, options?:any) {
     return JSON.parse(base64_url_decode(token.split('.')[pos]));
 };
 
-export class AccessTokenManager implements Fetcher {
+export class AccessTokenManager extends Fetcher {
     private tokenPath: string;
     private accessToken: string;
     private next: Fetcher;
@@ -58,6 +58,7 @@ export class AccessTokenManager implements Fetcher {
     private expirationTick;
 
     constructor(tokenPath: string, next: Fetcher) {
+        super();
         this.tokenPath = tokenPath;
         this.next = next;
     }

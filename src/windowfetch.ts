@@ -5,9 +5,9 @@
  * Use this to terminate fetcher chains and do the real fetch work.
  * @returns
  */
-export class WindowFetch implements Fetcher {
+export class WindowFetch extends Fetcher {
     constructor() {
-        
+        super();
     }
 
     fetch(url: RequestInfo, init?: RequestInit): Promise<Response> {

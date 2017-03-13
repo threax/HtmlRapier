@@ -9,10 +9,11 @@ function isRequest(url: RequestInfo): url is Request {
  * @param {type} next - The next fetcher in the chain.
  * @returns
  */
-export class CacheBuster implements Fetcher {
+export class CacheBuster extends Fetcher {
     private next: Fetcher;
 
     constructor(next: Fetcher) {
+        super();
         this.next = next;
     }
 
