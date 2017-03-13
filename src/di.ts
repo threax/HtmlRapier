@@ -42,7 +42,7 @@ export class ServiceCollection {
      * @param {ResolverFunction<T>} resolver The resolver function for the object, can return promises.
      * @returns
      */
-    public addScoped<T>(typeHandle: new () => T, resolver: ResolverFunction<T>): ServiceCollection {
+    public addScoped<T>(typeHandle: new (...args: any[]) => T, resolver: ResolverFunction<T>): ServiceCollection {
         return this.add(typeHandle, Scopes.Scoped, resolver);
     }
 
@@ -52,7 +52,7 @@ export class ServiceCollection {
      * @param {ResolverFunction<T>} resolver The resolver function for the object, can return promises.
      * @returns
      */
-    public addTransient<T>(typeHandle: new () => T, resolver: ResolverFunction<T>): ServiceCollection {
+    public addTransient<T>(typeHandle: new (...args: any[]) => T, resolver: ResolverFunction<T>): ServiceCollection {
         return this.add(typeHandle, Scopes.Transient, resolver);
     }
 
@@ -62,7 +62,7 @@ export class ServiceCollection {
      * @param {ResolverFunction<T>} resolver The resolver function for the object, can return promises.
      * @returns
      */
-    public addSingleton<T>(typeHandle: new () => T, resolver: ResolverFunction<T>): ServiceCollection {
+    public addSingleton<T>(typeHandle: new (...args: any[]) => T, resolver: ResolverFunction<T>): ServiceCollection {
         return this.add(typeHandle, Scopes.Singleton, resolver);
     }
 
@@ -71,7 +71,7 @@ export class ServiceCollection {
      * @param {function} typeHandle The constructor function for the type that represents this injected object.
      * @param {ResolverFunction<T>} resolver The resolver function for the object, can return promises.
      */
-    private add<T>(typeHandle: new () => T, scope: Scopes, resolver: ResolverFunction<T>): ServiceCollection {
+    private add<T>(typeHandle: new (...args: any[]) => T, scope: Scopes, resolver: ResolverFunction<T>): ServiceCollection {
         if (typeHandle[DiIdProperty] === undefined) {
             typeHandle[DiIdProperty] = ServiceCollection.idIndex++;
         }
@@ -156,7 +156,7 @@ export class Scope {
      * @param {function} typeHandle
      * @returns
      */
-    public getService<T>(typeHandle: new () => T) : Promise<T> {
+    public getService<T>(typeHandle: new (...args: any[]) => T) : Promise<T> {
         var id = typeHandle[DiIdProperty];
         var instance = this.getInstance(id);
 
@@ -180,7 +180,7 @@ export class Scope {
      * @param {function} typeHandle
      * @returns
      */
-    public getRequiredService<T>(typeHandle: new () => T): Promise<T> {
+    public getRequiredService<T>(typeHandle: new (...args: any[]) => T): Promise<T> {
         return this.getService(typeHandle)
             .then(instance => {
                 if (instance === undefined) {
