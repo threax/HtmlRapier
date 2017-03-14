@@ -241,7 +241,7 @@ export class Scope {
             var funcNameRegex = /^function\s+([\w\$]+)\s*\(/;
             var typeResult = funcNameRegex.exec(typeHandle.prototype.constructor.toString());
             var typeName = typeResult ? typeResult[1] : "anonymous";
-            throw new Error("Cannot find required service for function " + typeName + ". Did you forget to inject it. Also note that you cannot use generic classes in this di system.");
+            throw new Error("Cannot find required service for function " + typeName + ". Did you forget to inject it?");
         }
         return instance;
     }
