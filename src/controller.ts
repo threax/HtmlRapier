@@ -129,7 +129,8 @@ function IsScopedControllerInfo(test): test is ScopedControllerInfo {
  * This class provides a way to get a handle to the data provided by the
  * createOnCallback data argument. Return this type from your InjectorArgs
  * where you take the row data argument, and the appropriate data object
- * will be returned.
+ * will be returned. There is only a need for one of these, since controllers
+ * can only accept one piece of callback data.
  */
 export abstract class InjectControllerData{
     //This is useless on its own, just provides a function based handle to data.
@@ -192,9 +193,7 @@ export class InjectedControllerBuilder<ControllerType, DataType> {
             if (!ignoredNodes.isIgnored(element)) {
                 var services = new di.ServiceCollection();
                 var scope = this.baseScope.createChildScope(services);
-                services.addSingletonResolver(BindingCollection, s => {
-                    return new BindingCollection(element);
-                });
+                services.addScoped(BindingCollection, s => new BindingCollection(element));
                 element.removeAttribute('data-hr-controller');
                 var controller = this.createController(scope);
                 createdControllers.push(controller);
@@ -219,7 +218,7 @@ export class InjectedControllerBuilder<ControllerType, DataType> {
         return (bindings: BindingCollection, data: DataType) => {
             var services = new di.ServiceCollection();
             var scope = this.baseScope.createChildScope(services);
-            services.addSingleton(BindingCollection, bindings);
+            services.addScoped(BindingCollection, s => bindings);
 
             //If some data was provided, use it as our InjectControllerData service
             //for the newly created scope.

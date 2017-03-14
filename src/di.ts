@@ -39,7 +39,6 @@ interface ResolveResult<T> {
 export class ServiceCollection {
     private static idIndex: number = 0;
     private resolvers: InjectedPropertiesMap = {};
-    private singletonInstances: any = {};
 
     constructor() {
 
@@ -94,7 +93,7 @@ export class ServiceCollection {
     }
 
     /**
-     * Add a singleton service to the collection, singleton services are created the first time they are requested and persist across scopes.
+     * Add a singleton service to the collection, singleton services are created the first time they are requested and persist across child scopes.
      * @param {function} typeHandle The constructor function for the type that represents this injected object.
      * @param {ResolverFunction<T>} resolver The resolver function for the object, can return promises.
      * @returns
@@ -151,26 +150,11 @@ export class ServiceCollection {
      */
     public __resolveService<T>(typeHandle: DiFunction<T>, scope: Scope): ResolveResult<T> {
         var id = typeHandle[DiIdProperty];
-        var instance = this.singletonInstances[id];
-
-        if (instance !== undefined) {
-            //Return singleton
-            return {
-                instance: instance,
-                scope: Scopes.Singleton
-            };
-
-        }
 
         if (this.resolvers[id] !== undefined) {
             //Instantiate service, have scope handle instances
-
             var info = this.resolvers[id];
-            instance = info.resolver(scope);
-
-            if (info.scope === Scopes.Singleton) {
-                this.singletonInstances[id] = instance;
-            }
+            var instance = info.resolver(scope);
 
             return {
                 instance: instance,
@@ -182,7 +166,8 @@ export class ServiceCollection {
     }
 
     /**
-     * Create a scope to hold instantiated variables.
+     * Create a scope to hold instantiated variables. Note that calling this function will give you a new scope,
+     * which will resolve any singletons again for the new scope, so be aware of calling this more than once.
      * @returns
      */
     public createScope(): Scope {
@@ -199,6 +184,7 @@ export class ServiceCollection {
 export class Scope {
     private services: ServiceCollection;
     private instances: any = {};
+    private singletons: any = {};
     private parentScope: Scope;
 
     constructor(services: ServiceCollection, parentScope?: Scope) {
@@ -213,15 +199,18 @@ export class Scope {
      */
     public getService<T>(typeHandle: DiFunction<T>): T {
         var typeId = typeHandle[DiIdProperty];
-        var instance = this.instances[typeId];
+        var instance = this.findInstance(typeHandle);
 
         //If the service is not found, resolve from our service collection
         if (instance === undefined) {
             var result = this.resolveService<T>(typeHandle, this);
-            //Add scoped results to the scope instances if one was returned
+            //Add scoped and singleton results to the scope instances if one was returned
             if (result !== undefined) {
                 if (result.scope === Scopes.Scoped) {
                     this.instances[typeId] = result.instance;
+                }
+                else if (result.scope === Scopes.Singleton) {
+                    this.singletons[typeId] = result.instance;
                 }
                 instance = result.instance;
             }
@@ -247,7 +236,7 @@ export class Scope {
     }
 
     /**
-     * Create a child scope that shares service definitions. Any scoped services will be recreated
+     * Create a child scope that shares service definitions and singleton instances. Any scoped services will be recreated
      * when requested by a child scope. You can optionally add a new serviceCollection that will
      * shadow the parent scope's ServiceCollection, overriding services that are defined in the child
      * collection and adding any new services. This is done without modifying the parent ServiceCollection.
@@ -261,7 +250,39 @@ export class Scope {
     }
 
     /**
-     * Helper to resolve services, only looks at the service collection.
+     * Helper funciton to find existing instances, will look for scoped instances at the current level
+     * and then walk up the tree looking for singletons if there is no match. If no singleton or current
+     * scoped instance is found, a new one is created.
+     * @param {DiFunction<T>} typeHandle
+     * @returns
+     */
+    private findInstance<T>(typeHandle: DiFunction<T>) {
+        var typeId = typeHandle[DiIdProperty];
+        var instance = this.instances[typeId];
+        if (instance === undefined) {
+            instance = this.bubbleFindSingletonInstance(typeHandle);
+        }
+
+        return instance;
+    }
+
+    /**
+     * Walk up the tree looking for singletons, if one is found return it otherwise undefined is returned.
+     * @param {DiFunction<T>} typeHandle
+     * @returns
+     */
+    private bubbleFindSingletonInstance<T>(typeHandle: DiFunction<T>) {
+        var typeId = typeHandle[DiIdProperty];
+        var instance = this.singletons[typeId];
+        if (instance === undefined && this.parentScope !== undefined) {
+            instance = this.parentScope.bubbleFindSingletonInstance(typeHandle);
+        }
+
+        return instance;
+    }
+
+    /**
+     * Helper to resolve services, only looks at the service collection, walks entire tree to create a service.
      * @param {DiFunction<T>} typeHandle
      * @returns
      */
