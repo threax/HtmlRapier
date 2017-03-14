@@ -128,14 +128,16 @@ export class ServiceCollection {
      * @param {InjectableConstructor} resolver
      * @returns
      */
-    private createConstructorResolver<T>(resolver: InjectableConstructor<T>): ResolverFunction<T> {
+    private createConstructorResolver<T>(constructor: InjectableConstructor<T>): ResolverFunction<T> {
         return (s) => {
-            var argTypes = resolver.InjectorArgs;
+            var argTypes = constructor.InjectorArgs;
             var args = [];
             for (var i = 0; i < argTypes.length; ++i) {
                 args[i] = s.getRequiredService(argTypes[i]);
             }
-            return null;
+            var controllerObj = Object.create((<any>constructor).prototype);
+            (<any>constructor).apply(controllerObj, args);
+            return <T>controllerObj;
         };
     }
 
