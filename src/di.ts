@@ -1,8 +1,14 @@
-export type ResolverFunction<T> = (scope: Scope) => T | Promise<T>;
+export type ResolverFunction<T> = (scope: Scope) => T;
 
 //Thanks Tehau Cave at http://stackoverflow.com/questions/36886082/abstract-constructor-type-in-typescript
 //Intellisense seems to correctly detect T using this method.
 export type DiFunction<T> = Function & { prototype: T };
+//type DiConstructor<T> = (new (...args: any[]) => T);
+
+export type InjectableConstructor<T> = { InjectorArgs: DiFunction<any>[] };
+function IsInjectableConstructor<T>(test: any): test is InjectableConstructor<T> {
+    return test["InjectorArgs"] !== undefined;
+}
 
 const DiIdProperty = "__diId";
 
@@ -41,13 +47,36 @@ export class ServiceCollection {
     }
 
     /**
+     * Add a singleton service to the collection, singleton services are created the first time they are requested and persist across scopes.
+     * @param {function} typeHandle The constructor function for the type that represents this injected object.
+     * @param {ResolverFunction<T>} resolver The resolver function for the object, can return promises.
+     * @returns
+     */
+    public addSingleton<T>(typeHandle: DiFunction<T>, resolver: InjectableConstructor<T> | T): ServiceCollection {
+        if (IsInjectableConstructor(resolver)) {
+            return this.add(typeHandle, Scopes.Singleton, this.createConstructorResolver(resolver));
+        }
+        else {
+            //Got an instance, return it
+            return this.add(typeHandle, Scopes.Singleton, s => {
+                return resolver;
+            });
+        }
+    }
+
+    /**
      * Add a scoped service to the collection, scoped services are created once per scope they are part of.
      * @param {function} typeHandle The constructor function for the type that represents this injected object.
      * @param {ResolverFunction<T>} resolver The resolver function for the object, can return promises.
      * @returns
      */
-    public addScoped<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T>): ServiceCollection {
-        return this.add(typeHandle, Scopes.Scoped, resolver);
+    public addScoped<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T> | InjectableConstructor<T>): ServiceCollection {
+        if (IsInjectableConstructor(resolver)) {
+            return this.add(typeHandle, Scopes.Scoped, this.createConstructorResolver(resolver));
+        }
+        else {
+            return this.add(typeHandle, Scopes.Scoped, resolver);
+        }
     }
 
     /**
@@ -57,7 +86,12 @@ export class ServiceCollection {
      * @returns
      */
     public addTransient<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T>): ServiceCollection {
-        return this.add(typeHandle, Scopes.Transient, resolver);
+        if (IsInjectableConstructor(resolver)) {
+            return this.add(typeHandle, Scopes.Transient, this.createConstructorResolver(resolver));
+        }
+        else {
+            return this.add(typeHandle, Scopes.Transient, resolver);
+        }
     }
 
     /**
@@ -66,7 +100,7 @@ export class ServiceCollection {
      * @param {ResolverFunction<T>} resolver The resolver function for the object, can return promises.
      * @returns
      */
-    public addSingleton<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T>): ServiceCollection {
+    public addSingletonResolver<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T>): ServiceCollection {
         return this.add(typeHandle, Scopes.Singleton, resolver);
     }
 
@@ -86,6 +120,23 @@ export class ServiceCollection {
         };
 
         return this;
+    }
+
+    /**
+     * Helper function to create a resolver that constructs objects from constructor functions, it will di
+     * the arguments to the function.
+     * @param {InjectableConstructor} resolver
+     * @returns
+     */
+    private createConstructorResolver<T>(resolver: InjectableConstructor<T>): ResolverFunction<T> {
+        return (s) => {
+            var argTypes = resolver.InjectorArgs;
+            var args = [];
+            for (var i = 0; i < argTypes.length; ++i) {
+                args[i] = s.getRequiredService(argTypes[i]);
+            }
+            return null;
+        };
     }
 
     /**
@@ -160,23 +211,23 @@ export class Scope {
      * @param {function} typeHandle
      * @returns
      */
-    public getService<T>(typeHandle: DiFunction<T>): Promise<T> {
-        var id = typeHandle[DiIdProperty];
-        var instance = this.getInstance(id);
+    public getService<T>(typeHandle: DiFunction<T>): T {
+        var typeId = typeHandle[DiIdProperty];
+        var instance = this.instances[typeId];
 
-        //If the service is still not found, resolve from our service collection
+        //If the service is not found, resolve from our service collection
         if (instance === undefined) {
-            var result = this.services.__resolveService(typeHandle, this); //Result here is a promise potentailly, that is what we store as the instance if the di looks it up through a promise
+            var result = this.resolveService<T>(typeHandle, this);
+            //Add scoped results to the scope instances if one was returned
             if (result !== undefined) {
-                //Add scoped results to the scope instances if one was returned
-                if (result !== undefined && result.scope === Scopes.Scoped) {
-                    this.instances[id] = result.instance;
+                if (result.scope === Scopes.Scoped) {
+                    this.instances[typeId] = result.instance;
                 }
                 instance = result.instance;
             }
         }
 
-        return Promise.resolve(instance);
+        return instance;
     }
 
     /**
@@ -184,37 +235,42 @@ export class Scope {
      * @param {function} typeHandle
      * @returns
      */
-    public getRequiredService<T>(typeHandle: DiFunction<T>): Promise<T> {
-        return this.getService(typeHandle)
-            .then(instance => {
-                if (instance === undefined) {
-                    throw new Error("Cannot find required service for prototype " + typeHandle.prototype.name + ". Did you forget to inject it. Also note that you cannot use generic classes in this di system.");
-                }
-                return instance;
-            });
+    public getRequiredService<T>(typeHandle: DiFunction<T>): T {
+        var instance = this.getService(typeHandle);
+        if (instance === undefined) {
+            var funcNameRegex = /^function\s+([\w\$]+)\s*\(/;
+            var typeResult = funcNameRegex.exec(typeHandle.prototype.constructor.toString());
+            var typeName = typeResult ? typeResult[1] : "anonymous";
+            throw new Error("Cannot find required service for function " + typeName + ". Did you forget to inject it. Also note that you cannot use generic classes in this di system.");
+        }
+        return instance;
     }
 
     /**
-     * Private function that searches this and parent scopes for instances.
-     * @param typeId
-     */
-    private getInstance(typeId) {
-        if (this.instances[typeId] !== undefined) {
-            return this.instances[typeId];
-        }
-
-        if (this.parentScope !== undefined) {
-            return this.parentScope.getInstance(typeId);
-        }
-
-        return undefined;
-    }
-
-    /**
-     * Create a child scope that shares services and uses this scope as a parent.
+     * Create a child scope that shares service definitions. Any scoped services will be recreated
+     * when requested by a child scope. You can optionally add a new serviceCollection that will
+     * shadow the parent scope's ServiceCollection, overriding services that are defined in the child
+     * collection and adding any new services. This is done without modifying the parent ServiceCollection.
      * @returns
      */
-    public createChildScope(): Scope {
-        return new Scope(this.services, this);
+    public createChildScope(serviceCollection?: ServiceCollection): Scope {
+        if (serviceCollection === undefined) {
+            serviceCollection = new ServiceCollection();
+        }
+        return new Scope(serviceCollection, this);
+    }
+
+    /**
+     * Helper to resolve services, only looks at the service collection.
+     * @param {DiFunction<T>} typeHandle
+     * @returns
+     */
+    private resolveService<T>(typeHandle: DiFunction<T>, scope: Scope): ResolveResult<T> {
+        var result = this.services.__resolveService(typeHandle, scope);
+        if (result === undefined && this.parentScope) {
+            //Cannot find service at this level, search parent services.
+            result = this.parentScope.resolveService<T>(typeHandle, scope);
+        }
+        return result;
     }
 }

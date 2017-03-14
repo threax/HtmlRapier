@@ -7,6 +7,7 @@ export { OnOffToggle, TypedToggle } from 'hr.toggles';
 import * as domQuery from 'hr.domquery';
 import * as ignoredNodes from 'hr.ignored';
 import { ActionEventDispatcher } from 'hr.eventdispatcher';
+import * as di from 'hr.di';
 
 /**
  * This interface describes a type that has a constructor that converts
@@ -105,6 +106,76 @@ export class ControllerBuilder<ControllerType, ContextType, DataType> {
     createOnCallback(): (bindings: BindingCollection, data: DataType) => void {
         return (bindings: BindingCollection, data: DataType) => {
             var controller = new this.controllerConstructor(bindings, this.context, data);
+            bindings.setListener(controller);
+            this.controllerCreatedEvent.fire(controller);
+        }
+    }
+}
+
+export class InjectedControllerBuilder<ControllerType, DataType> {
+    private controllerConstructor: di.DiFunction<ControllerType>;
+    private controllerCreatedEvent = new ActionEventDispatcher<ControllerType>();
+    private serviceCollection: di.ServiceCollection;
+    private baseScope: di.Scope;
+
+    /**
+     * Create a new ControllerBuilder
+     * @param {type} controllerConstructor
+     */
+    constructor(controllerConstructor: di.DiFunction<ControllerType>, scope: di.Scope) {
+        this.controllerConstructor = controllerConstructor;
+        this.serviceCollection = new di.ServiceCollection();
+        this.baseScope = scope.createChildScope(this.serviceCollection);
+    }
+
+    get Services(): di.ServiceCollection {
+        return this.serviceCollection;
+    }
+
+    get controllerCreated() {
+        return this.controllerCreatedEvent.modifier;
+    }
+
+    create(name: string, parentBindings?: BindingCollection): ControllerType[] {
+        var createdControllers: ControllerType[] = [];
+
+        var foundElement = (element) => {
+            if (!ignoredNodes.isIgnored(element)) {
+                var services = new di.ServiceCollection();
+                var scope = this.baseScope.createChildScope(services);
+                services.addSingletonResolver(BindingCollection, s => {
+                    return new BindingCollection(element);
+                });
+                var bindings = scope.getRequiredService(BindingCollection);
+                var controller = scope.getRequiredService(this.controllerConstructor);
+                bindings.setListener(controller);
+                element.removeAttribute('data-hr-controller');
+                createdControllers.push(controller);
+                this.controllerCreatedEvent.fire(controller);
+            }
+        }
+
+        if (parentBindings) {
+            parentBindings.iterateControllers(name, foundElement);
+        }
+        else {
+            domQuery.iterate('[data-hr-controller="' + name + '"]', null, foundElement);
+        }
+
+        return createdControllers;
+    }
+
+    /**
+     * This will create a callback function that will create a new controller when it is called.
+     * @returns
+     */
+    createOnCallback(): (bindings: BindingCollection, data: DataType) => void {
+        return (bindings: BindingCollection, data: DataType) => {
+            var services = new di.ServiceCollection();
+            var scope = this.baseScope.createChildScope(services);
+            services.addSingleton(BindingCollection, bindings);
+            var bindings = scope.getRequiredService(BindingCollection);
+            var controller = scope.getRequiredService(this.controllerConstructor);
             bindings.setListener(controller);
             this.controllerCreatedEvent.fire(controller);
         }
