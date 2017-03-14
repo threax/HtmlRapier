@@ -3,7 +3,6 @@ export type ResolverFunction<T> = (scope: Scope) => T;
 //Thanks Tehau Cave at http://stackoverflow.com/questions/36886082/abstract-constructor-type-in-typescript
 //Intellisense seems to correctly detect T using this method.
 export type DiFunction<T> = Function & { prototype: T };
-//type DiConstructor<T> = (new (...args: any[]) => T);
 
 export type InjectableConstructor<T> = { InjectorArgs: DiFunction<any>[] };
 function IsInjectableConstructor<T>(test: any): test is InjectableConstructor<T> {
@@ -85,7 +84,7 @@ export class ServiceCollection {
      * @param {ResolverFunction<T>} resolver The resolver function for the object, can return promises.
      * @returns
      */
-    public addTransient<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T>): ServiceCollection {
+    public addTransient<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T> | InjectableConstructor<T>): ServiceCollection {
         if (IsInjectableConstructor(resolver)) {
             return this.add(typeHandle, Scopes.Transient, this.createConstructorResolver(resolver));
         }
@@ -208,8 +207,7 @@ export class Scope {
     }
 
     /**
-     * Get a service defined by the given constructor function returned through a promise.
-     * If the service cannot be found the promise will still resolve, but the 
+     * Get a service defined by the given constructor function.
      * @param {function} typeHandle
      * @returns
      */

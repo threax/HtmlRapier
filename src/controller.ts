@@ -112,17 +112,56 @@ export class ControllerBuilder<ControllerType, ContextType, DataType> {
     }
 }
 
+const controllerInfoPropertyName = "__.hrControllerInfo";
+interface ControllerInfo {
+
+}
+
+interface ScopedControllerInfo {
+    scope: di.Scope;
+}
+
+function IsScopedControllerInfo(test): test is ScopedControllerInfo {
+    return test !== undefined && test.scope !== undefined;
+}
+
 export class InjectedControllerBuilder<ControllerType, DataType> {
+    private static services = new di.ServiceCollection();
+    private static globalScope = new di.Scope(InjectedControllerBuilder.services);
+
+    public static get GlobalScope() {
+        return InjectedControllerBuilder.globalScope;
+    }
+
+    public static get GlobalServices() {
+        return InjectedControllerBuilder.services;
+    }
+
     private controllerConstructor: di.DiFunction<ControllerType>;
     private controllerCreatedEvent = new ActionEventDispatcher<ControllerType>();
     private serviceCollection: di.ServiceCollection;
     private baseScope: di.Scope;
 
     /**
-     * Create a new ControllerBuilder
-     * @param {type} controllerConstructor
+     * Create a new ControllerBuilder, can reference a parent controller by passing it.
+     * @param controllerConstructor
+     * @param scope The scope to use for dependency injection into the controller
      */
-    constructor(controllerConstructor: di.DiFunction<ControllerType>, scope: di.Scope) {
+    constructor(controllerConstructor: di.DiFunction<ControllerType>, parentController?: any) {
+        var scope;
+        //If there is a parent controller, try to use its scope
+        if (parentController !== undefined) {
+            var info: ControllerInfo = parentController[controllerInfoPropertyName];
+            if (IsScopedControllerInfo(info)) {
+                scope = info.scope;
+            }
+        }
+
+        //Make sure there is a scope, use global if needed.
+        if(!scope) {
+            scope = InjectedControllerBuilder.globalScope;
+        }
+
         this.controllerConstructor = controllerConstructor;
         this.serviceCollection = new di.ServiceCollection();
         this.baseScope = scope.createChildScope(this.serviceCollection);
@@ -146,12 +185,9 @@ export class InjectedControllerBuilder<ControllerType, DataType> {
                 services.addSingletonResolver(BindingCollection, s => {
                     return new BindingCollection(element);
                 });
-                var bindings = scope.getRequiredService(BindingCollection);
-                var controller = scope.getRequiredService(this.controllerConstructor);
-                bindings.setListener(controller);
                 element.removeAttribute('data-hr-controller');
+                var controller = this.createController(scope);
                 createdControllers.push(controller);
-                this.controllerCreatedEvent.fire(controller);
             }
         }
 
@@ -174,10 +210,20 @@ export class InjectedControllerBuilder<ControllerType, DataType> {
             var services = new di.ServiceCollection();
             var scope = this.baseScope.createChildScope(services);
             services.addSingleton(BindingCollection, bindings);
-            var bindings = scope.getRequiredService(BindingCollection);
-            var controller = scope.getRequiredService(this.controllerConstructor);
-            bindings.setListener(controller);
-            this.controllerCreatedEvent.fire(controller);
+
+            return this.createController(scope);
         }
+    }
+
+    private createController(scope: di.Scope) {
+        var bindings = scope.getRequiredService(BindingCollection);
+        var controller = scope.getRequiredService(this.controllerConstructor);
+        var controllerInfo: ScopedControllerInfo = {
+            scope: scope
+        };
+        controller[controllerInfoPropertyName] = controllerInfo;
+        bindings.setListener(controller);
+        this.controllerCreatedEvent.fire(controller);
+        return controller;
     }
 }
