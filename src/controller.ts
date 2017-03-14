@@ -125,6 +125,16 @@ function IsScopedControllerInfo(test): test is ScopedControllerInfo {
     return test !== undefined && test.scope !== undefined;
 }
 
+/**
+ * This class provides a way to get a handle to the data provided by the
+ * createOnCallback data argument. Return this type from your InjectorArgs
+ * where you take the row data argument, and the appropriate data object
+ * will be returned.
+ */
+export abstract class InjectControllerData{
+    //This is useless on its own, just provides a function based handle to data.
+}
+
 export class InjectedControllerBuilder<ControllerType, DataType> {
     private static services = new di.ServiceCollection();
     private static globalScope = new di.Scope(InjectedControllerBuilder.services);
@@ -210,6 +220,12 @@ export class InjectedControllerBuilder<ControllerType, DataType> {
             var services = new di.ServiceCollection();
             var scope = this.baseScope.createChildScope(services);
             services.addSingleton(BindingCollection, bindings);
+
+            //If some data was provided, use it as our InjectControllerData service
+            //for the newly created scope.
+            if (data !== undefined) {
+                services.addSingleton(InjectControllerData, data);
+            }
 
             return this.createController(scope);
         }
