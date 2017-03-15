@@ -204,13 +204,10 @@ export class Scope {
         //If the service is not found, resolve from our service collection
         if (instance === undefined) {
             var result = this.resolveService<T>(typeHandle, this);
-            //Add scoped and singleton results to the scope instances if one was returned
+            //Add scoped results to the scope instances if one was returned
             if (result !== undefined) {
                 if (result.scope === Scopes.Scoped) {
                     this.instances[typeId] = result.instance;
-                }
-                else if (result.scope === Scopes.Singleton) {
-                    this.singletons[typeId] = result.instance;
                 }
                 instance = result.instance;
             }
@@ -291,6 +288,11 @@ export class Scope {
         if (result === undefined && this.parentScope) {
             //Cannot find service at this level, search parent services.
             result = this.parentScope.resolveService<T>(typeHandle, scope);
+            if (result !== undefined && result.scope === Scopes.Singleton) {
+                //If we found an instance and its a singleton, add it to this scope's list of singletons.
+                var typeId = typeHandle[DiIdProperty];
+                this.singletons[typeId] = result.instance;
+            }
         }
         return result;
     }
