@@ -285,14 +285,17 @@ export class Scope {
      */
     private resolveService<T>(typeHandle: DiFunction<T>, scope: Scope): ResolveResult<T> {
         var result = this.services.__resolveService(typeHandle, scope);
-        if (result === undefined && this.parentScope) {
+        if (result === undefined) {
             //Cannot find service at this level, search parent services.
-            result = this.parentScope.resolveService<T>(typeHandle, scope);
-            if (result !== undefined && result.scope === Scopes.Singleton) {
-                //If we found an instance and its a singleton, add it to this scope's list of singletons.
-                var typeId = typeHandle[DiIdProperty];
-                this.singletons[typeId] = result.instance;
+            if (this.parentScope) {
+                result = this.parentScope.resolveService<T>(typeHandle, scope);
             }
+        }
+        else if (result.scope === Scopes.Singleton) {
+            //If we found an instance and its a singleton, add it to this scope's list of singletons.
+            //Do it here so its stored on the level that resolved it.
+            var typeId = typeHandle[DiIdProperty];
+            this.singletons[typeId] = result.instance;
         }
         return result;
     }

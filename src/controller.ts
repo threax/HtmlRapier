@@ -178,15 +178,15 @@ export class InjectedControllerBuilder<ControllerType, DataType> {
         this.baseScope = scope.createChildScope(this.serviceCollection);
     }
 
-    get Services(): di.ServiceCollection {
+    public get Services(): di.ServiceCollection {
         return this.serviceCollection;
     }
 
-    get controllerCreated() {
+    public get controllerCreated() {
         return this.controllerCreatedEvent.modifier;
     }
 
-    create(name: string, parentBindings?: BindingCollection): ControllerType[] {
+    public create(name: string, parentBindings?: BindingCollection): ControllerType[] {
         var createdControllers: ControllerType[] = [];
 
         var foundElement = (element) => {
@@ -214,7 +214,7 @@ export class InjectedControllerBuilder<ControllerType, DataType> {
      * This will create a callback function that will create a new controller when it is called.
      * @returns
      */
-    createOnCallback(): (bindings: BindingCollection, data: DataType) => void {
+    public createOnCallback(): (bindings: BindingCollection, data: DataType) => void {
         return (bindings: BindingCollection, data: DataType) => {
             var services = new di.ServiceCollection();
             var scope = this.baseScope.createChildScope(services);
@@ -228,6 +228,23 @@ export class InjectedControllerBuilder<ControllerType, DataType> {
 
             return this.createController(scope);
         }
+    }
+
+    /**
+     * Create a new builder from this one that shares services and singletons with the
+     * current builder. You can define the new controller type the builder will create
+     * by passing it.
+     * @param {di.DiFunction<ControllerType>} controllerConstructor The new controller di handle for the new builder
+     */
+    public createSubBuilder<ControllerType, DataType>(controllerConstructor: di.DiFunction<ControllerType>): InjectedControllerBuilder<ControllerType, DataType> {
+        //Emulate a "parent" controller, since controllers are pojos anyway we can pass a dummy one here.
+        //This is done so the public controller for this class does not leak di info.
+        var parentController = {};
+        var controllerInfo: ScopedControllerInfo = {
+            scope: this.baseScope
+        };
+        parentController[controllerInfoPropertyName] = controllerInfo;
+        return new InjectedControllerBuilder<ControllerType, DataType>(controllerConstructor, parentController);
     }
 
     private createController(scope: di.Scope) {
