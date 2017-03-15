@@ -8,6 +8,7 @@ import * as domQuery from 'hr.domquery';
 import * as ignoredNodes from 'hr.ignored';
 import { ActionEventDispatcher } from 'hr.eventdispatcher';
 import * as di from 'hr.di';
+export { DiFunction } from 'hr.di';
 
 /**
  * This interface describes a type that has a constructor that converts
