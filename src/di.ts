@@ -63,6 +63,23 @@ export class ServiceCollection {
     }
 
     /**
+     * Add a singleton service to the collection if it does not exist in the collection already. Note that the ServiceCollections do not
+     * have parents or any concept of parents, so services added this way to a ServiceCollection that is a child of another service
+     * collection will override the service in the child collection as if you added it with add, since it has no way to check parents
+     * for the existance of a service.
+     * @param {DiFunction<T>} typeHandle
+     * @param {InjectableConstructor<T> | T} resolver
+     * @returns
+     */
+    public tryAddSingleton<T>(typeHandle: DiFunction<T>, resolver: InjectableConstructor<T> | T): ServiceCollection {
+        var typeId = typeHandle[DiIdProperty];
+        if (typeId === undefined || this.resolvers[typeId] === undefined) {
+            this.addSingleton(typeHandle, resolver);
+        }
+        return this;
+    }
+
+    /**
      * Add a scoped service to the collection, scoped services are created once per scope they are part of.
      * @param {function} typeHandle The constructor function for the type that represents this injected object.
      * @param {ResolverFunction<T>} resolver The resolver function for the object, can return promises.
@@ -75,6 +92,23 @@ export class ServiceCollection {
         else {
             return this.add(typeHandle, Scopes.Scoped, resolver);
         }
+    }
+
+    /**
+     * Add a scoped service to the collection if it does not exist in the collection already. Note that the ServiceCollections do not
+     * have parents or any concept of parents, so services added this way to a ServiceCollection that is a child of another service
+     * collection will override the service in the child collection as if you added it with add, since it has no way to check parents
+     * for the existance of a service.
+     * @param {DiFunction<T>} typeHandle
+     * @param {InjectableConstructor<T> | T} resolver
+     * @returns
+     */
+    public tryAddScoped<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T> | InjectableConstructor<T>): ServiceCollection {
+        var typeId = typeHandle[DiIdProperty];
+        if (typeId === undefined || this.resolvers[typeId] === undefined) {
+            this.addScoped(typeHandle, resolver);
+        }
+        return this;
     }
 
     /**
@@ -93,6 +127,23 @@ export class ServiceCollection {
     }
 
     /**
+     * Add a transient service to the collection if it does not exist in the collection already. Note that the ServiceCollections do not
+     * have parents or any concept of parents, so services added this way to a ServiceCollection that is a child of another service
+     * collection will override the service in the child collection as if you added it with add, since it has no way to check parents
+     * for the existance of a service.
+     * @param {DiFunction<T>} typeHandle
+     * @param {InjectableConstructor<T> | T} resolver
+     * @returns
+     */
+    public tryAddTransient<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T> | InjectableConstructor<T>): ServiceCollection {
+        var typeId = typeHandle[DiIdProperty];
+        if (typeId === undefined || this.resolvers[typeId] === undefined) {
+            this.addTransient(typeHandle, resolver);
+        }
+        return this;
+    }
+
+    /**
      * Add a singleton service to the collection, singleton services are created the first time they are requested and persist across child scopes.
      * @param {function} typeHandle The constructor function for the type that represents this injected object.
      * @param {ResolverFunction<T>} resolver The resolver function for the object, can return promises.
@@ -100,6 +151,23 @@ export class ServiceCollection {
      */
     public addSingletonResolver<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T>): ServiceCollection {
         return this.add(typeHandle, Scopes.Singleton, resolver);
+    }
+
+    /**
+     * Add a singleton service to the collection if it does not exist in the collection already. Note that the ServiceCollections do not
+     * have parents or any concept of parents, so services added this way to a ServiceCollection that is a child of another service
+     * collection will override the service in the child collection as if you added it with add, since it has no way to check parents
+     * for the existance of a service.
+     * @param {DiFunction<T>} typeHandle
+     * @param {InjectableConstructor<T> | T} resolver
+     * @returns
+     */
+    public tryAddSingletonResolver<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T>): ServiceCollection {
+        var typeId = typeHandle[DiIdProperty];
+        if (typeId === undefined || this.resolvers[typeId] === undefined) {
+            this.addSingletonResolver(typeHandle, resolver);
+        }
+        return this;
     }
 
     /**
