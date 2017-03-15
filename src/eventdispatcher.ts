@@ -8,7 +8,7 @@ export type FuncEventListener<TRet, TArg> = (arg:TArg) => TRet;
 /**
  * A view of EventDispatcher that only allows add and remove.
  */
-interface EventModifier<T>{
+export interface EventModifier<T>{
     add(listener: T): void;
     remove(listener: T): void;
 }
