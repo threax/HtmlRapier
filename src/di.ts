@@ -50,15 +50,12 @@ export class ServiceCollection {
      * @param {ResolverFunction<T>} resolver The resolver function for the object, can return promises.
      * @returns
      */
-    public addSingleton<T>(typeHandle: DiFunction<T>, resolver: InjectableConstructor<T> | T): ServiceCollection {
+    public addSingleton<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T> | InjectableConstructor<T>): ServiceCollection {
         if (IsInjectableConstructor(resolver)) {
             return this.add(typeHandle, Scopes.Singleton, this.createConstructorResolver(resolver));
         }
         else {
-            //Got an instance, return it
-            return this.add(typeHandle, Scopes.Singleton, s => {
-                return resolver;
-            });
+            return this.add(typeHandle, Scopes.Singleton, resolver);
         }
     }
 
@@ -71,7 +68,7 @@ export class ServiceCollection {
      * @param {InjectableConstructor<T> | T} resolver
      * @returns
      */
-    public tryAddSingleton<T>(typeHandle: DiFunction<T>, resolver: InjectableConstructor<T> | T): ServiceCollection {
+    public tryAddSingleton<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T> | InjectableConstructor<T>): ServiceCollection {
         var typeId = typeHandle[DiIdProperty];
         if (typeId === undefined || this.resolvers[typeId] === undefined) {
             this.addSingleton(typeHandle, resolver);
@@ -144,13 +141,14 @@ export class ServiceCollection {
     }
 
     /**
-     * Add a singleton service to the collection, singleton services are created the first time they are requested and persist across child scopes.
+     * Add an existing object instance as a singleton to this injector. Existing instances can only be added
+     * as singletons.
      * @param {function} typeHandle The constructor function for the type that represents this injected object.
      * @param {ResolverFunction<T>} resolver The resolver function for the object, can return promises.
      * @returns
      */
-    public addSingletonResolver<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T>): ServiceCollection {
-        return this.add(typeHandle, Scopes.Singleton, resolver);
+    public addSingletonInstance<T>(typeHandle: DiFunction<T>, instance: T): ServiceCollection {
+        return this.add(typeHandle, Scopes.Singleton, s => instance);
     }
 
     /**
@@ -162,10 +160,10 @@ export class ServiceCollection {
      * @param {InjectableConstructor<T> | T} resolver
      * @returns
      */
-    public tryAddSingletonResolver<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T>): ServiceCollection {
+    public tryAddSingletonInstance<T>(typeHandle: DiFunction<T>, instance: T): ServiceCollection {
         var typeId = typeHandle[DiIdProperty];
         if (typeId === undefined || this.resolvers[typeId] === undefined) {
-            this.addSingletonResolver(typeHandle, resolver);
+            this.addSingletonInstance(typeHandle, instance);
         }
         return this;
     }
