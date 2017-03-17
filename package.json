@@ -1,9 +1,9 @@
 {
   "name": "htmlrapier",
-  "version": "3.7.0",
+  "version": "3.7.1",
   "private": false,
   "dependencies": {
-    "@types/es6-promise": "0.0.32"
+    "@types/es6-promise": "^0.0.32"
   },
   "devDependencies": {
     "gulp": "3.9.1",
@@ -20,6 +20,7 @@
     "gulp-inject-string": "~1.1.0",
     "threax-gulp-tk": "^2.0.0",
     "concat-with-sourcemaps": "^1.0.4",
-    "jsns": "^2.0.0"
+    "jsns": "^2.0.0",
+    "tslib": "^1.6.0"
   }
 }

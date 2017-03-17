@@ -19,6 +19,7 @@ module.exports = function (rootDir, outDir, settings) {
     compileJavascript({
         libs: [
             __dirname + "/src/polyfill.js",
+            __dirname + "/src/tslib.js",
             "!**/*.intellisense.js"
         ],
         output: "polyfill",
