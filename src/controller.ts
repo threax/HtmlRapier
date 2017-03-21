@@ -163,8 +163,8 @@ export class InjectedControllerBuilder {
         return this.controllerCreatedEvent.modifier;
     }
 
-    public create(name: string, controllerConstructor: di.DiFunction<any>, parentBindings?: BindingCollection): any[] {
-        var createdControllers: any[] = [];
+    public create<T>(name: string, controllerConstructor: di.DiFunction<T>, parentBindings?: BindingCollection): T[] {
+        var createdControllers: T[] = [];
 
         var foundElement = (element) => {
             if (!ignoredNodes.isIgnored(element)) {
