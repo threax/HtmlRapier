@@ -1,7 +1,7 @@
 ﻿import * as http from 'hr.http';
 import * as docCookies from 'hr.cookies';
 import * as uri from 'hr.uri';
-import { Fetcher, RequestInfo, RequestInit, Response } from 'hr.fetcher';
+import { Fetcher, RequestInfo, RequestInit, Response, Request } from 'hr.fetcher';
 
 //From https://github.com/auth0/jwt-decode/blob/master/lib/base64_url_decode.js
 function b64DecodeUnicode(str) {
@@ -37,7 +37,7 @@ function base64_url_decode(str) {
 };
 
 //From https://github.com/auth0/jwt-decode/blob/master/lib/index.js
-function parseJwt(token:string, options?:any) {
+function parseJwt(token: string, options?: any) {
     if (typeof token !== 'string') {
         throw new Error('Invalid token specified');
     }
@@ -46,6 +46,57 @@ function parseJwt(token:string, options?:any) {
     var pos = options.header === true ? 0 : 1;
     return JSON.parse(base64_url_decode(token.split('.')[pos]));
 };
+
+export interface IAccessWhitelist {
+    canSendAccessToken(url: RequestInfo): boolean;
+}
+
+function requestIsRequestObject(test: RequestInfo): test is Request {
+    return (<Request>test).url !== undefined;
+}
+
+export class AccessWhitelist implements IAccessWhitelist {
+    private whitelist: uri.Uri[] = [];
+
+    constructor(whitelist?: string[]) {
+        if (whitelist) {
+            for (var i = 0; i < whitelist.length; ++i) {
+                this.add(whitelist[i]);
+            }
+        }
+    }
+
+    public add(url: string) {
+        this.whitelist.push(new uri.Uri(this.transformInput(url)));
+    }
+
+    public canSendAccessToken(url: RequestInfo): boolean {
+        var testUri: uri.Uri;
+        if (requestIsRequestObject(url)) {
+            testUri = new uri.Uri(this.transformInput(url.url));
+        }
+        else {
+            testUri = new uri.Uri(this.transformInput(url));
+        }
+
+        for (var i = 0; i < this.whitelist.length; ++i) {
+            var item = this.whitelist[i];
+            //Check to see if the urls match here, check that authorities match and
+            //that the path for the item starts with the whitelisted path.
+            if (item.protocol === 'HTTPS'
+                && item.authority == testUri.authority
+                && (<any>testUri.path).startsWith(item.path)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private transformInput(url: string): string {
+        return url.toLocaleUpperCase();
+    }
+}
 
 export class AccessTokenManager extends Fetcher {
     private tokenPath: string;
@@ -56,18 +107,20 @@ export class AccessTokenManager extends Fetcher {
     private currentToken;
     private startTime;
     private expirationTick;
+    private accessWhitelist: IAccessWhitelist;
 
-    constructor(tokenPath: string, next: Fetcher) {
+    constructor(tokenPath: string, accessWhitelist: IAccessWhitelist, next: Fetcher) {
         super();
         this.tokenPath = tokenPath;
         this.next = next;
+        this.accessWhitelist = accessWhitelist;
     }
 
     fetch(url: RequestInfo, init?: RequestInit): Promise<Response> {
-        //Make sure the request is trying to add a bearer token that is null, otherwise do nothing
-        if (init !== undefined && init.headers !== undefined && (<any>init.headers).bearer === null) { 
+        //Make sure the request is allowed to send an access token
+        if (this.accessWhitelist.canSendAccessToken(url)) {
             //Does token need refresh?
-            if (this.startTime === undefined || Date.now() / 1000 - this.startTime > this.expirationTick){
+            if (this.startTime === undefined || Date.now() / 1000 - this.startTime > this.expirationTick) {
                 return http.post(this.tokenPath)
                     .then((data: any) => {
                         this.currentToken = data.accessToken;
