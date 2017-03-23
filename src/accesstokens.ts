@@ -130,6 +130,13 @@ export class AccessTokenManager extends Fetcher {
                         this.expirationTick = (tokenObj.exp - this.startTime) / 2; //After half the token time has expired we will turn it in for another one.
 
                         return this.addToken(url, init);
+                    })
+                    .catch(err => { //This error happens only if we can't get the access token, that is also ok and we will try the request anyway.
+                        if (err && err.message) {
+                            console.log("Could not get access token. Reason: " + err.message + " will try connection anyway");
+                        }
+
+                        return this.addToken(url, init);
                     });
             }
             else {
