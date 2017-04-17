@@ -1,1 +1,1 @@
-(<any>window).jsns.runNamedAmd("node_modules/htmlrapier/src/componentgatherer");
+(<any>window).jsns.runNamedAmd("hr.componentgatherer");

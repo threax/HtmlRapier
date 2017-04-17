@@ -1,4 +1,6 @@
-﻿"use strict";
+﻿///<amd-module name="hr.componentgatherer"/>
+
+"use strict";
 
 import * as domquery from 'hr.domquery';
 import {BindingCollection} from 'hr.bindingcollection';

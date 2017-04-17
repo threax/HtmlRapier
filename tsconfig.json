@@ -6,6 +6,7 @@
     "sourceMap": true,
     "target": "es5",
     "outDir": "obj/tsc",
+    "outFile": "obj/tsbin.js",
     "module": "amd",
     "baseUrl": ".",
     "paths": {
