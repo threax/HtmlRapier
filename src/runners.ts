@@ -1,5 +1,6 @@
+declare var jsns;
+
 (function () {
-    var jsns = (<any>window).jsns;
     jsns.run("hr.componentgatherer");
 
     var runnerElements = document.querySelectorAll('[data-hr-run]');
