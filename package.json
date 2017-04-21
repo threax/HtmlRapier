@@ -1,12 +1,12 @@
 {
   "name": "htmlrapier",
-  "version": "4.0.2",
+  "version": "4.1.0",
   "private": false,
   "dependencies": {
     "@types/es6-promise": "^0.0.32"
   },
   "devDependencies": {
-    "jsns": "^3.0.3",
+    "jsns": "^4.0.0",
     "tslib": "^1.6.0"
   }
 }
