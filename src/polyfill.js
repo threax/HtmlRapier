@@ -1,5 +1,5 @@
 ﻿(function () {
-function fillPolys(){
+var fillPolys = function(){
     //Startswith polyfill
     if (!String.prototype.startsWith) {
         String.prototype.startsWith = function (searchString, position) {
