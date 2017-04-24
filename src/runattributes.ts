@@ -1,4 +1,4 @@
-///<amd-module name="hr.inlinerunners"/>
+///<amd-module name="hr.runattributes"/>
 
 "use strict";
 
