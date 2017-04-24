@@ -1,4 +1,5 @@
 ﻿(function () {
+function fillPolys(){
     //Startswith polyfill
     if (!String.prototype.startsWith) {
         String.prototype.startsWith = function (searchString, position) {
@@ -701,4 +702,14 @@
         }
         self.fetch.polyfill = true
     })(typeof self !== 'undefined' ? self : this);
+};
+
+if(jsns){
+    jsns.define("hr.polyfill", [], fillPolys);
+    jsns.run("hr.polyfill");
+}
+else{
+    fillPolys();
+}
+
 })();
