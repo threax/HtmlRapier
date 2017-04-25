@@ -13,7 +13,6 @@ const DiIdProperty = "__diId";
 
 enum Scopes {
     Singleton,
-    Scoped,
     Transient
 }
 
@@ -34,6 +33,13 @@ interface ResolveResult<T> {
 /**
  * A collection of services for injection into other classes.
  * Currently this can only accept non generic typescript classes to inject.
+ * It works by creating a hierarchy of service collections, which can then have scopes
+ * created with additional servics defined if needed. Servics can be shared or transient.
+ * If they are shared a single instance will be created when requested and stored at the 
+ * level in the instance resolver that it was defined on. If any child scopes attempt to
+ * create a shared service they will get the shared instance. Note that this is not quite a
+ * singleton because you can have multiple service stacks. Transient services are not shared
+ * and a new instance will be created each time an instance is requested.
  * @returns
  */
 export class ServiceCollection {
@@ -45,12 +51,13 @@ export class ServiceCollection {
     }
 
     /**
-     * Add a singleton service to the collection, singleton services are created the first time they are requested and persist across scopes.
+     * Add a shared service to the collection, shared services are created the first time they are requested 
+     * and persist across child scopes.
      * @param {function} typeHandle The constructor function for the type that represents this injected object.
      * @param {ResolverFunction<T>} resolver The resolver function for the object, can return promises.
      * @returns
      */
-    public addSingleton<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T> | InjectableConstructor<T>): ServiceCollection {
+    public addShared<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T> | InjectableConstructor<T>): ServiceCollection {
         if (IsInjectableConstructor(resolver)) {
             return this.add(typeHandle, Scopes.Singleton, this.createConstructorResolver(resolver));
         }
@@ -68,40 +75,9 @@ export class ServiceCollection {
      * @param {InjectableConstructor<T> | T} resolver
      * @returns
      */
-    public tryAddSingleton<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T> | InjectableConstructor<T>): ServiceCollection {
+    public tryAddShared<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T> | InjectableConstructor<T>): ServiceCollection {
         if (!this.hasTypeHandle(typeHandle)) {
-            this.addSingleton(typeHandle, resolver);
-        }
-        return this;
-    }
-
-    /**
-     * Add a scoped service to the collection, scoped services are created once per scope they are part of.
-     * @param {function} typeHandle The constructor function for the type that represents this injected object.
-     * @param {ResolverFunction<T>} resolver The resolver function for the object, can return promises.
-     * @returns
-     */
-    public addScoped<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T> | InjectableConstructor<T>): ServiceCollection {
-        if (IsInjectableConstructor(resolver)) {
-            return this.add(typeHandle, Scopes.Scoped, this.createConstructorResolver(resolver));
-        }
-        else {
-            return this.add(typeHandle, Scopes.Scoped, resolver);
-        }
-    }
-
-    /**
-     * Add a scoped service to the collection if it does not exist in the collection already. Note that the ServiceCollections do not
-     * have parents or any concept of parents, so services added this way to a ServiceCollection that is a child of another service
-     * collection will override the service in the child collection as if you added it with add, since it has no way to check parents
-     * for the existance of a service.
-     * @param {DiFunction<T>} typeHandle
-     * @param {InjectableConstructor<T> | T} resolver
-     * @returns
-     */
-    public tryAddScoped<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T> | InjectableConstructor<T>): ServiceCollection {
-        if (!this.hasTypeHandle(typeHandle)) {
-            this.addScoped(typeHandle, resolver);
+            this.addShared(typeHandle, resolver);
         }
         return this;
     }
@@ -144,7 +120,7 @@ export class ServiceCollection {
      * @param {ResolverFunction<T>} resolver The resolver function for the object, can return promises.
      * @returns
      */
-    public addSingletonInstance<T>(typeHandle: DiFunction<T>, instance: T): ServiceCollection {
+    public addSharedInstance<T>(typeHandle: DiFunction<T>, instance: T): ServiceCollection {
         return this.add(typeHandle, Scopes.Singleton, s => instance);
     }
 
@@ -157,9 +133,9 @@ export class ServiceCollection {
      * @param {InjectableConstructor<T> | T} resolver
      * @returns
      */
-    public tryAddSingletonInstance<T>(typeHandle: DiFunction<T>, instance: T): ServiceCollection {
+    public tryAddSharedInstance<T>(typeHandle: DiFunction<T>, instance: T): ServiceCollection {
         if (!this.hasTypeHandle(typeHandle)) {
-            this.addSingletonInstance(typeHandle, instance);
+            this.addSharedInstance(typeHandle, instance);
         }
         return this;
     }
@@ -258,7 +234,6 @@ export class ServiceCollection {
  */
 export class Scope {
     private services: ServiceCollection;
-    private instances: any = {};
     private singletons: any = {};
     private parentScope: Scope;
 
@@ -281,9 +256,6 @@ export class Scope {
             var result = this.resolveService<T>(typeHandle, this);
             //Add scoped results to the scope instances if one was returned
             if (result !== undefined) {
-                if (result.scope === Scopes.Scoped) {
-                    this.instances[typeId] = result.instance;
-                }
                 instance = result.instance;
             }
         }
@@ -330,10 +302,7 @@ export class Scope {
      */
     private findInstance<T>(typeHandle: DiFunction<T>) {
         var typeId = typeHandle.prototype[DiIdProperty];
-        var instance = this.instances[typeId];
-        if (instance === undefined) {
-            instance = this.bubbleFindSingletonInstance(typeHandle);
-        }
+        var instance = this.bubbleFindSingletonInstance(typeHandle);
 
         return instance;
     }

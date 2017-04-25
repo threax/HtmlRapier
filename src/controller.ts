@@ -132,6 +132,9 @@ export class InjectedControllerBuilder {
         return InjectedControllerBuilder.globalScope;
     }
 
+    /**
+     * The global service collection for all controllers. Anything added to this will be added to any builder scopes created.
+     */
     public static get GlobalServices() {
         return InjectedControllerBuilder.services;
     }
@@ -170,7 +173,7 @@ export class InjectedControllerBuilder {
             if (!ignoredNodes.isIgnored(element)) {
                 var services = new di.ServiceCollection();
                 var scope = this.baseScope.createChildScope(services);
-                services.addScoped(BindingCollection, s => new BindingCollection(element));
+                services.addTransient(BindingCollection, s => new BindingCollection(element));
                 element.removeAttribute('data-hr-controller');
                 var controller = this.createController(controllerConstructor, services, scope);
                 createdControllers.push(controller);
@@ -195,12 +198,12 @@ export class InjectedControllerBuilder {
         return (bindings: BindingCollection, data: any) => {
             var services = new di.ServiceCollection();
             var scope = this.baseScope.createChildScope(services);
-            services.addScoped(BindingCollection, s => bindings);
+            services.addTransient(BindingCollection, s => bindings);
 
             //If some data was provided, use it as our InjectControllerData service
             //for the newly created scope.
             if (data !== undefined) {
-                services.addScoped(InjectControllerData, s => data);
+                services.addTransient(InjectControllerData, s => data);
             }
 
             return this.createController(controllerConstructor, services, scope);
