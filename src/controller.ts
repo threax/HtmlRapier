@@ -173,9 +173,10 @@ export class InjectedControllerBuilder {
             if (!ignoredNodes.isIgnored(element)) {
                 var services = new di.ServiceCollection();
                 var scope = this.baseScope.createChildScope(services);
-                services.addTransient(BindingCollection, s => new BindingCollection(element));
+                var bindings =  new BindingCollection(element);
+                services.addTransient(BindingCollection, s => bindings);
                 element.removeAttribute('data-hr-controller');
-                var controller = this.createController(controllerConstructor, services, scope);
+                var controller = this.createController(controllerConstructor, services, scope, bindings);
                 createdControllers.push(controller);
             }
         }
@@ -206,13 +207,12 @@ export class InjectedControllerBuilder {
                 services.addTransient(InjectControllerData, s => data);
             }
 
-            return this.createController(controllerConstructor, services, scope);
+            return this.createController(controllerConstructor, services, scope, bindings);
         }
     }
 
-    private createController(controllerConstructor: di.DiFunction<any>, services: di.ServiceCollection, scope: di.Scope) {
+    private createController(controllerConstructor: di.DiFunction<any>, services: di.ServiceCollection, scope: di.Scope, bindings: BindingCollection) {
         services.addTransient(InjectedControllerBuilder, s => new InjectedControllerBuilder(scope));
-        var bindings = scope.getRequiredService(BindingCollection);
         var controller = scope.getRequiredService(controllerConstructor);
         bindings.setListener(controller);
         this.controllerCreatedEvent.fire(controller);
