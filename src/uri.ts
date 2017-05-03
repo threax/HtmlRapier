@@ -103,7 +103,15 @@ export class Uri {
         var queryString = "";
         for (var key in data) {
             if (data[key] !== undefined && data[key] !== null) {
-                queryString += key + '=' + encodeURIComponent(data[key]) + '&';
+                if(Array.isArray(data[key])){
+                    var arr: any[] = data[key];
+                    for(var i = 0; i < arr.length; ++i){
+                        queryString += key + '=' + encodeURIComponent(arr[i]) + '&';
+                    }
+                }
+                else{
+                    queryString += key + '=' + encodeURIComponent(data[key]) + '&';
+                }
             }
         }
         if (queryString.length > 0) {
@@ -128,11 +136,24 @@ export class Uri {
         var val = {};
         for (var i = 0; i < qs.length; ++i) {
             var pair = qs[i].split('=', 2);
-            if (pair.length === 1) {
-                val[pair[0].toLowerCase()] = "";
-            }
-            else if (pair.length > 0) {
-                val[pair[0].toLowerCase()] = escape(decodeURIComponent(pair[1].replace(/\+/g, ' ')));
+            if(pair.length > 0){
+                var name = pair[0].toLowerCase();
+                var pairValue = "";
+                if (pair.length > 1) {
+                    pairValue = escape(decodeURIComponent(pair[1].replace(/\+/g, ' ')));
+                }
+                if(val[name] === undefined){
+                    //Undefined, set value directly
+                    val[name] = pairValue;
+                }
+                else if(Array.isArray(val[name])){
+                    //Already an array, add the value
+                    val[name].push(pairValue);
+                }
+                else{
+                    //One value set, add 2nd into array
+                    val[name] = [val[name], pairValue];
+                }
             }
         }
         return val;
