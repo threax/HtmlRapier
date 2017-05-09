@@ -7,7 +7,7 @@ import * as TextStream from 'hr.textstream';
 import * as toggles from 'hr.toggles';
 import * as models from 'hr.models';
 
-function EventRunner(name, listener) {
+function EventRunner(name: string, listener: any) {
     this.execute = function (evt) {
         var cb = listener[name];
         if (cb) {
@@ -16,7 +16,7 @@ function EventRunner(name, listener) {
     }
 }
 
-function bindEvents(elements, listener) {
+function bindEvents(elements: HTMLElement[], listener: any) {
     for (var eIx = 0; eIx < elements.length; ++eIx) {
         var element = elements[eIx];
         domQuery.iterateNodes(element, NodeFilter.SHOW_ELEMENT, function (node) {
@@ -35,7 +35,7 @@ function bindEvents(elements, listener) {
     }
 }
 
-function getToggle(name, elements, typedToggle: toggles.TypedToggle) {
+function getToggle(name: string, elements: HTMLElement[], typedToggle: toggles.TypedToggle) {
     var states = typedToggle.getPossibleStates();
     var toggleArray: toggles.IToggleStates[] = [];
     var query = '[data-hr-toggle=' + name + ']';
@@ -67,7 +67,7 @@ function getToggle(name, elements, typedToggle: toggles.TypedToggle) {
     }
 }
 
-function getModel<T>(name, elements): models.Model<T> {
+function getModel<T>(name: string, elements: HTMLElement[]): models.Model<T> {
     var model: models.Model<T>;
     var query = '[data-hr-model=' + name + ']';
     for (var eIx = 0; eIx < elements.length; ++eIx) {
@@ -89,7 +89,7 @@ function getModel<T>(name, elements): models.Model<T> {
     return model;
 }
 
-function getHandle(name, elements) {
+function getHandle(name: string, elements: HTMLElement[]) {
     var model;
     var query = '[data-hr-handle=' + name + ']';
     for (var eIx = 0; eIx < elements.length; ++eIx) {
@@ -103,7 +103,7 @@ function getHandle(name, elements) {
     return null;
 }
 
-function getConfig(elements) {
+function getConfig(elements: HTMLElement[]) {
     var data = {};
     for (var eIx = 0; eIx < elements.length; ++eIx) {
         var element = elements[eIx];
@@ -120,12 +120,10 @@ function getConfig(elements) {
     return data;
 }
 
-function iterateControllers(name, elements, cb) {
+function iterateControllers(name: string, elements: HTMLElement[], cb: domQuery.ElementIteratorCallback) {
     for (var eIx = 0; eIx < elements.length; ++eIx) {
         var element = elements[eIx];
-        domQuery.iterate('[data-hr-controller="' + name + '"]', element, function (cntrlElement) {
-            cb(cntrlElement);
-        });
+        domQuery.iterate('[data-hr-controller="' + name + '"]', element, cb);
     }
 }
 
@@ -199,7 +197,7 @@ export class BindingCollection {
     /**
      * Iterate over all the controllers in the BindingCollection.
      */
-    iterateControllers(name: string, cb) {
+    iterateControllers(name: string, cb: domQuery.ElementIteratorCallback) {
         iterateControllers(name, this.elements, cb);
     }
 };

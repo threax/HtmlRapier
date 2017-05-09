@@ -2,36 +2,44 @@
 
 import * as typeId from 'hr.typeidentifiers';
 
-export interface IteratorInterface<T>{
+export interface IteratorInterface<T> {
     next(): IterateResult<T>;
 }
 
-export interface IterableInterface<T>{
+export interface IterableInterface<T> {
     select<NewType>(s: (i: T) => NewType): IterableInterface<NewType>;
 
-    where(w):IterableInterface<T>;
+    where(w): IterableInterface<T>;
 
-    forEach(cb:(i:T)=>void);
+    forEach(cb: (i: T) => void);
 
-    iterator():IteratorInterface<T>;
+    iterator(): IteratorInterface<T>;
 }
 
-function Query() {
-    var chain = [];
+class Query {
+    private chain = [];
 
-    function push(c) {
-        chain.push(c);
+    constructor() {
+
     }
-    this.push = push;
 
-    function derive(item) {
+    /**
+     * Push an item, queries are derived backward (lifo).
+     */
+    push(c) {
+        this.chain.push(c);
+    }
+
+    /**
+     * Derive the query lifo order from how they were pushed.
+     */
+    derive(item) {
         var result = item;
-        for (var i = chain.length - 1; i >= 0 && result !== undefined; --i) {
-            result = chain[i](result);
+        for (var i = this.chain.length - 1; i >= 0 && result !== undefined; --i) {
+            result = this.chain[i](result);
         }
         return result;
     }
-    this.derive = derive;
 }
 
 var defaultQuery = new Query(); //Empty query to use as default
@@ -111,62 +119,77 @@ function _forEach(items, query, cb) {
     }
 }
 
-function _build(prevBuild, get, query, cb) {
-    query.push(get);
-    return prevBuild(query, cb);
+abstract class IteratorBase<T> implements IterableInterface<T>{
+    select<NewType>(s: (i: T) => NewType): IterableInterface<NewType> {
+        return new Selector<NewType>(s, this);
+    }
+
+    where(w): IterableInterface<T> {
+        return new Conditional(w, this);
+    }
+
+    forEach(cb: (i: T) => void) {
+        this.build(new Query()).forEach(cb);
+    }
+
+    iterator(): IteratorInterface<T> {
+        return this.build(new Query()).iterator();
+    }
+
+    abstract build(query: Query);
 }
 
-function _queryClause(build) {
-    this.select = function (s) {
-        return new Selector(s, build);
+class Selector<T> extends IteratorBase<T>{
+    constructor(private selectCb, private previous: IteratorBase<any>) {
+        super();
     }
 
-    this.where = function (w) {
-        return new Conditional(w, build);
-    }
-
-    this.forEach = function (cb) {
-        build(new Query()).forEach(cb);
-    }
-
-    this.iterator = function () {
-        return build(new Query()).iterator();
+    build(query: Query) {
+        query.push(i => this.selectCb(i));
+        return this.previous.build(query);
     }
 }
 
-function Selector(selectCb, prevBuild) {
-    _queryClause.call(this, build);
+class Conditional<T> extends IteratorBase<T> {
 
-    function build(query, cb) {
-        return _build(prevBuild, selectCb, query, cb);
-    }
-}
-
-function Conditional(whereCb, prevBuild) {
-    _queryClause.call(this, build);
-
-    function build(query, cb) {
-        return _build(prevBuild, get, query, cb);
+    constructor(private whereCb, private previous: IteratorBase<T>) {
+        super();
     }
 
-    function get(item) {
-        if (whereCb(item)) {
+    build(query: Query) {
+        query.push((i) => this.get(i));
+        return this.previous.build(query);
+    }
+
+    get(item) {
+        if (this.whereCb(item)) {
             return item;
         }
     }
 }
 
-export function Iterable(items) {
-    _queryClause.call(this, build);
+export type IteratorSource<T> = () => T;
 
-    function build(query) {
-        return {
-            forEach: function (cb) {
-                _forEach(items, query, cb);
-            },
-            iterator: function () {
-                return _iterate(items, query);
-            }
-        }
+export class Iterable<T> extends IteratorBase<T> {
+    constructor(private items: T[] | IteratorSource<T>) {
+        super();
+    }
+
+    public build(query) {
+        return new BuiltQuery<T>(this.items, query);
+    }
+}
+
+class BuiltQuery<T>{
+    constructor(private items, private query) {
+
+    }
+
+    forEach(cb) {
+        _forEach(this.items, this.query, cb);
+    }
+
+    iterator() {
+        return _iterate(this.items, this.query);
     }
 }

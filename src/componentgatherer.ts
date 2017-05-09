@@ -7,7 +7,7 @@ import {BindingCollection} from 'hr.bindingcollection';
 import {TextStream} from 'hr.textstream';
 import * as components from 'hr.components';
 import * as ignoredNodes from 'hr.ignored';
-import {Iterable} from 'hr.iterable';
+import {Iterable, IteratorInterface} from 'hr.iterable';
 
 var browserSupportsTemplates = 'content' in document.createElement('template');
 var anonTemplateIndex = 0;
@@ -101,24 +101,29 @@ function buildTemplateElements(nestedElementsStack) {
     }
 }
 
-var templateElements = new Iterable(Array.prototype.slice.call(document.getElementsByTagName("TEMPLATE")));
+interface ElementPair{
+    element: Element;
+    templateElement: Element;
+}
+
+var templateIterables = new Iterable<Element>(Array.prototype.slice.call(document.getElementsByTagName("TEMPLATE")));
+var templateElements: IteratorInterface<ElementPair>;
 //If the browser supports templates, iterate through them after creating temp ones.
 if (browserSupportsTemplates) {
     var nestedElementsStack = [];
-    nestedElementsStack.push(templateElements.iterator());
-    templateElements = new Iterable(function () {
+    nestedElementsStack.push(templateIterables.iterator());
+    templateElements = new Iterable<ElementPair>(function () {
         return buildTemplateElements(nestedElementsStack);
-    });
+    }).iterator();
 }
 else {
-    templateElements = templateElements.select(function (t) {
+    templateElements = templateIterables.select<ElementPair>(function (t) {
         return {
             element: t,
             templateElement: t
         }
-    });
+    }).iterator();
 }
-templateElements = templateElements.iterator();
 
 var currentTemplate = templateElements.next();
 while (!currentTemplate.done) {
@@ -127,7 +132,7 @@ while (!currentTemplate.done) {
 }
 
 //Extract templates off the page
-function extractTemplate(elementPair, currentBuilder) {
+function extractTemplate(elementPair: ElementPair, currentBuilder) {
     var element = elementPair.element;
 
     //INC HERE - This is where currentTemplate is incremented to its next value
@@ -159,7 +164,7 @@ function extractTemplate(elementPair, currentBuilder) {
         }
     }
 
-    var elementParent = element.parentNode;
+    var elementParent = element.parentElement;
     elementParent.removeChild(element);
 
     var variantName = element.getAttribute("data-hr-variant");
@@ -194,7 +199,7 @@ function extractTemplate(elementPair, currentBuilder) {
 }
 
 //Actual creation function
-var str2DOMElement = function (html) {
+function str2DOMElement(html: string) {
     //From j Query and the discussion on http://krasimirtsonev.com/blog/article/Revealing-the-magic-how-to-properly-convert-HTML-string-to-a-DOM-element
     //Modified, does not support body tags and returns collections of children
 
