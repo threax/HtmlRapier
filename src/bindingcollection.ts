@@ -89,13 +89,13 @@ function getModel<T>(name: string, elements: HTMLElement[]): models.Model<T> {
     return model;
 }
 
-function getHandle(name: string, elements: HTMLElement[]) {
+function getHandle(name: string, elements: HTMLElement[]): HTMLElement {
     var model;
     var query = '[data-hr-handle=' + name + ']';
     for (var eIx = 0; eIx < elements.length; ++eIx) {
         var element = elements[eIx];
         var targetElement = domQuery.first(query, element);
-        if (targetElement) {
+        if (targetElement && targetElement instanceof HTMLElement) {
             return targetElement;
         }
     }
@@ -190,7 +190,7 @@ export class BindingCollection {
      * Get a handle element. These are direct references to html elements for passing to third party libraries
      * that need them. Don't use these directly if you can help it.
      */
-    getHandle(name: string) {
+    getHandle(name: string): HTMLElement {
         return getHandle(name, this.elements);
     }
 
