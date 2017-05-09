@@ -2,6 +2,9 @@
 
 import * as typeId from 'hr.typeidentifiers';
 
+export type NodeIteratorCallback = (node: Node) => void;
+export type ElementIteratorCallback = (element: Element) => void;
+
 /**
  * Derive the plain javascript element from a passed element
  * @param {string|Node} element - the element to detect
@@ -13,7 +16,7 @@ export function first(element: Node | string, context?: HTMLElement): Node {
             if (this.matches(context, element)) {
                 return context;
             }
-            else{
+            else {
                 return context.querySelector(element);
             }
         }
@@ -78,7 +81,7 @@ export function all(element: HTMLElement | HTMLElement[] | string, context?: HTM
  * @param {HTMLElement} element - the context to search
  * @param cb - Called with each htmlelement that is found
  */
-export function iterate(element, context, cb) {
+export function iterate(element: HTMLElement | HTMLElement[] | string, context: HTMLElement, cb: ElementIteratorCallback) {
     if (typeId.isString(element)) {
         if (context) {
             if (this.matches(context, element)) {
@@ -92,10 +95,10 @@ export function iterate(element, context, cb) {
             iterateQuery(document.querySelectorAll(element), cb);
         }
     }
-    else if (!typeId.isArray(element)) {
+    else if (element instanceof HTMLElement) {
         cb(element);
     }
-    else {
+    else if (Array.isArray(element)) {
         for (var i = 0; i < element.length; ++i) {
             cb(element[i]);
         }
@@ -110,14 +113,14 @@ function alwaysTrue(node) {
  * Iterate a node collection using createNodeIterator. There is no query for this version
  * as it iterates everything and allows you to extract what is needed.
  * @param  element - The root element
- * @param  cb - The function called for each item iterated
  * @param {NodeFilter} whatToShow - see createNodeIterator, defaults to SHOW_ALL
+ * @param  cb - The function called for each item iterated
  */
-export function iterateNodes(element, whatToShow, cb) {
-    var iter = document.createNodeIterator(element, whatToShow, alwaysTrue as any, false);
-    var node;
-    while (node = iter.nextNode()) {
-        cb(node);
+export function iterateNodes(node: Node, whatToShow?: number, cb?: NodeIteratorCallback) {
+    var iter = document.createNodeIterator(node, whatToShow, <any>alwaysTrue, false);
+    var resultNode;
+    while (resultNode = iter.nextNode()) {
+        cb(resultNode);
     }
 }
 
@@ -127,17 +130,17 @@ export function iterateNodes(element, whatToShow, cb) {
  * @param {type} selector
  * @returns {type} 
  */
-export function matches(element, selector) {
+export function matches(element: Element, selector: string) {
     return element.matches(selector);
 }
 
-function nodesToArray(nodes, arr) {
+function nodesToArray(nodes: NodeListOf<Element>, arr: Element[]) {
     for (var i = 0; i < nodes.length; ++i) {
         arr.push(nodes[i]);
     }
 }
 
-function iterateQuery(nodes, cb) {
+function iterateQuery(nodes: NodeListOf<Element>, cb: ElementIteratorCallback) {
     for (var i = 0; i < nodes.length; ++i) {
         cb(nodes[i]);
     }

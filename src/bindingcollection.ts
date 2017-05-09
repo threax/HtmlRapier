@@ -23,7 +23,7 @@ function bindEvents(elements, listener) {
             //Look for attribute
             for (var i = 0; i < node.attributes.length; i++) {
                 var attribute = node.attributes[i];
-                if (attribute.name.startsWith('data-hr-on-')) {
+                if ((<any>attribute.name).startsWith('data-hr-on-')) {
                     var eventFunc = attribute.value;
                     if (listener[eventFunc]) {
                         var runner = new EventRunner(eventFunc, listener);
@@ -111,7 +111,7 @@ function getConfig(elements) {
             //Look for attribute
             for (var i = 0; i < node.attributes.length; i++) {
                 var attribute = node.attributes[i];
-                if (attribute.name.startsWith('data-hr-config-')) {
+                if ((<any>attribute.name).startsWith('data-hr-config-')) {
                     data[attribute.name.substr(15)] = attribute.value;
                 }
             }
