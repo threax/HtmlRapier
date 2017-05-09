@@ -92,7 +92,7 @@ export function repeat<T>(name, parentComponent, data: T, createdCallback: Creat
         insertBefore = insertBefore.nextElementSibling;
     }
 
-    var fragmentParent = document.createDocumentFragment() as HTMLElement;
+    var fragmentParent = document.createDocumentFragment();
 
     //Output
     if (typeId.isArray(data)) {
@@ -117,7 +117,7 @@ export function repeat<T>(name, parentComponent, data: T, createdCallback: Creat
 /**
  * Remove all children from an html element
  */
-export function empty(parentComponent: HTMLElement | string) {
+export function empty(parentComponent: Node | string) {
 
     var parent: Node = domquery.first(parentComponent);
     var currentNode = parent.firstChild;
@@ -133,7 +133,7 @@ export function empty(parentComponent: HTMLElement | string) {
     }
 }
 
-function doCreateComponent<T>(name, data: T, parentComponent: HTMLElement | string, insertBeforeSibling, variant: string, createdCallback: CreatedCallback<T>) {
+function doCreateComponent<T>(name, data: T, parentComponent: Node | string, insertBeforeSibling, variant: string, createdCallback: CreatedCallback<T>) {
     parentComponent = domquery.first(parentComponent);
     if (factory.hasOwnProperty(name)) {
         var created = factory[name](data, parentComponent, insertBeforeSibling, variant);

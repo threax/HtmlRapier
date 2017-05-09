@@ -4,21 +4,21 @@ import * as typeId from 'hr.typeidentifiers';
 
 /**
  * Derive the plain javascript element from a passed element
- * @param {string|HTMLElement} element - the element to detect
- * @returns {HTMLElement} - The located html element.
+ * @param {string|Node} element - the element to detect
+ * @returns {Node} - The located html element.
  */
-export function first(element: HTMLElement | string, context?: HTMLElement): HTMLElement {
+export function first(element: Node | string, context?: HTMLElement): Node {
     if (typeof element === 'string') {
         if (context !== undefined) {
             if (this.matches(context, element)) {
                 return context;
             }
             else{
-                return context.querySelector(element) as HTMLElement;
+                return context.querySelector(element);
             }
         }
         else {
-            return document.querySelector(element) as HTMLElement;
+            return document.querySelector(element);
         }
     }
     if (element instanceof Node) {

@@ -94,7 +94,7 @@ export function serialize(form) {
  */
 export function populate(form: HTMLElement | string, data:any) {
     var formElement = domQuery.first(form);
-    var nameAttrs = domQuery.all('[name]', formElement);
+    var nameAttrs = domQuery.all('[name]', <HTMLElement>formElement);
     if (typeIds.isObject(data)) {
         for (var i = 0; i < nameAttrs.length; ++i) {
             var element = nameAttrs[i] as HTMLInputElement;
