@@ -23,6 +23,6 @@ export function getSessionObject<T>(name, defaultValue?:T):T {
  * @param name - The name of the object to store.
  * @param {T} value - The value to store.
  */
-export function storeObjectInSession<T>(name, value:T) {
-    sessionStorage.setItem(name, JSON.stringify(value));
+export function storeObjectInSession<T>(name, value: T, replacer?: (key: string, value: any) => any | (number | string)[] | null) {
+    sessionStorage.setItem(name, JSON.stringify(value, replacer));
 }
