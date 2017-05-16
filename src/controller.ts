@@ -124,6 +124,23 @@ export abstract class InjectControllerData{
     //This is useless on its own, just provides a function based handle to data.
 }
 
+/**
+ * This class builds controllers using dependency injection.
+ * Controllers are pretty much normal dependency injected classes, they have no superclass and don't
+ * have any constructor requirements, however, you might want to take controller.BindingCollection at a minimum.
+ * In addition to this your controller can define a function called postBind that will be called after the 
+ * controller's constructor and setting the controller as the binding collection listener. This is the best
+ * place to create additional neseted controllers without messing up the binding collection.
+ * 
+ * The way to handle a controller is as follows:
+ * 1. Create the controller class with any InjectorArgs defined that need to be injected, likely at a minimnum this is controller.BindingCollection
+ * 2. Implement the constructor for the controller taking in arguments for everything you need injected.
+ *    In the controller read anything you will need out of the BindingCollection, do not store it for later or read it later, it will change as the page
+ *    changes, so if you have nested controllers they can potentially end up seeing each others elements.
+ * 3. Implement protected postBind() to do any work that should happen after bindings are complete. This will fire after the constructor has run and after
+ *    the new controller instance has bound its functions to the dom. Ideally this method is protected so subclasses can call it but nothing else in typescript
+ *    can see it.
+ */
 export class InjectedControllerBuilder {
     private static services = new di.ServiceCollection();
     private static globalScope = new di.Scope(InjectedControllerBuilder.services);
@@ -215,6 +232,9 @@ export class InjectedControllerBuilder {
         services.addTransient(InjectedControllerBuilder, s => new InjectedControllerBuilder(scope));
         var controller = scope.getRequiredService(controllerConstructor);
         bindings.setListener(controller);
+        if (controller.postBind !== undefined) {
+            controller.postBind();
+        }
         this.controllerCreatedEvent.fire(controller);
         return controller;
     }
