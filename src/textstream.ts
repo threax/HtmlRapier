@@ -3,35 +3,54 @@
 import {escape} from 'hr.escape';
 import * as typeId from 'hr.typeidentifiers';
 
-function TextNode(str) {
-    this.writeObject = function (data) {
-        return str;
-    }
-
-    this.writeFunction = this.writeObject;
+interface IStreamNode{
+    writeFunction(data: (variable: string) => any);
+    writeObject(data: any);
 }
 
-function VariableNode(variable) {
-    this.writeObject = function (data) {
-        return escape(data[variable]);
+class TextNode implements IStreamNode{
+    constructor(private str: string){
+
     }
 
-    this.writeFunction = function (data) {
-        return escape(data(variable));
+    writeObject(data: any) {
+        return this.str;
+    }
+
+    writeFunction(data: (variable: string) => any){
+        return this.writeObject(data);
     }
 }
 
-function ThisVariableNode() {
-    this.writeObject = function (data) {
+class VariableNode implements IStreamNode {
+    constructor(private variable: string){
+
+    }
+
+    writeObject(data: any) {
+        return escape(data[this.variable]);
+    }
+
+    writeFunction(data: (variable: string) => any){
+        return escape(data(this.variable));
+    }
+}
+
+class ThisVariableNode {
+    constructor(){
+
+    }
+
+    writeObject(data: any) {
         return escape(data);
     }
 
-    this.writeFunction = function (data) {
+    writeFunction(data: (variable: string) => any){
         return escape(data('this'));
     }
 }
 
-function format(data, streamNodes) {
+function format(data: any, streamNodes: IStreamNode[]) {
     if (data === null || data === undefined) {
         data = {};
     }
@@ -60,7 +79,7 @@ function format(data, streamNodes) {
  * @returns {type} 
  */
 export class TextStream {
-    private streamNodes = [];
+    private streamNodes: IStreamNode[] = [];
     private variablesFound = false;
 
     constructor(text: string, open?: string, close?: string){
