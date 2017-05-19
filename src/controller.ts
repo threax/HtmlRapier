@@ -142,20 +142,6 @@ export abstract class InjectControllerData{
  *    can see it.
  */
 export class InjectedControllerBuilder {
-    private static services = new di.ServiceCollection();
-    private static globalScope = new di.Scope(InjectedControllerBuilder.services);
-
-    public static get GlobalScope() {
-        return InjectedControllerBuilder.globalScope;
-    }
-
-    /**
-     * The global service collection for all controllers. Anything added to this will be added to any builder scopes created.
-     */
-    public static get GlobalServices() {
-        return InjectedControllerBuilder.services;
-    }
-
     private controllerCreatedEvent = new ActionEventDispatcher<any>();
     private serviceCollection: di.ServiceCollection;
     protected baseScope: di.Scope;
@@ -166,13 +152,13 @@ export class InjectedControllerBuilder {
      * @param scope The scope to use for dependency injection into the controller
      */
     constructor(scope?: di.Scope) {
-        //Make sure there is a scope, use global if needed.
-        if(!scope) {
-            scope = InjectedControllerBuilder.globalScope;
-        }
-
         this.serviceCollection = new di.ServiceCollection();
-        this.baseScope = scope.createChildScope(this.serviceCollection);
+        if(scope) {
+            this.baseScope = scope.createChildScope(this.serviceCollection);
+        }
+        else {
+            this.baseScope = new di.Scope(this.serviceCollection);
+        }
     }
 
     public get Services(): di.ServiceCollection {
@@ -206,6 +192,22 @@ export class InjectedControllerBuilder {
         }
 
         return createdControllers;
+    }
+
+    /**
+     * This will create a controller without looking for html elements, it will not have a binding collection.
+     * Only one instance will be created per call.
+     */
+    public createUnbound<T>(controllerConstructor: di.DiFunction<T>): T {
+        var services = new di.ServiceCollection();
+        var scope = this.baseScope.createChildScope(services);
+        services.addTransient(InjectedControllerBuilder, s => new InjectedControllerBuilder(scope));
+        var controller = scope.getRequiredService(controllerConstructor);
+        if ((<any>controller).postBind !== undefined) {
+            (<any>controller).postBind();
+        }
+        this.controllerCreatedEvent.fire(controller);
+        return controller;
     }
 
     /**
