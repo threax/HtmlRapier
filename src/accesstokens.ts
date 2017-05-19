@@ -4,7 +4,7 @@ import * as uri from 'hr.uri';
 import { Fetcher, RequestInfo, RequestInit, Response, Request } from 'hr.fetcher';
 
 //From https://github.com/auth0/jwt-decode/blob/master/lib/base64_url_decode.js
-function b64DecodeUnicode(str) {
+function b64DecodeUnicode(str: string) {
     return decodeURIComponent(atob(str).replace(/(.)/g, function (m, p) {
         var code = p.charCodeAt(0).toString(16).toUpperCase();
         if (code.length < 2) {
@@ -14,7 +14,7 @@ function b64DecodeUnicode(str) {
     }));
 }
 
-function base64_url_decode(str) {
+function base64_url_decode(str: string) {
     var output = str.replace(/-/g, "+").replace(/_/g, "/");
     switch (output.length % 4) {
         case 0:
@@ -104,9 +104,9 @@ export class AccessTokenManager extends Fetcher {
     private next: Fetcher;
     //Remove this
     private tokenPromise: Promise<string>; //The promise that gets the token
-    private currentToken;
-    private startTime;
-    private expirationTick;
+    private currentToken: any;
+    private startTime: number;
+    private expirationTick: number;
     private accessWhitelist: IAccessWhitelist;
 
     constructor(tokenPath: string, accessWhitelist: IAccessWhitelist, next: Fetcher) {

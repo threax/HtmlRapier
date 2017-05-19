@@ -7,139 +7,161 @@ import * as typeId from 'hr.typeidentifiers';
 import * as domQuery from 'hr.domquery';
 import * as iter from 'hr.iterable';
 
-function sharedClearer(i) {
+function sharedClearer(i: number) {
     return "";
 }
 
-function FormModel(form, src) {
-    this.setData = function (data) {
-        forms.populate(form, data);
+class FormModel<T> implements Model<T>{
+    constructor(private form: string | HTMLElement, private src: string) {
+
+    }
+    
+    public setData(data: T) {
+        forms.populate(this.form, data);
+    }
+    
+    public appendData(data: T) {
+        forms.populate(this.form, data);
     }
 
-    this.appendData = this.setData;
-
-    function clear() {
-        forms.populate(form, sharedClearer);
-    }
-    this.clear = clear;
-
-    this.getData = function () {
-        return forms.serialize(form);
+    public clear() {
+        forms.populate(this.form, sharedClearer);
     }
 
-    this.getSrc = function () {
-        return src;
+    public getData(): T {
+        return <T>forms.serialize(this.form);
+    }
+
+    getSrc(): string {
+        return this.src;
     }
 }
 
-function ComponentModel(element, src, component) {
-    this.setData = function (data, createdCallback, variantFinderCallback) {
-        components.empty(element);
+ class ComponentModel<T> implements Model<T> {
+    constructor(private element: HTMLElement, private src: string, private component: string){
+
+    }
+
+    public setData(data, createdCallback, variantFinderCallback) {
+        components.empty(this.element);
         this.appendData(data, createdCallback, variantFinderCallback);
     }
 
-    this.appendData = function (data, createdCallback, variantFinderCallback) {
+    public appendData(data, createdCallback, variantFinderCallback) {
         if (typeId.isArray(data) || typeId.isForEachable(data)) {
-            components.repeat(component, element, data, createdCallback, variantFinderCallback);
+            components.repeat(this.component, this.element, data, createdCallback, variantFinderCallback);
         }
         else if (data !== undefined && data !== null) {
-            components.single(component, element, data, createdCallback, variantFinderCallback);
+            components.single(this.component, this.element, data, createdCallback, variantFinderCallback);
         }
     }
 
-    function clear() {
-        components.empty(element);
-    }
-    this.clear = clear;
-
-    this.getData = function () {
-        return {};
+    public clear() {
+        components.empty(this.element);
     }
 
-    this.getSrc = function () {
-        return src;
-    }
-}
-
-function TextNodeModel(element, src) {
-    var dataTextElements = undefined;
-
-    this.setData = function (data) {
-        dataTextElements = bindData(data, element, dataTextElements);
+    public getData(): T {
+        return <T>{};
     }
 
-    function clear() {
-        dataTextElements = bindData(sharedClearer, element, dataTextElements);
-    }
-    this.clear = clear;
-
-    this.appendData = this.setData;
-
-    this.getData = function () {
-        return {};
-    }
-
-    this.getSrc = function () {
-        return src;
+    public getSrc(): string {
+        return this.src;
     }
 }
 
-function bindData(data, element, dataTextElements) {
-    //No found elements, iterate everything.
-    if (dataTextElements === undefined) {
-        dataTextElements = [];
-        domQuery.iterateNodes(element, NodeFilter.SHOW_TEXT, function (node) {
-            var textStream = new TextStream(node.textContent);
-            if (textStream.foundVariable()) {
-                node.textContent = textStream.format(data);
-                dataTextElements.push({
-                    node: node,
-                    stream: textStream
-                });
+class TextNodeModel<T> implements Model<T> {
+    private dataTextElements = undefined;
+
+    constructor(private element: HTMLElement, private src: string){
+
+    }
+
+    public setData(data) {
+        this.dataTextElements = TextNodeModel.bindData(data, this.element, this.dataTextElements);
+    }
+
+    public appendData(data) {
+        this.dataTextElements = TextNodeModel.bindData(data, this.element, this.dataTextElements);
+    }
+
+    public clear() {
+        this.dataTextElements = TextNodeModel.bindData(sharedClearer, this.element, this.dataTextElements);
+    }
+
+    public getData(): T {
+        return <T>{};
+    }
+
+    public getSrc(): string {
+        return this.src;
+    }
+    
+
+    private static bindData(data, element, dataTextElements) {
+        //No found elements, iterate everything.
+        if (dataTextElements === undefined) {
+            dataTextElements = [];
+            domQuery.iterateNodes(element, NodeFilter.SHOW_TEXT, function (node) {
+                var textStream = new TextStream(node.textContent);
+                if (textStream.foundVariable()) {
+                    node.textContent = textStream.format(data);
+                    dataTextElements.push({
+                        node: node,
+                        stream: textStream
+                    });
+                }
+            });
+        }
+        //Already found the text elements, output those.
+        else {
+            for (var i = 0; i < dataTextElements.length; ++i) {
+                var node = dataTextElements[i];
+                node.node.textContent = node.stream.format(data);
             }
-        });
-    }
-    //Already found the text elements, output those.
-    else {
-        for (var i = 0; i < dataTextElements.length; ++i) {
-            var node = dataTextElements[i];
-            node.node.textContent = node.stream.format(data);
         }
-    }
 
-    return dataTextElements;
+        return dataTextElements;
+    }
 }
 
 export function build<T>(element) : Model<T> {
     var src = element.getAttribute('data-hr-model-src');
     if (element.nodeName === 'FORM' || element.nodeName == 'INPUT' || element.nodeName == 'TEXTAREA') {
-        return new FormModel(element, src);
+        return new FormModel<T>(element, src);
     }
     else {
         var component = element.getAttribute('data-hr-model-component');
         if (component) {
-            return new ComponentModel(element, src, component);
+            return new ComponentModel<T>(element, src, component);
         }
         else {
-            return new TextNodeModel(element, src);
+            return new TextNodeModel<T>(element, src);
         }
     }
 }
 
-export function NullModel() {
-    this.setData = function (data) {
+export class NullModel implements Model<any> {
+    constructor(){
 
     }
 
-    this.appendData = this.setData;
+    public setData(data): void {
 
-    this.clear = function () { }
+    }
 
-    this.getData = function () {
+    public appendData(data): void {
+
+    }
+
+    public clear(): void {
+
+    }
+
+    public getData() {
         return {};
     }
 
-    this.getSrc = function () {
+    public getSrc() {
         return "";
     }
 }

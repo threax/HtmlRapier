@@ -80,12 +80,11 @@ export function single<T>(name: string, parentComponent, data: T, createdCallbac
  * If it is a function return the data and then return null to stop iteration.
  * @param {exports.createComponent~callback} createdCallback
  */
-export function repeat<T>(name, parentComponent, data: T, createdCallback: CreatedCallback<T>, variantFinder?: VariantFinderCallback<T>) {
+export function repeat<T>(name: string, parentComponent: HTMLElement, data: T, createdCallback: CreatedCallback<T>, variantFinder?: VariantFinderCallback<T>) {
     if (variantFinder === undefined) {
         variantFinder = getDefaultVariant;
     }
     //Look for an insertion point
-    var insertBefore = null;
     var insertBefore = parentComponent.firstElementChild;
     var variant;
     while (insertBefore != null && !insertBefore.hasAttribute('data-hr-insert')) {
@@ -133,7 +132,7 @@ export function empty(parentComponent: Node | string) {
     }
 }
 
-function doCreateComponent<T>(name, data: T, parentComponent: Node | string, insertBeforeSibling, variant: string, createdCallback: CreatedCallback<T>) {
+function doCreateComponent<T>(name: string, data: T, parentComponent: Node | string, insertBeforeSibling, variant: string, createdCallback: CreatedCallback<T>) {
     parentComponent = domquery.first(parentComponent);
     if (factory.hasOwnProperty(name)) {
         var created = factory[name](data, parentComponent, insertBeforeSibling, variant);

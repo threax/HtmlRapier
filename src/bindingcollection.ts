@@ -8,7 +8,7 @@ import * as toggles from 'hr.toggles';
 import * as models from 'hr.models';
 
 function EventRunner(name: string, listener: any) {
-    this.execute = function (evt) {
+    this.execute = function (evt: Event) {
         var cb = listener[name];
         if (cb) {
             cb.call(listener, evt);
@@ -83,7 +83,7 @@ function getModel<T>(name: string, elements: HTMLElement[]): models.Model<T> {
     }
 
     if (model === null) {
-        model = new models.NullModel();
+        model = <models.Model<T>>(new models.NullModel());
     }
 
     return model;
