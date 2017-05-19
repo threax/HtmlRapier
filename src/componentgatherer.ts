@@ -27,58 +27,67 @@ function createItem(data, componentStringStream, parentComponent, insertBeforeSi
     return new BindingCollection(arrayedItems);
 }
 
-function VariantBuilder(componentString) {
-    var tokenizedString;
-    var currentBuildFunc = tokenize;
+class VariantBuilder{
+    private tokenizedString: TextStream;
+    private currentBuildFunc;
 
-    function tokenize(data, parentComponent, insertBeforeSibling) {
-        tokenizedString = new TextStream(componentString);
-        currentBuildFunc = build;
-        return build(data, parentComponent, insertBeforeSibling);
+    constructor(private componentString: string){
+        this.currentBuildFunc = this.tokenize;
     }
 
-    function build(data, parentComponent, insertBeforeSibling) {
-        return createItem(data, tokenizedString, parentComponent, insertBeforeSibling);
+    public tokenize(data, parentComponent, insertBeforeSibling) {
+        this.tokenizedString = new TextStream(this.componentString);
+        this.currentBuildFunc = this.build;
+        return this.build(data, parentComponent, insertBeforeSibling);
     }
 
-    function create(data, parentComponent, insertBeforeSibling) {
-        return currentBuildFunc(data, parentComponent, insertBeforeSibling);
+    public build(data, parentComponent, insertBeforeSibling) {
+        return createItem(data, this.tokenizedString, parentComponent, insertBeforeSibling);
     }
-    this.create = create;
+
+    public create(data, parentComponent, insertBeforeSibling) {
+        return this.currentBuildFunc(data, parentComponent, insertBeforeSibling);
+    }
 }
 
-function ComponentBuilder(componentString) {
-    var variants = {};
-    var tokenizedString;
-    var currentBuildFunc = tokenize;
+type VariantBuilderMap = {[key: string]: VariantBuilder};
 
-    function tokenize(data, parentComponent, insertBeforeSibling) {
-        tokenizedString = new TextStream(componentString);
-        currentBuildFunc = build;
-        return build(data, parentComponent, insertBeforeSibling);
+class ComponentBuilder{
+    private variants: VariantBuilderMap = {};
+    private tokenizedString;
+    private currentBuildFunc;
+
+    constructor(private componentString: string){
+        this.currentBuildFunc = this.tokenize;
     }
 
-    function build(data, parentComponent, insertBeforeSibling) {
-        return createItem(data, tokenizedString, parentComponent, insertBeforeSibling);
+    public tokenize(data, parentComponent, insertBeforeSibling) {
+        this.tokenizedString = new TextStream(this.componentString);
+        this.currentBuildFunc = this.build;
+        return this.build(data, parentComponent, insertBeforeSibling);
     }
 
-    function create(data, parentComponent, insertBeforeSibling, variant) {
-        if (variant !== null && variants.hasOwnProperty(variant)) {
-            return variants[variant].create(data, parentComponent, insertBeforeSibling);
+    public build(data, parentComponent, insertBeforeSibling) {
+        return createItem(data, this.tokenizedString, parentComponent, insertBeforeSibling);
+    }
+
+    public create(data, parentComponent, insertBeforeSibling, variant) {
+        if (variant !== null && this.variants.hasOwnProperty(variant)) {
+            return this.variants[variant].create(data, parentComponent, insertBeforeSibling);
         }
-        return currentBuildFunc(data, parentComponent, insertBeforeSibling);
+        return this.currentBuildFunc(data, parentComponent, insertBeforeSibling);
     }
-    this.create = create;
 
-    function addVariant(name, variantBuilder) {
-        variants[name] = variantBuilder;
+    public addVariant(name: string, variantBuilder: VariantBuilder) {
+        this.variants[name] = variantBuilder;
     }
-    this.addVariant = addVariant;
 }
 
-var extractedBuilders = {};
+type ComponentBuilderMap = {[key: string]: ComponentBuilder };
 
-function buildTemplateElements(nestedElementsStack) {
+var extractedBuilders: ComponentBuilderMap = {};
+
+function buildTemplateElements(nestedElementsStack: any[]) {
     if (nestedElementsStack.length > 0) {
         var currentTopLevelTemplate = nestedElementsStack[nestedElementsStack.length - 1].next();
         if (!currentTopLevelTemplate.done) {
@@ -132,7 +141,7 @@ while (!currentTemplate.done) {
 }
 
 //Extract templates off the page
-function extractTemplate(elementPair: ElementPair, currentBuilder) {
+function extractTemplate(elementPair: ElementPair, currentBuilder: ComponentBuilder): ComponentBuilder {
     var element = elementPair.element;
 
     //INC HERE - This is where currentTemplate is incremented to its next value
