@@ -71,7 +71,13 @@ class ComponentBuilder{
         return createItem(data, this.tokenizedString, parentComponent, insertBeforeSibling);
     }
 
-    public create(data, parentComponent, insertBeforeSibling, variant) {
+    public getFactory() {
+        return (data, parentComponent, insertBeforeSibling, variant) =>{
+            this.create(data, parentComponent, insertBeforeSibling, variant);
+        };
+    }
+
+    private create(data, parentComponent, insertBeforeSibling, variant) {
         if (variant !== null && this.variants.hasOwnProperty(variant)) {
             return this.variants[variant].create(data, parentComponent, insertBeforeSibling);
         }
@@ -188,7 +194,7 @@ function extractTemplate(elementPair: ElementPair, currentBuilder: ComponentBuil
 
         var builder = new ComponentBuilder(componentString);
         extractedBuilders[componentName] = builder;
-        components.register(componentName, builder.create);
+        components.register(componentName, builder.getFactory());
         return builder;
     }
     else {
