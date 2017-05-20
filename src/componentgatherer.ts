@@ -73,7 +73,7 @@ class ComponentBuilder{
 
     public getFactory() {
         return (data, parentComponent, insertBeforeSibling, variant) =>{
-            this.create(data, parentComponent, insertBeforeSibling, variant);
+            return this.create(data, parentComponent, insertBeforeSibling, variant);
         };
     }
 
