@@ -67,7 +67,7 @@ export class ServiceCollection {
     }
 
     /**
-     * Add a singleton service to the collection if it does not exist in the collection already. Note that the ServiceCollections do not
+     * Add a shared service to the collection if it does not exist in the collection already. Note that the ServiceCollections do not
      * have parents or any concept of parents, so services added this way to a ServiceCollection that is a child of another service
      * collection will override the service in the child collection as if you added it with add, since it has no way to check parents
      * for the existance of a service.
@@ -217,9 +217,8 @@ export class ServiceCollection {
     }
 
     /**
-     * Create a scope to hold instantiated variables. Note that calling this function will give you a new scope,
-     * which will resolve any singletons again for the new scope, so be aware of calling this more than once.
-     * @returns
+     * Create a scope to hold instantiated variables.
+     * @returns The new scope.
      */
     public createScope(): Scope {
         return new Scope(this);
@@ -280,10 +279,7 @@ export class Scope {
     }
 
     /**
-     * Create a child scope that shares service definitions and singleton instances. Any scoped services will be recreated
-     * when requested by a child scope. You can optionally add a new serviceCollection that will
-     * shadow the parent scope's ServiceCollection, overriding services that are defined in the child
-     * collection and adding any new services. This is done without modifying the parent ServiceCollection.
+     * Create a child scope that shares service definitions and singleton instances.
      * @returns
      */
     public createChildScope(serviceCollection?: ServiceCollection): Scope {
@@ -294,9 +290,9 @@ export class Scope {
     }
 
     /**
-     * Helper funciton to find existing instances, will look for scoped instances at the current level
-     * and then walk up the tree looking for singletons if there is no match. If no singleton or current
-     * scoped instance is found, a new one is created.
+     * Helper funciton to find existing instances, will look for shared instances at the current level
+     * and then walk up the tree looking for shared instances if there is no match. If nothing is found
+     * a new instance is created.
      * @param {DiFunction<T>} typeHandle
      * @returns
      */
