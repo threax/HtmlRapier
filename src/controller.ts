@@ -60,14 +60,34 @@ export class InjectedControllerBuilder {
         }
     }
 
+    /**
+     * Get the service collection to define services for this builder.
+     */
     public get Services(): di.ServiceCollection {
         return this.serviceCollection;
     }
 
+    /**
+     * This event is fired when this builder creates a controller.
+     */
     public get controllerCreated() {
         return this.controllerCreatedEvent.modifier;
     }
 
+    /**
+     * Create a child builder from this controller builder, this allows you to add
+     * shared instances to the child that will not be present in the parent.
+     */
+    public createChildBuilder(): InjectedControllerBuilder {
+        return new InjectedControllerBuilder(this.baseScope.createChildScope(new di.ServiceCollection()));
+    }
+
+    /**
+     * Create a new controller instance on the named nodes in the document.
+     * @param name The name of the data-hr-controller nodes to lookup.
+     * @param controllerConstructor The controller to create when a node is found.
+     * @param parentBindings The parent bindings to restrict the controller search.
+     */
     public create<T>(name: string, controllerConstructor: di.DiFunction<T>, parentBindings?: BindingCollection): T[] {
         var createdControllers: T[] = [];
 
