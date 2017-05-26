@@ -1,5 +1,4 @@
 ﻿import * as http from 'hr.http';
-import * as docCookies from 'hr.cookies';
 import * as uri from 'hr.uri';
 import { Fetcher, RequestInfo, RequestInit, Response, Request } from 'hr.fetcher';
 
