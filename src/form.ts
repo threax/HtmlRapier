@@ -98,15 +98,24 @@ export function populate(form: HTMLElement | string, data:any) {
     if (typeIds.isObject(data)) {
         for (var i = 0; i < nameAttrs.length; ++i) {
             var element = nameAttrs[i] as HTMLInputElement;
-            element.value = data[element.getAttribute('name')];
+
+            switch (element.type) {
+                case 'checkbox':
+                    element.checked = data[element.getAttribute('name')];
+                    break;
+                default:
+                    element.value = data[element.getAttribute('name')];
+                    break;
+            }
         }
     }
     else if (typeIds.isFunction(data)) {
         for (var i = 0; i < nameAttrs.length; ++i) {
             var element = nameAttrs[i] as HTMLInputElement;
+
             switch (element.type) {
                 case 'checkbox':
-                    element.checked = data(element.getAttribute('name')) === element.value;
+                    element.checked = data(element.getAttribute('name'));
                     break;
                 default:
                     element.value = data(element.getAttribute('name'));
