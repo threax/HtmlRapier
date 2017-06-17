@@ -9,6 +9,8 @@ import * as ignoredNodes from 'hr.ignored';
 import { ActionEventDispatcher } from 'hr.eventdispatcher';
 import * as di from 'hr.di';
 export { DiFunction, ServiceCollection } from 'hr.di';
+export { IForm } from 'hr.form';
+export { IView } from 'hr.view';
 
 /**
  * This class provides a way to get a handle to the data provided by the
