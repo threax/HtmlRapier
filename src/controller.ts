@@ -97,6 +97,7 @@ export class InjectedControllerBuilder {
                 var scope = this.baseScope.createChildScope(services);
                 var bindings =  new BindingCollection(element);
                 services.addTransient(BindingCollection, s => bindings);
+                element.removeAttribute('data-hr-controller');
                 var controller = this.createController(controllerConstructor, services, scope, bindings);
                 createdControllers.push(controller);
             }

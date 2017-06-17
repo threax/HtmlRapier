@@ -85,15 +85,45 @@ class TextNodeView<T> implements IView<T> {
     }
 }
 
-export function build<T>(element: HTMLElement) : IView<T> {
-    var src = element.getAttribute('data-hr-model-src');
-    var component = element.getAttribute('data-hr-model-component');
-    if (component) {
-        return new ComponentView<T>(element, src, component);
+export class NullView<T> implements IView<T> {
+    constructor(){
+
     }
-    else {
-        return new TextNodeView<T>(element, src);
+
+    public setData(data): void {
+
     }
+
+    public appendData(data): void {
+
+    }
+
+    public clear(): void {
+
+    }
+
+    public getSrc() {
+        return "";
+    }
+}
+
+function IsHTMLElement(element: Node): element is HTMLElement{
+    //Just check a couple functions, no need to go overboard, only comparing to node anyway
+    return element && element.nodeType == 1;
+}
+
+export function build<T>(element: Node) : IView<T> {
+    if(IsHTMLElement(element)){
+        var src = element.getAttribute('data-hr-model-src');
+        var component = element.getAttribute('data-hr-model-component');
+        if (component) {
+            return new ComponentView<T>(element, src, component);
+        }
+        else {
+            return new TextNodeView<T>(element, src);
+        }
+    }
+    return new NullView<T>();
 }
 
 interface DataTextElement{

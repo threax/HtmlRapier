@@ -6,6 +6,8 @@ import * as domQuery from 'hr.domquery';
 import * as TextStream from 'hr.textstream';
 import * as toggles from 'hr.toggles';
 import * as models from 'hr.models';
+import * as form from 'hr.form';
+import * as view from 'hr.view';
 
 function EventRunner(name: string, listener: any) {
     this.execute = function (evt: Event) {
@@ -167,6 +169,8 @@ export class BindingCollection {
     }
 
     /**
+     * @deprecated
+     * THIS IS DEPRECATED use getForm and getView instead.
      * Get a named model. Can also provide a StrongTypeConstructor that will be called with new to create
      * the instance of the data pulled from the model. If you don't provide this the objects will be plain
      * javascript objects.
@@ -199,5 +203,31 @@ export class BindingCollection {
      */
     iterateControllers(name: string, cb: domQuery.ElementIteratorCallback) {
         iterateControllers(name, this.elements, cb);
+    }
+
+    getForm<T>(name: string, elements: HTMLElement[]): form.IForm<T> {
+        var query = '[data-hr-form=' + name + ']';
+        for (var eIx = 0; eIx < elements.length; ++eIx) {
+            var element = elements[eIx];
+            var targetElement = domQuery.first(query, element);
+            if (targetElement) {
+                break; //Found it, need to break element loop, done here if found
+            }
+        }
+
+        return form.build<T>(targetElement);
+    }
+
+    getView<T>(name: string, elements: HTMLElement[]): view.IView<T> {
+        var query = '[data-hr-view=' + name + ']';
+        for (var eIx = 0; eIx < elements.length; ++eIx) {
+            var element = elements[eIx];
+            var targetElement = domQuery.first(query, element);
+            if (targetElement) {
+                break; //Found it, need to break element loop, done here if found
+            }
+        }
+
+        return view.build<T>(targetElement);
     }
 };
