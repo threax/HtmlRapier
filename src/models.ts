@@ -1,152 +1,28 @@
 "use strict";
 
 import * as forms from 'hr.form';
+import * as views from 'hr.view';
 import { TextStream } from 'hr.textstream';
 import * as components from 'hr.components';
 import * as typeId from 'hr.typeidentifiers';
 import * as domQuery from 'hr.domquery';
 import * as iter from 'hr.iterable';
 
-function sharedClearer(i: number) {
-    return "";
-}
-
-class FormModel<T> implements Model<T>{
-    private proto: T;
-
-    constructor(private form: string | HTMLElement, private src: string) {
-
-    }
-    
-    public setData(data: T) {
-        forms.populate(this.form, data);
-    }
-    
-    public appendData(data: T) {
-        forms.populate(this.form, data);
-    }
-
-    public clear() {
-        forms.populate(this.form, sharedClearer);
-    }
-
-    public getData(): T {
-        return <T>forms.serialize(this.form, this.proto);
-    }
-
-    public getSrc(): string {
-        return this.src;
-    }
-
-    public setPrototype(proto: T): void { 
-        this.proto = proto;
-    }
-}
-
- class ComponentModel<T> implements Model<T> {
-    constructor(private element: HTMLElement, private src: string, private component: string){
-
-    }
-
-    public setData(data, createdCallback, variantFinderCallback) {
-        components.empty(this.element);
-        this.appendData(data, createdCallback, variantFinderCallback);
-    }
-
-    public appendData(data, createdCallback, variantFinderCallback) {
-        if (typeId.isArray(data) || typeId.isForEachable(data)) {
-            components.repeat(this.component, this.element, data, createdCallback, variantFinderCallback);
-        }
-        else if (data !== undefined && data !== null) {
-            components.single(this.component, this.element, data, createdCallback, variantFinderCallback);
-        }
-    }
-
-    public clear() {
-        components.empty(this.element);
-    }
-
-    public getData(): T {
-        return <T>{};
-    }
-
-    public getSrc(): string {
-        return this.src;
-    }
-
-    public setPrototype(proto: T): void { }
-}
-
-class TextNodeModel<T> implements Model<T> {
-    private dataTextElements = undefined;
-
-    constructor(private element: HTMLElement, private src: string){
-
-    }
-
-    public setData(data) {
-        this.dataTextElements = TextNodeModel.bindData(data, this.element, this.dataTextElements);
-    }
-
-    public appendData(data) {
-        this.dataTextElements = TextNodeModel.bindData(data, this.element, this.dataTextElements);
-    }
-
-    public clear() {
-        this.dataTextElements = TextNodeModel.bindData(sharedClearer, this.element, this.dataTextElements);
-    }
-
-    public getData(): T {
-        return <T>{};
-    }
-
-    public getSrc(): string {
-        return this.src;
-    }
-
-    public setPrototype(proto: T): void { }
-    
-
-    private static bindData(data, element, dataTextElements) {
-        //No found elements, iterate everything.
-        if (dataTextElements === undefined) {
-            dataTextElements = [];
-            domQuery.iterateNodes(element, NodeFilter.SHOW_TEXT, function (node) {
-                var textStream = new TextStream(node.textContent);
-                if (textStream.foundVariable()) {
-                    node.textContent = textStream.format(data);
-                    dataTextElements.push({
-                        node: node,
-                        stream: textStream
-                    });
-                }
-            });
-        }
-        //Already found the text elements, output those.
-        else {
-            for (var i = 0; i < dataTextElements.length; ++i) {
-                var node = dataTextElements[i];
-                node.node.textContent = node.stream.format(data);
-            }
-        }
-
-        return dataTextElements;
-    }
-}
-
 export function build<T>(element) : Model<T> {
     var src = element.getAttribute('data-hr-model-src');
     if (element.nodeName === 'FORM' || element.nodeName == 'INPUT' || element.nodeName == 'TEXTAREA') {
-        return new FormModel<T>(element, src);
+        var shim = forms.build<T>(element);
+        (<any>shim).appendData = (data: T) =>{
+            shim.setData(data);
+        };
+        return <Model<T>>shim;
     }
     else {
-        var component = element.getAttribute('data-hr-model-component');
-        if (component) {
-            return new ComponentModel<T>(element, src, component);
-        }
-        else {
-            return new TextNodeModel<T>(element, src);
-        }
+        var shim2 = views.build(element);
+        (<any>shim2).getData = () =>{
+            return {};
+        };
+        return <Model<T>>shim2;
     }
 }
 
