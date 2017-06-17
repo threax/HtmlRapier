@@ -85,7 +85,7 @@ class TextNodeView<T> implements IView<T> {
     }
 }
 
-export class NullView<T> implements IView<T> {
+class NullView<T> implements IView<T> {
     constructor(){
 
     }

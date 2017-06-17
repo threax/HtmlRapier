@@ -146,14 +146,14 @@ export class BindingCollection {
      * fired when a matching event is fired.
      * @param {type} listener
      */
-    setListener(listener: any) {
+    public setListener(listener: any): void {
         bindEvents(this.elements, listener);
     }
 
     /**
      * Get a named toggle, this will always be an on off toggle.
      */
-    getToggle(name: string): toggles.OnOffToggle {
+    public getToggle(name: string): toggles.OnOffToggle {
         var toggle = new toggles.OnOffToggle();
         getToggle(name, this.elements, toggle);
         return toggle;
@@ -163,7 +163,7 @@ export class BindingCollection {
      * Get a named toggle, this will use the passed in custom toggle instance. Using this you can define
      * states other than on and off.
      */
-    getCustomToggle<T extends toggles.TypedToggle>(name: string, toggle: T) {
+    public getCustomToggle<T extends toggles.TypedToggle>(name: string, toggle: T): T {
         getToggle(name, this.elements, toggle);
         return toggle;
     }
@@ -175,7 +175,7 @@ export class BindingCollection {
      * the instance of the data pulled from the model. If you don't provide this the objects will be plain
      * javascript objects.
      */
-    getModel<T>(name: string, strongConstructor?: models.StrongTypeConstructor<T>): models.Model<T> {
+    public getModel<T>(name: string, strongConstructor?: models.StrongTypeConstructor<T>): models.Model<T> {
         var model = getModel<T>(name, this.elements);
         if (strongConstructor !== undefined) {
             model = new models.StrongTypedModel<T>(model, strongConstructor);
@@ -186,7 +186,7 @@ export class BindingCollection {
     /**
      * Get the config for this binding collection.
      */
-    getConfig<T>(): T {
+    public getConfig<T>(): T {
         return <T>getConfig(this.elements);
     }
 
@@ -194,21 +194,26 @@ export class BindingCollection {
      * Get a handle element. These are direct references to html elements for passing to third party libraries
      * that need them. Don't use these directly if you can help it.
      */
-    getHandle(name: string): HTMLElement {
+    public getHandle(name: string): HTMLElement {
         return getHandle(name, this.elements);
     }
 
     /**
      * Iterate over all the controllers in the BindingCollection.
      */
-    iterateControllers(name: string, cb: domQuery.ElementIteratorCallback) {
+    public iterateControllers(name: string, cb: domQuery.ElementIteratorCallback): void {
         iterateControllers(name, this.elements, cb);
     }
 
-    getForm<T>(name: string, elements: HTMLElement[]): form.IForm<T> {
+    /**
+     * Get a named form, will return a valid IForm object no matter what, but that object
+     * might not actually be a rea form on the document if name does not exist.
+     * @param name The name of the form to lookup.
+     */
+    public getForm<T>(name: string): form.IForm<T> {
         var query = '[data-hr-form=' + name + ']';
-        for (var eIx = 0; eIx < elements.length; ++eIx) {
-            var element = elements[eIx];
+        for (var eIx = 0; eIx < this.elements.length; ++eIx) {
+            var element = this.elements[eIx];
             var targetElement = domQuery.first(query, element);
             if (targetElement) {
                 break; //Found it, need to break element loop, done here if found
@@ -218,10 +223,15 @@ export class BindingCollection {
         return form.build<T>(targetElement);
     }
 
-    getView<T>(name: string, elements: HTMLElement[]): view.IView<T> {
+    /**
+     * Get a named view, will return a valid IView object no matter what, but that object
+     * might not actually be a real view on the document if name does not exist.
+     * @param name The name of the view to lookup
+     */
+    public getView<T>(name: string): view.IView<T> {
         var query = '[data-hr-view=' + name + ']';
-        for (var eIx = 0; eIx < elements.length; ++eIx) {
-            var element = elements[eIx];
+        for (var eIx = 0; eIx < this.elements.length; ++eIx) {
+            var element = this.elements[eIx];
             var targetElement = domQuery.first(query, element);
             if (targetElement) {
                 break; //Found it, need to break element loop, done here if found

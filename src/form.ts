@@ -35,7 +35,7 @@ export interface IForm<T> {
     setPrototype(proto: T): void;
 }
 
-export class Form<T> {
+class Form<T> {
     private proto: T;
 
     constructor(private form: HTMLFormElement, private src: string) {
