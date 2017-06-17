@@ -12,6 +12,8 @@ function sharedClearer(i: number) {
 }
 
 class FormModel<T> implements Model<T>{
+    private proto: T;
+
     constructor(private form: string | HTMLElement, private src: string) {
 
     }
@@ -29,11 +31,15 @@ class FormModel<T> implements Model<T>{
     }
 
     public getData(): T {
-        return <T>forms.serialize(this.form);
+        return <T>forms.serialize(this.form, this.proto);
     }
 
-    getSrc(): string {
+    public getSrc(): string {
         return this.src;
+    }
+
+    public setPrototype(proto: T): void { 
+        this.proto = proto;
     }
 }
 
@@ -67,6 +73,8 @@ class FormModel<T> implements Model<T>{
     public getSrc(): string {
         return this.src;
     }
+
+    public setPrototype(proto: T): void { }
 }
 
 class TextNodeModel<T> implements Model<T> {
@@ -95,6 +103,8 @@ class TextNodeModel<T> implements Model<T> {
     public getSrc(): string {
         return this.src;
     }
+
+    public setPrototype(proto: T): void { }
     
 
     private static bindData(data, element, dataTextElements) {
@@ -164,6 +174,8 @@ export class NullModel implements Model<any> {
     public getSrc() {
         return "";
     }
+
+    public setPrototype(proto: any): void { }
 }
 
 /**
@@ -195,6 +207,13 @@ export interface Model<T>{
      * Get the data source for the model.
      */
     getSrc(): string;
+
+    /**
+     * Set the prototype object to use when getting data.
+     * When the new object is created it will use this as
+     * its prototype.
+     */
+    setPrototype(proto: T): void;
 }
 
 /**
@@ -235,5 +254,9 @@ export class StrongTypedModel<T> implements Model<T>{
 
     getSrc(): string {
         return this.childModel.getSrc();
+    }
+
+    public setPrototype(proto: T): void { 
+        this.childModel.setPrototype(proto);
     }
 }

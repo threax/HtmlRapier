@@ -21,7 +21,7 @@ function addValue(q, name, value) {
  * @param {HTMLElement|string} form - A selector or form element for the form to serialize.
  * @returns {object} - The object that represents the form contents as an object.
  */
-export function serialize(form) {
+export function serialize(form: any, proto?: any) {
     //This is from https://code.google.com/archive/p/form-serialize/downloads
     //Modified to return an object instead of a query string
     form = domQuery.first(form);
@@ -29,7 +29,7 @@ export function serialize(form) {
     if (!form || form.nodeName !== "FORM") {
         return;
     }
-    var i, j, q = {};
+    var i, j, q = Object.create(proto || null);
     for (i = form.elements.length - 1; i >= 0; i = i - 1) {
         if (form.elements[i].name === "") {
             continue;
