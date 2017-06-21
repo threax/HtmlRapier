@@ -114,7 +114,15 @@ function IsHTMLElement(element: Node): element is HTMLElement{
 
 export function build<T>(element: Node) : IView<T> {
     if(IsHTMLElement(element)){
-        var component = element.getAttribute('data-hr-model-component');
+
+        var component: string;
+        if(element.hasAttribute('data-hr-view-component')){
+            component = element.getAttribute('data-hr-view-component');
+        }
+        else if(element.hasAttribute('data-hr-model-component')){ //Backward compatibility
+            component = element.getAttribute('data-hr-model-component');
+        }
+        
         if (component) {
             return new ComponentView<T>(element, component);
         }

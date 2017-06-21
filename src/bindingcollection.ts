@@ -212,12 +212,12 @@ export class BindingCollection {
      */
     public getForm<T>(name: string): form.IForm<T> {
         var query = '[data-hr-form=' + name + ']';
-        for (var eIx = 0; eIx < this.elements.length; ++eIx) {
-            var element = this.elements[eIx];
-            var targetElement = domQuery.first(query, element);
-            if (targetElement) {
-                break; //Found it, need to break element loop, done here if found
-            }
+        var targetElement = this.findElement(query);
+
+        //Backward compatibility with model
+        if(targetElement === null){
+            query = '[data-hr-model=' + name + ']';
+            targetElement = this.findElement(query);
         }
 
         return form.build<T>(targetElement);
@@ -230,15 +230,27 @@ export class BindingCollection {
      */
     public getView<T>(name: string): view.IView<T> {
         var query = '[data-hr-view=' + name + ']';
+        var targetElement = this.findElement(query);
+
+        //Backward compatibility with model
+        if(targetElement === null){
+            query = '[data-hr-model=' + name + ']';
+            targetElement = this.findElement(query);
+        }
+
+        return view.build<T>(targetElement);
+    }
+
+    private findElement(query: string): Node{
         for (var eIx = 0; eIx < this.elements.length; ++eIx) {
             var element = this.elements[eIx];
             var targetElement = domQuery.first(query, element);
             if (targetElement) {
-                break; //Found it, need to break element loop, done here if found
+                //Found it, return now
+                return targetElement;
             }
         }
-
-        return view.build<T>(targetElement);
+        return null; //Not found, return null
     }
 
     /**

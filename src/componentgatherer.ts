@@ -189,7 +189,7 @@ function extractTemplate(elementPair: ElementPair, currentBuilder: ComponentBuil
         //name the template
         if (componentName === null) {
             componentName = 'AnonTemplate_' + anonTemplateIndex++;
-            elementParent.setAttribute("data-hr-model-component", componentName);
+            elementParent.setAttribute("data-hr-view-component", componentName);
         }
 
         var builder = new ComponentBuilder(componentString);
