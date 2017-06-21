@@ -59,7 +59,7 @@ export function one<T>(name: string, data: T, parentComponent: Node | string, in
  * If it is a function return the data and then return null to stop iteration.
  * @param {exports.createComponent~callback} createdCallback
  */
-export function repeat<T>(name: string, parentComponent: HTMLElement, data: T, createdCallback: CreatedCallback<T>, variantFinder?: VariantFinderCallback<T>) {
+export function many<T>(name: string, data: T, parentComponent: HTMLElement, insertBeforeSibling: Node, createdCallback: CreatedCallback<T>, variantFinder?: VariantFinderCallback<T>) {
     if (variantFinder === undefined) {
         variantFinder = getDefaultVariant;
     }

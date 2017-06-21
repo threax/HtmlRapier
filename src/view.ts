@@ -49,7 +49,7 @@ class ComponentView<T> implements IView<T> {
 
     public insertData(data: T | T[] | iter.IterableInterface<T>, insertBeforeSibling: Node, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): void {
         if (typeId.isArray(data) || typeId.isForEachable(data)) {
-            components.repeat(this.component, this.element, data, createdCallback, variantFinderCallback);
+            components.many(this.component, data, this.element, insertBeforeSibling, createdCallback, variantFinderCallback);
         }
         else if (data !== undefined && data !== null) {
             components.one(this.component, data, this.element, insertBeforeSibling, createdCallback, variantFinderCallback);
