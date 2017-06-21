@@ -135,7 +135,7 @@ function iterateControllers(name: string, elements: HTMLElement[], cb: domQuery.
  * should not need to, using the interfaces should be enough.
  */
 export class BindingCollection {
-    private elements;
+    private elements: HTMLElement[];
 
     constructor(elements) {
         this.elements = domQuery.all(elements);
@@ -239,5 +239,15 @@ export class BindingCollection {
         }
 
         return view.build<T>(targetElement);
+    }
+
+    /**
+     * Return the "root" html element for this binding collection. If there is more
+     * than one element, the first one will be returned and null will be returned if
+     * there is no root element. Ideally you would not use this directly, but it is
+     * useful to insert nodes before a set of bound elements.
+     */
+    public get rootElement(): HTMLElement{
+        return this.elements.length > 0 ? this.elements[0] : null;
     }
 };

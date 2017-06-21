@@ -2,37 +2,22 @@
 
 import * as typeId from 'hr.typeidentifiers';
 import * as domquery from 'hr.domquery';
+import { BindingCollection } from 'hr.bindingcollection';
 
-var factory = {};
+interface ComponentFactory {
+    [s: string]: ComponentCreateFunc
+}
 
-/**
- * This callback is called when a component is created
- * @callback exports.createComponent~callback
- * @param {exports.component.BindingCollection} created
- * @param {object} data
- */
+var factory: ComponentFactory = {};
 
-/**
- * This callback is called when a component is about to be created and we want its variant.
- * @callback exports.createComponent~callback
- * @param {object} data - The data to identify a variant for.
- * @return {string} the name of the variant to use or null to use the original.
- */
-
-/**
- * This callback is used to create components when they are requested.
- * @callback exports.registerComponent~callback
- * @param {exports.component.BindingCollection} created
- * @param {object} data
- * @returns {exports.component.BindingCollection} 
- */
+type ComponentCreateFunc = (data: any, parentComponent: Node, insertBeforeSibling: Node, variant: string) => BindingCollection;
 
 /**
  * Register a function with the component system.
- * @param {string} name - The name of the component
- * @param {exports.registerComponent~callback} createFunc - The function that creates the new component.
+ * @param name - The name of the component
+ * @param createFunc - The function that creates the new component.
  */
-export function register(name, createFunc) {
+export function register(name: string, createFunc: ComponentCreateFunc) {
     factory[name] = createFunc;
 }
 
@@ -54,14 +39,8 @@ function getDefaultVariant(item:any) {
 
 /**
  * Create a single component.
- * @param name
- * @param parentComponent
- * @param {T} data
- * @param {CreatedCallback<T>} createdCallback?
- * @param {VariantFinderCallback<T>} variantFinder?
- * @returns
  */
-export function single<T>(name: string, parentComponent, data: T, createdCallback?: CreatedCallback<T>, variantFinder?: VariantFinderCallback<T>) {
+export function one<T>(name: string, data: T, parentComponent: Node | string, insertBeforeSibling: Node, createdCallback?: CreatedCallback<T>, variantFinder?: VariantFinderCallback<T>) {
     var variant: string;
     if (variantFinder === undefined) {
         variantFinder = getDefaultVariant(data);
@@ -69,7 +48,7 @@ export function single<T>(name: string, parentComponent, data: T, createdCallbac
     else if (typeId.isFunction(variantFinder)) {
         variant = variantFinder(data);
     }
-    return doCreateComponent(name, data, parentComponent, null, variant, createdCallback);
+    return doCreateComponent(name, data, parentComponent, insertBeforeSibling, variant, createdCallback);
 }
 
 /**
@@ -92,7 +71,7 @@ export function repeat<T>(name: string, parentComponent: HTMLElement, data: T, c
     }
 
     var fragmentParent = document.createDocumentFragment();
-
+    
     //Output
     if (typeId.isArray(data)) {
         //An array, read it as fast as possible
@@ -132,7 +111,7 @@ export function empty(parentComponent: Node | string) {
     }
 }
 
-function doCreateComponent<T>(name: string, data: T, parentComponent: Node | string, insertBeforeSibling, variant: string, createdCallback: CreatedCallback<T>) {
+function doCreateComponent<T>(name: string, data: T, parentComponent: Node | string, insertBeforeSibling: Node, variant: string, createdCallback: CreatedCallback<T>) {
     parentComponent = domquery.first(parentComponent);
     if (factory.hasOwnProperty(name)) {
         var created = factory[name](data, parentComponent, insertBeforeSibling, variant);

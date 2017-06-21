@@ -40,15 +40,19 @@ class ComponentView<T> implements IView<T> {
 
     public setData(data: T | T[] | iter.IterableInterface<T>, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): void {
         components.empty(this.element);
-        this.appendData(data, createdCallback, variantFinderCallback);
+        this.insertData(data, null, createdCallback, variantFinderCallback);
     }
 
     public appendData(data: T | T[] | iter.IterableInterface<T>, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): void {
+        this.insertData(data, null, createdCallback, variantFinderCallback);
+    }
+
+    public insertData(data: T | T[] | iter.IterableInterface<T>, insertBeforeSibling: Node, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): void {
         if (typeId.isArray(data) || typeId.isForEachable(data)) {
             components.repeat(this.component, this.element, data, createdCallback, variantFinderCallback);
         }
         else if (data !== undefined && data !== null) {
-            components.single(this.component, this.element, data, createdCallback, variantFinderCallback);
+            components.one(this.component, data, this.element, insertBeforeSibling, createdCallback, variantFinderCallback);
         }
     }
 
