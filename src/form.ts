@@ -23,11 +23,6 @@ export interface IForm<T> {
     getData(): T;
 
     /**
-     * Get the data-hr-src attribute value for this form.
-     */
-    getSrc(): string;
-
-    /**
      * Set the prototype object to use when getting the
      * form data with getData.
      * @param proto The prototype object.
@@ -38,7 +33,7 @@ export interface IForm<T> {
 class Form<T> {
     private proto: T;
 
-    constructor(private form: HTMLFormElement, private src: string) {
+    constructor(private form: HTMLFormElement) {
 
     }
     
@@ -52,10 +47,6 @@ class Form<T> {
 
     public getData(): T {
         return <T>serialize(this.form, this.proto);
-    }
-
-    public getSrc(): string {
-        return this.src;
     }
 
     public setPrototype(proto: T): void { 
@@ -80,10 +71,6 @@ class NullForm<T> implements IForm<T> {
         return <T>null;
     }
 
-    public getSrc() {
-        return "";
-    }
-
     public setPrototype(proto: T): void { 
 
     }
@@ -95,9 +82,8 @@ class NullForm<T> implements IForm<T> {
  */
 export function build<T>(element: Node) : IForm<T> {
     if(IsFormElement(element)){
-        var src = element.getAttribute('data-hr-form-src');
         if (element.nodeName === 'FORM' || element.nodeName == 'INPUT' || element.nodeName == 'TEXTAREA') {
-            return new Form<T>(element, src);
+            return new Form<T>(element);
         }
     }
     return new NullForm<T>();

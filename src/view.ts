@@ -23,18 +23,18 @@ export interface IView<T>{
     appendData(data: T | T[] | iter.IterableInterface<T>, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): void;
 
     /**
+     * Insert more data in the model, does not erase existing data.
+     */
+    insertData(data: T | T[] | iter.IterableInterface<T>, insertBeforeSibling: Node, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): void;
+
+    /**
      * Clear all data from the model.
      */
     clear(): void;
-
-    /**
-     * Get the data source for the model.
-     */
-    getSrc(): string;
 }
 
 class ComponentView<T> implements IView<T> {
-    constructor(private element: HTMLElement, private src: string, private component: string){
+    constructor(private element: HTMLElement, private component: string){
 
     }
 
@@ -59,16 +59,12 @@ class ComponentView<T> implements IView<T> {
     public clear(): void {
         components.empty(this.element);
     }
-
-    public getSrc(): string {
-        return this.src;
-    }
 }
 
 class TextNodeView<T> implements IView<T> {
     private dataTextElements = undefined;
 
-    constructor(private element: HTMLElement, private src: string){
+    constructor(private element: HTMLElement){
 
     }
 
@@ -80,12 +76,12 @@ class TextNodeView<T> implements IView<T> {
         this.dataTextElements = bindData(data, this.element, this.dataTextElements);
     }
 
-    public clear(): void {
-        this.dataTextElements = bindData(sharedClearer, this.element, this.dataTextElements);
+    insertData(data: T | T[] | iter.IterableInterface<T>): void{
+        this.dataTextElements = bindData(data, this.element, this.dataTextElements);
     }
 
-    public getSrc(): string {
-        return this.src;
+    public clear(): void {
+        this.dataTextElements = bindData(sharedClearer, this.element, this.dataTextElements);
     }
 }
 
@@ -94,20 +90,20 @@ class NullView<T> implements IView<T> {
 
     }
 
-    public setData(data): void {
+    public setData(): void {
 
     }
 
-    public appendData(data): void {
+    public appendData(): void {
+
+    }
+
+    public insertData(): void {
 
     }
 
     public clear(): void {
 
-    }
-
-    public getSrc() {
-        return "";
     }
 }
 
@@ -118,13 +114,12 @@ function IsHTMLElement(element: Node): element is HTMLElement{
 
 export function build<T>(element: Node) : IView<T> {
     if(IsHTMLElement(element)){
-        var src = element.getAttribute('data-hr-model-src');
         var component = element.getAttribute('data-hr-model-component');
         if (component) {
-            return new ComponentView<T>(element, src, component);
+            return new ComponentView<T>(element, component);
         }
         else {
-            return new TextNodeView<T>(element, src);
+            return new TextNodeView<T>(element);
         }
     }
     return new NullView<T>();

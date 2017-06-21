@@ -11,16 +11,22 @@ import * as iter from 'hr.iterable';
 export function build<T>(element) : Model<T> {
     var src = element.getAttribute('data-hr-model-src');
     if (element.nodeName === 'FORM' || element.nodeName == 'INPUT' || element.nodeName == 'TEXTAREA') {
-        var shim = forms.build<T>(element);
-        (<any>shim).appendData = (data: T) =>{
+        var shim: Model<T> = <Model<T>><any>forms.build<T>(element);
+        shim.appendData = (data: T) =>{
             shim.setData(data);
         };
-        return <Model<T>>shim;
+        shim.getSrc = (): string =>{
+            return src;
+        };
+        return shim;
     }
     else {
-        var shim2 = views.build(element);
-        (<any>shim2).getData = () =>{
-            return {};
+        var shim2: Model<T> = <Model<T>><any>views.build(element);
+        shim2.getData = (): T =>{
+            return <T>{};
+        };
+        shim2.getSrc = (): string =>{
+            return src;
         };
         return <Model<T>>shim2;
     }
