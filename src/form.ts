@@ -82,15 +82,13 @@ class NullForm<T> implements IForm<T> {
  */
 export function build<T>(element: Node) : IForm<T> {
     if(IsFormElement(element)){
-        if (element.nodeName === 'FORM' || element.nodeName == 'INPUT' || element.nodeName == 'TEXTAREA') {
-            return new Form<T>(element);
-        }
+        return new Form<T>(element);
     }
     return new NullForm<T>();
 }
 
 function IsFormElement(element: Node): element is HTMLFormElement{
-    return element && element.nodeName === "FORM";
+    return element && (element.nodeName === 'FORM' || element.nodeName == 'INPUT' || element.nodeName == 'TEXTAREA');
 }
 
 function addValue(q, name, value) {
