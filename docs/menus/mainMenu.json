@@ -1,0 +1,39 @@
+{
+  "name": "Root",
+  "children": [
+    {
+      "name": "Main Page",
+      "link": "/"
+    },
+    {
+      "name": "Reference",
+      "children": [
+        {
+          "name": "Data Attributes",
+          "link": "/data-attributes"
+        }
+      ]
+    },
+    {
+      "name": "Demos",
+      "children": [
+        {
+          "name": "Hello World",
+          "link": "/demos/hello-world"
+        },
+        {
+          "name": "Simple Form Input",
+          "link": "/demos/simple-form-input"
+        },
+        {
+          "name": "Toggles",
+          "link": "/demos/toggles"
+        },
+        {
+          "name": "Todo List",
+          "link": "/demos/todo-list"
+        }
+      ]
+    }
+  ]
+}

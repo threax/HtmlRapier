@@ -2,6 +2,9 @@
   "$schema": "../../../SchemaGenerator/Schema/EdityProject.json",
   "contentMap": {
   },
+  "vars": {
+    "siteTitle": "HtmlRapier Docs"
+  },
   "compilers": [
     {
       "type": "Html",
