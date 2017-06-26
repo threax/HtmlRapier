@@ -1,4 +1,6 @@
-﻿"use strict";
+﻿///<amd-module name="hello-world-demo"/>
+
+"use strict";
 import * as controller from "hr.controller";
 
 //Define the contents of your views with interfaces, this documents what can be written to a view.

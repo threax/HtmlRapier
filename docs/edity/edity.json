@@ -1,6 +1,17 @@
 ﻿{
   "$schema": "../../../SchemaGenerator/Schema/EdityProject.json",
   "contentMap": {
+    "demos": {
+      "js": [
+        {
+          "file": "~/demos/demos.js",
+          "async": false
+        }
+      ],
+      "dependencies": [
+        "tsBinProd"
+      ]
+    }
   },
   "vars": {
     "siteTitle": "HtmlRapier Docs"

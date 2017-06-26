@@ -1,4 +1,4 @@
-{
+﻿{
   "compilerOptions": {
     "noImplicitAny": false,
     "noEmitOnError": true,
@@ -7,21 +7,23 @@
     "noEmitHelpers": true,
     "importHelpers": true,
     "target": "es5",
-    "outDir": "obj/tsc",
-    "outFile": "obj/tsbin.js",
+    "outDir": ".",
+    "outFile": "demos.js",
     "module": "amd",
     "baseUrl": ".",
     "moduleResolution": "node",
     "paths": {
       "hr.*": [
-        "src/*"
+        "../../src/*"
       ]
     }
   },
+  "include": [
+    "**/*.ts"
+  ],
   "exclude": [
-    "node_modules",
-    "dist",
-    "obj"
+    "**/*.js",
+    "../../src/*"
   ],
   "compileOnSave": true
 }
