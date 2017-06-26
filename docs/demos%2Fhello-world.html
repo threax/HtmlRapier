@@ -1,0 +1,59 @@
+<h1 data-hr-run="hello-world-demo">Hello World</h1>
+<p>This is a really simple example of using a controller and a model to display some data on the screen.</p>
+<p data-hr-view="hello">Hello {{message}}</p>
+<p>So, that is pretty stupid, but it is actually doing something.</p>
+<h2>How Does It Work?</h2>
+<h3>The Markup</h3>
+<pre style="background:#042029;color:#839496"><span style="color:#586e75">&lt;</span><span style="color:#268bd2;font-weight:700">div</span> <span style="color:#93a1a1">data-hr-controller</span>=<span style="color:#269186"><span style="color:#269186">&quot;</span>helloWorldDemo<span style="color:#269186">&quot;</span></span><span style="color:#586e75">&gt;</span>
+    <span style="color:#586e75">&lt;</span><span style="color:#268bd2;font-weight:700">p</span> <span style="color:#93a1a1">data-hr-view</span>=<span style="color:#269186"><span style="color:#269186">&quot;</span>hello<span style="color:#269186">&quot;</span></span><span style="color:#586e75">&gt;</span>Hello {{message}}<span style="color:#586e75">&lt;/</span><span style="color:#268bd2;font-weight:700">p</span><span style="color:#586e75">&gt;</span>
+    <span style="color:#586e75">&lt;</span><span style="color:#268bd2;font-weight:700">p</span><span style="color:#586e75">&gt;</span>So, that is pretty stupid, but it is actually doing something.<span style="color:#586e75">&lt;/</span><span style="color:#268bd2;font-weight:700">p</span><span style="color:#586e75">&gt;</span>
+<span style="color:#586e75">&lt;/</span><span style="color:#268bd2;font-weight:700">div</span><span style="color:#586e75">&gt;</span>
+</pre>
+<p>The markup defines a controller named <em>helloWorldDemo</em> and a model named <em>hello</em>&nbsp;and model that we use to bind our data. The model will be a TextNodeModel which will fill in a variable called {{message}}.</p>
+<h3>The Javascript</h3>
+<pre style="background:#042029;color:#839496"><span style="color:#586e75">/// This line gives our module a predictable name</span>
+<span style="color:#586e75">///&lt;amd-module name=&quot;hello-world-demo&quot;/&gt;</span>
+
+<span style="color:#269186"><span style="color:#c60000">&quot;</span>use strict<span style="color:#c60000">&quot;</span></span>;
+<span style="color:#859900">import</span> <span style="color:#859900">*</span> as controller from <span style="color:#269186"><span style="color:#c60000">&quot;</span>hr.controller<span style="color:#c60000">&quot;</span></span>;
+
+<span style="color:#586e75">//Define the contents of your views with interfaces, this documents what can be written to a view.</span>
+<span style="color:#268bd2">interface</span> IHelloView <span style="color:#268bd2">{</span>
+    message: string;
+<span style="color:#268bd2">}</span>
+
+<span style="color:#586e75">//Define a class to hold our controller, no base class, these are pojos.</span>
+<span style="color:#268bd2">class</span> HelloWorldController <span style="color:#268bd2">{</span>
+    <span style="color:#586e75">//This is the arguments for the dependency injector, you return the constructor</span>
+    <span style="color:#586e75">//functions for the types you want to inject into the constructor.</span>
+    <span style="color:#586e75">//The return items here and the arguments to the constructor must match.</span>
+    <span style="color:#738a05">public</span> <span style="color:#738a05">static</span> get InjectorArgs<span style="color:#93a1a1">(</span><span style="color:#93a1a1">)</span>: controller.DiFunction<span style="color:#859900">&lt;</span>any<span style="color:#859900">&gt;</span><span style="color:#268bd2">[</span><span style="color:#268bd2">]</span> <span style="color:#268bd2">{</span>
+        <span style="color:#859900">return</span> <span style="color:#268bd2">[</span>controller.BindingCollection<span style="color:#268bd2">]</span>;
+    <span style="color:#268bd2">}</span>
+
+    <span style="color:#586e75">//Views are strongly typed to help ensure the right data gets into them.</span>
+    <span style="color:#738a05">private</span> view: controller.IView<span style="color:#859900">&lt;</span>IHelloView<span style="color:#859900">&gt;</span>;
+
+    <span style="color:#738a05">public</span> constructor<span style="color:#93a1a1">(</span>bindings: controller.BindingCollection<span style="color:#93a1a1">)</span> <span style="color:#268bd2">{</span>
+        <span style="color:#586e75">//Extract the view from the binding collection.</span>
+        <span style="color:#268bd2">this</span>.view <span style="color:#859900">=</span> bindings.getView<span style="color:#859900">&lt;</span>IHelloView<span style="color:#859900">&gt;</span><span style="color:#93a1a1">(</span><span style="color:#269186"><span style="color:#c60000">&quot;</span>hello<span style="color:#c60000">&quot;</span></span><span style="color:#93a1a1">)</span>;
+
+        <span style="color:#586e75">//Set the data on the view.</span>
+        <span style="color:#268bd2">this</span>.view.setData<span style="color:#93a1a1">(</span><span style="color:#268bd2">{</span>
+            message: <span style="color:#269186"><span style="color:#c60000">&quot;</span>World<span style="color:#c60000">&quot;</span></span>
+        <span style="color:#268bd2">}</span><span style="color:#93a1a1">)</span>;
+    <span style="color:#268bd2">}</span>
+<span style="color:#268bd2">}</span>
+
+<span style="color:#586e75">//Create a controller builder.</span>
+<span style="color:#268bd2">var</span> builder <span style="color:#859900">=</span> <span style="color:#859900">new</span> controller.InjectedControllerBuilder<span style="color:#93a1a1">(</span><span style="color:#93a1a1">)</span>;
+
+<span style="color:#586e75">//Add our new class to the dependency injector as a transient (create every time) instance.</span>
+builder.Services.addTransient<span style="color:#93a1a1">(</span>HelloWorldController, HelloWorldController<span style="color:#93a1a1">)</span>;
+
+<span style="color:#586e75">//Finally create an instance of the controller for each apperance of a </span>
+<span style="color:#586e75">//data-hr-controller attribute on an element with the value &quot;helloWorldDemo&quot;</span>
+builder.create<span style="color:#93a1a1">(</span><span style="color:#269186"><span style="color:#c60000">&quot;</span>helloWorldDemo<span style="color:#c60000">&quot;</span></span>, HelloWorldController<span style="color:#93a1a1">)</span>;
+</pre>
+<p>In javascript we create a controller class named HelloWorldController. Inside this class we find the view named &quot;hello&quot; and write our message &quot;World&quot; to it.</p>
+<p>Finally we create a builder and add the controller as a transient service, so we get a new one each time it is requested.&nbsp;</p>

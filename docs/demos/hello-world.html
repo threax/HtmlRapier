@@ -1,31 +1,19 @@
 <h1 data-hr-run="hello-world-demo">Hello World</h1>
 <p>This is a really simple example of using a controller and a model to display some data on the screen.</p>
 <div data-hr-controller="helloWorldDemo">
-	<p data-hr-view="hello">Hello {{message}}</p>
-	<p data-hr-view="hello">So, that is pretty stupid, but it is actually doing something.</p></div>
+    <p data-hr-view="hello">Hello {{message}}</p>
+    <p>So, that is pretty stupid, but it is actually doing something.</p>
+</div>
 <h2>How Does It Work?</h2>
 <h3>The Markup</h3>
-<pre style="margin: 0px; line-height: 125%;"><span style="color: rgb(0, 119, 0);">&lt;div</span> <span style="color: rgb(0, 0, 204);">data-hr-controller=</span><span style="background-color: rgb(255, 240, 240);">&quot;helloWorldDemo&quot;</span><span style="color: rgb(0, 119, 0);">&gt;</span>
-    <span style="color: rgb(0, 119, 0);">&lt;p</span> <span style="color: rgb(0, 0, 204);">data-hr-model=</span><span style="background-color: rgb(255, 240, 240);">&quot;hello&quot;</span><span style="color: rgb(0, 119, 0);">&gt;</span>Hello {{message}}<span style="color: rgb(0, 119, 0);">&lt;/p&gt;</span>
-<span style="color: rgb(0, 119, 0);">&lt;/div&gt;</span></pre>
+
 <p>&nbsp;</p>
-<p>The markup defines a controller named <em>helloWorldDemo</em> and a model named <em>hello</em>&nbsp;and model that we use to bind our data. The model will be a TextNodeModel which will fill in a variable called {{message}}.</p>
+<p>The markup defines a controller named <em>helloWorldDemo</em> and a model named <em>hello</em>&nbsp;and model that we use
+    to bind our data. The model will be a TextNodeModel which will fill in a variable called {{message}}.</p>
 <h3>The Javascript</h3>
-<pre style="margin: 0px; line-height: 125%;"><span style="background-color: rgb(255, 240, 240);">&quot;use strict&quot;</span>;
 
-jsns.run([
-    <span style="background-color: rgb(255, 240, 240);">&quot;hr.controller&quot;</span>
-], <span style="color: rgb(0, 136, 0); font-weight: bold;">function</span> (exports, module, controller) {
-    <span style="color: rgb(0, 136, 0); font-weight: bold;">function</span> HelloWorldController(bindings) {
-        <span style="color: rgb(0, 136, 0); font-weight: bold;">var</span> model <span style="color: rgb(51, 51, 51);">=</span> bindings.getModel(<span style="background-color: rgb(255, 240, 240);">&#39;hello&#39;</span>);
-
-        model.setData({
-            message<span style="color: rgb(51, 51, 51);">:</span> <span style="background-color: rgb(255, 240, 240);">&quot;World&quot;</span>
-        });
-    }
-
-    controller.create(<span style="background-color: rgb(255, 240, 240);">&quot;helloWorldDemo&quot;</span>, HelloWorldController);
-});</pre>
 <p>&nbsp;</p>
-<p>In javascript we create a controller constructor function named HelloWorldController. This is then passed to controller.create along with the name of the controller elements we want to bind new instances of that controller object to.</p>
-<p>Once the controller is being constructed we get our model from the bindings and set its message data with setData. This will go to the markup and replace any {{message}} variables with the value &quot;World&quot; from our data.</p>
+<p>In javascript we create a controller constructor function named HelloWorldController. This is then passed to controller.create
+    along with the name of the controller elements we want to bind new instances of that controller object to.</p>
+<p>Once the controller is being constructed we get our model from the bindings and set its message data with setData. This will
+    go to the markup and replace any {{message}} variables with the value &quot;World&quot; from our data.</p>
