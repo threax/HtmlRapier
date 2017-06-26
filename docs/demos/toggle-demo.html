@@ -1,40 +1,49 @@
 <h1>Toggle Demo</h1>
 <p>This demo shows how to use the toggles.</p>
 <p>Click Toggle Colors to make the red square turn blue.</p>
-<div data-hr-controller="toggleDemo"><button data-hr-on-click="toggleColors">Toggle Colors</button>
+<div data-hr-controller="toggleDemo" data-hr-run="toggle-demo"><button data-hr-on-click="toggleColors">Toggle Colors</button>
 	<div data-hr-style-on="background-color:blue" data-hr-toggle="color" style="width: 100px; height: 100px; background-color: red;">&nbsp;</div></div>
 <h2>How Does&nbsp;It Work?</h2>
 <h3>The Markup</h3>
-<pre style="margin: 0px; line-height: 125%;">    <span style="color: rgb(0, 119, 0);">&lt;div</span> <span style="color: rgb(0, 0, 204);">data-hr-controller=</span><span style="background-color: rgb(255, 240, 240);">&quot;toggleDemo&quot;</span><span style="color: rgb(0, 119, 0);">&gt;</span>
-        <span style="color: rgb(0, 119, 0);">&lt;button</span> <span style="color: rgb(0, 0, 204);">data-hr-on-click=</span><span style="background-color: rgb(255, 240, 240);">&quot;toggleColors&quot;</span><span style="color: rgb(0, 119, 0);">&gt;</span>Toggle Colors<span style="color: rgb(0, 119, 0);">&lt;/button&gt;</span>
-        <span style="color: rgb(0, 119, 0);">&lt;div</span> <span style="color: rgb(0, 0, 204);">data-hr-toggle=</span><span style="background-color: rgb(255, 240, 240);">&quot;color&quot; </span><span style="color: rgb(0, 0, 204);">data-hr-style-on=</span><span style="background-color: rgb(255, 240, 240);">&quot;background-color:blue&quot;</span> <span style="color: rgb(0, 0, 204);">style=</span><span style="background-color: rgb(255, 240, 240);">&quot;width: 100px; height: 100px; background-color: red;&quot;</span><span style="color: rgb(0, 119, 0);">&gt;
-</span><span style="color: rgb(136, 0, 0); font-weight: bold;">		&amp;nbsp;
-</span><span style="color: rgb(0, 119, 0);">	&lt;/div&gt;</span>
-    <span style="color: rgb(0, 119, 0);">&lt;/div&gt;</span></pre>
+<pre style="background:#042029;color:#839496"><span style="color:#586e75">&lt;</span><span style="color:#268bd2;font-weight:700">div</span> <span style="color:#93a1a1">data-hr-controller</span>=<span style="color:#269186"><span style="color:#269186">&quot;</span>toggleDemo<span style="color:#269186">&quot;</span></span> <span style="color:#93a1a1">data-hr-run</span>=<span style="color:#269186"><span style="color:#269186">&quot;</span>toggle-demo<span style="color:#269186">&quot;</span></span><span style="color:#586e75">&gt;</span>
+    <span style="color:#586e75">&lt;</span><span style="color:#268bd2;font-weight:700">button</span> <span style="color:#93a1a1">data-hr-on-click</span>=<span style="color:#269186"><span style="color:#269186">&quot;</span>toggleColors<span style="color:#269186">&quot;</span></span><span style="color:#586e75">&gt;</span>Toggle Colors<span style="color:#586e75">&lt;/</span><span style="color:#268bd2;font-weight:700">button</span><span style="color:#586e75">&gt;</span>
+    <span style="color:#586e75">&lt;</span><span style="color:#268bd2;font-weight:700">div</span> <span style="color:#93a1a1">data-hr-style-on</span>=<span style="color:#269186"><span style="color:#269186">&quot;</span>background-color:blue<span style="color:#269186">&quot;</span></span> <span style="color:#93a1a1">data-hr-toggle</span>=<span style="color:#269186"><span style="color:#269186">&quot;</span>color<span style="color:#269186">&quot;</span></span> 
+<span style="color:#93a1a1">         style</span>=<span style="color:#269186"><span style="color:#269186">&quot;</span>width: 100px; height: 100px; background-color: red;<span style="color:#269186">&quot;</span></span><span style="color:#586e75">&gt;</span><span style="color:#cb4b16">&amp;nbsp;</span><span style="color:#586e75">&lt;/</span><span style="color:#268bd2;font-weight:700">div</span><span style="color:#586e75">&gt;</span>
+<span style="color:#586e75">&lt;/</span><span style="color:#268bd2;font-weight:700">div</span><span style="color:#586e75">&gt;</span>
+</pre>
 <p>The markup defines a toggle named <em>color </em>with an on style that has a blue background and a standard style that is a red background. When the toggle is turned on the blue background will be added to its element style, which will override the red background. You can alternatively use classes with data-hr-class-on (or off).</p>
 <p>The markup also defines a button that binds the toggleColors function to the click event of the button.</p>
-<h3>The Javascript&nbsp;</h3>
-<pre style="margin: 0px; line-height: 125%;"><span style="background-color: rgb(255, 240, 240);">&quot;use strict&quot;</span>;
+<h3>The Typescript&nbsp;</h3>
+<pre style="background:#042029;color:#839496"><span style="color:#586e75">///&lt;amd-module name=&quot;toggle-demo&quot;/&gt;</span>
 
-jsns.run([
-    <span style="background-color: rgb(255, 240, 240);">&quot;hr.controller&quot;</span>
-], <span style="color: rgb(0, 136, 0); font-weight: bold;">function</span> (exports, module, controller) {
-    <span style="color: rgb(0, 136, 0); font-weight: bold;">function</span> ToggleDemoController(bindings) {
-        <span style="color: rgb(0, 136, 0); font-weight: bold;">var</span> toggle <span style="color: rgb(51, 51, 51);">=</span> bindings.getToggle(<span style="background-color: rgb(255, 240, 240);">&#39;color&#39;</span>);
-        <span style="color: rgb(0, 136, 0); font-weight: bold;">var</span> on <span style="color: rgb(51, 51, 51);">=</span> <span style="color: rgb(0, 136, 0); font-weight: bold;">false</span>;
-        
-        <span style="color: rgb(0, 136, 0); font-weight: bold;">function</span> toggleColors(evt) {
-            on <span style="color: rgb(51, 51, 51);">=</span> <span style="color: rgb(51, 51, 51);">!</span>on;
-            <span style="color: rgb(0, 136, 0); font-weight: bold;">if</span> (on) {
-                toggle.on();
-            }
-            <span style="color: rgb(0, 136, 0); font-weight: bold;">else</span> {
-                toggle.off();                
-            }
-        }
-        <span style="color: rgb(0, 136, 0); font-weight: bold;">this</span>.toggleColors <span style="color: rgb(51, 51, 51);">=</span> toggleColors;
-    }
+<span style="color:#269186"><span style="color:#c60000">&quot;</span>use strict<span style="color:#c60000">&quot;</span></span>;
+<span style="color:#859900">import</span> <span style="color:#859900">*</span> as controller from <span style="color:#269186"><span style="color:#c60000">&quot;</span>hr.controller<span style="color:#c60000">&quot;</span></span>;
 
-    controller.create(<span style="background-color: rgb(255, 240, 240);">&quot;toggleDemo&quot;</span>, ToggleDemoController);
-});</pre>
-<p>The javscript defines a ToggleDemoController constructor function. This controller will get the toggle color from the bindings and it defines the toggleColors function, which toggles the color on and off. It is important to note that for the most part toggles do not maintain any state, so you have to track on and off status yourself. This demo is a bit contrived, usually you would put a series of toggles in a toggle group and activate them individually.</p>
+<span style="color:#268bd2">class</span> ToggleDemoController<span style="color:#268bd2">{</span>
+    <span style="color:#738a05">public</span> <span style="color:#738a05">static</span> get InjectorArgs<span style="color:#93a1a1">(</span><span style="color:#93a1a1">)</span>: controller.DiFunction<span style="color:#859900">&lt;</span>any<span style="color:#859900">&gt;</span><span style="color:#268bd2">[</span><span style="color:#268bd2">]</span> <span style="color:#268bd2">{</span>
+        <span style="color:#859900">return</span> <span style="color:#268bd2">[</span>controller.BindingCollection<span style="color:#268bd2">]</span>;
+    <span style="color:#268bd2">}</span>
+
+    <span style="color:#738a05">private</span> toggle: controller.OnOffToggle;
+    <span style="color:#738a05">private</span> on: <span style="color:#268bd2">boolean</span> <span style="color:#859900">=</span> <span style="color:#b58900">false</span>;
+
+    <span style="color:#738a05">public</span> constructor<span style="color:#93a1a1">(</span>bindings: controller.BindingCollection<span style="color:#93a1a1">)</span><span style="color:#268bd2">{</span>
+        <span style="color:#268bd2">this</span>.toggle <span style="color:#859900">=</span> bindings.getToggle<span style="color:#93a1a1">(</span><span style="color:#269186"><span style="color:#c60000">&#39;</span>color<span style="color:#c60000">&#39;</span></span><span style="color:#93a1a1">)</span>;
+    <span style="color:#268bd2">}</span>
+
+    <span style="color:#738a05">public</span> toggleColors<span style="color:#93a1a1">(</span>evt: Event<span style="color:#93a1a1">)</span>: <span style="color:#268bd2">void</span> <span style="color:#268bd2">{</span>
+        <span style="color:#268bd2">this</span>.on <span style="color:#859900">=</span> <span style="color:#859900">!</span><span style="color:#268bd2">this</span>.on;
+        <span style="color:#859900">if</span> <span style="color:#93a1a1">(</span><span style="color:#268bd2">this</span>.on<span style="color:#93a1a1">)</span> <span style="color:#268bd2">{</span>
+            <span style="color:#268bd2">this</span>.toggle.on<span style="color:#93a1a1">(</span><span style="color:#93a1a1">)</span>;
+        <span style="color:#268bd2">}</span>
+        <span style="color:#859900">else</span> <span style="color:#268bd2">{</span>
+            <span style="color:#268bd2">this</span>.toggle.off<span style="color:#93a1a1">(</span><span style="color:#93a1a1">)</span>;                
+        <span style="color:#268bd2">}</span>
+    <span style="color:#268bd2">}</span>
+<span style="color:#268bd2">}</span>
+
+<span style="color:#268bd2">var</span> builder <span style="color:#859900">=</span> <span style="color:#859900">new</span> controller.InjectedControllerBuilder<span style="color:#93a1a1">(</span><span style="color:#93a1a1">)</span>;
+builder.Services.addTransient<span style="color:#93a1a1">(</span>ToggleDemoController, ToggleDemoController<span style="color:#93a1a1">)</span>;
+builder.create<span style="color:#93a1a1">(</span><span style="color:#269186"><span style="color:#c60000">&quot;</span>toggleDemo<span style="color:#c60000">&quot;</span></span>, ToggleDemoController<span style="color:#93a1a1">)</span>;
+</pre>
+<p>Here we create the ToggleDemoController class, which holds the toggle itself and defines the function toggleColors to turn the toggle on and off when the button is clicked.</p>
