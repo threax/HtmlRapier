@@ -2,49 +2,62 @@
 <p>This example shows taking input and outputting it again.</p>
 <p>&nbsp;</p>
 <div class="row" data-hr-controller="inputDemo" data-hr-run="simple-form-input-demo">
-	<form class="col-md-6" data-hr-model="input" data-hr-on-submit="outputInfo">
+	<form class="col-md-6" data-hr-form="input" data-hr-on-submit="outputInfo">
 		<div class="form-group"><label for="userName">Enter your name</label> <input class="form-control" name="userName" type="text" /></div><button type="submit">Submit</button></form>
-	<div class="col-md-6" data-hr-model="output">
+	<div class="col-md-6" data-hr-view="output">
 		<p>Hello {{userName}} you have input some data with HtmlRapier.</p></div></div>
 <p>&nbsp;</p>
 <p>Here input your name and press enter (or click submit). Your name will appear in the output section.</p>
 <h2>How Does It Work?</h2>
 <h3>The Markup</h3>
-<pre style="margin: 0px; line-height: 125%;"><span style="color: rgb(0, 119, 0);">&lt;div</span> <span style="color: rgb(0, 0, 204);">class=</span><span style="background-color: rgb(255, 240, 240);">&quot;row&quot;</span> <span style="color: rgb(0, 0, 204);">data-hr-controller=</span><span style="background-color: rgb(255, 240, 240);">&quot;inputDemo&quot;</span><span style="color: rgb(0, 119, 0);">&gt;</span>
-	<span style="color: rgb(0, 119, 0);">&lt;form</span> <span style="color: rgb(0, 0, 204);">class=</span><span style="background-color: rgb(255, 240, 240);">&quot;col-md-6&quot;</span> <span style="color: rgb(0, 0, 204);">data-hr-model=</span><span style="background-color: rgb(255, 240, 240);">&quot;input&quot;</span> <span style="color: rgb(0, 0, 204);">data-hr-on-submit=</span><span style="background-color: rgb(255, 240, 240);">&quot;outputInfo&quot;</span><span style="color: rgb(0, 119, 0);">&gt;</span>
-		<span style="color: rgb(0, 119, 0);">&lt;div</span> <span style="color: rgb(0, 0, 204);">class=</span><span style="background-color: rgb(255, 240, 240);">&quot;form-group&quot;</span><span style="color: rgb(0, 119, 0);">&gt;</span>
-			<span style="color: rgb(0, 119, 0);">&lt;label</span> <span style="color: rgb(0, 0, 204);">for=</span><span style="background-color: rgb(255, 240, 240);">&quot;userName&quot;</span><span style="color: rgb(0, 119, 0);">&gt;</span>Enter your name<span style="color: rgb(0, 119, 0);">&lt;/label&gt;</span> 
-			<span style="color: rgb(0, 119, 0);">&lt;input</span> <span style="color: rgb(0, 0, 204);">class=</span><span style="background-color: rgb(255, 240, 240);">&quot;form-control&quot;</span> <span style="color: rgb(0, 0, 204);">name=</span><span style="background-color: rgb(255, 240, 240);">&quot;userName&quot;</span> <span style="color: rgb(0, 0, 204);">type=</span><span style="background-color: rgb(255, 240, 240);">&quot;text&quot;</span> <span style="color: rgb(0, 119, 0);">/&gt;</span>
-		<span style="color: rgb(0, 119, 0);">&lt;/div&gt;</span>
-		<span style="color: rgb(0, 119, 0);">&lt;button</span> <span style="color: rgb(0, 0, 204);">type=</span><span style="background-color: rgb(255, 240, 240);">&quot;submit&quot;</span><span style="color: rgb(0, 119, 0);">&gt;</span>Submit<span style="color: rgb(0, 119, 0);">&lt;/button&gt;</span>
-	<span style="color: rgb(0, 119, 0);">&lt;/form&gt;</span>
-	<span style="color: rgb(0, 119, 0);">&lt;div</span> <span style="color: rgb(0, 0, 204);">class=</span><span style="background-color: rgb(255, 240, 240);">&quot;col-md-6&quot;</span> <span style="color: rgb(0, 0, 204);">data-hr-model=</span><span style="background-color: rgb(255, 240, 240);">&quot;output&quot;</span><span style="color: rgb(0, 119, 0);">&gt;</span>
-		<span style="color: rgb(0, 119, 0);">&lt;p&gt;</span>Hello {{userName}} you have input some data with HtmlRapier.<span style="color: rgb(0, 119, 0);">&lt;/p&gt;</span>
-	<span style="color: rgb(0, 119, 0);">&lt;/div&gt;</span>
-<span style="color: rgb(0, 119, 0);">&lt;/div&gt;</span> </pre>
-<p>&nbsp;</p>
+<pre style="background:#042029;color:#839496"><span style="color:#586e75">&lt;</span><span style="color:#268bd2;font-weight:700">div</span> <span style="color:#93a1a1">class</span>=<span style="color:#269186"><span style="color:#269186">&quot;</span>row<span style="color:#269186">&quot;</span></span> <span style="color:#93a1a1">data-hr-controller</span>=<span style="color:#269186"><span style="color:#269186">&quot;</span>inputDemo<span style="color:#269186">&quot;</span></span> <span style="color:#93a1a1">data-hr-run</span>=<span style="color:#269186"><span style="color:#269186">&quot;</span>simple-form-input-demo<span style="color:#269186">&quot;</span></span><span style="color:#586e75">&gt;</span>
+    <span style="color:#586e75">&lt;</span><span style="color:#268bd2;font-weight:700">form</span> <span style="color:#93a1a1">class</span>=<span style="color:#269186"><span style="color:#269186">&quot;</span>col-md-6<span style="color:#269186">&quot;</span></span> <span style="color:#93a1a1">data-hr-form</span>=<span style="color:#269186"><span style="color:#269186">&quot;</span>input<span style="color:#269186">&quot;</span></span> <span style="color:#93a1a1">data-hr-on-submit</span>=<span style="color:#269186"><span style="color:#269186">&quot;</span>outputInfo<span style="color:#269186">&quot;</span></span><span style="color:#586e75">&gt;</span>
+        <span style="color:#586e75">&lt;</span><span style="color:#268bd2;font-weight:700">div</span> <span style="color:#93a1a1">class</span>=<span style="color:#269186"><span style="color:#269186">&quot;</span>form-group<span style="color:#269186">&quot;</span></span><span style="color:#586e75">&gt;</span>
+            <span style="color:#586e75">&lt;</span><span style="color:#268bd2;font-weight:700">label</span> <span style="color:#93a1a1">for</span>=<span style="color:#269186"><span style="color:#269186">&quot;</span>userName<span style="color:#269186">&quot;</span></span><span style="color:#586e75">&gt;</span>Enter your name<span style="color:#586e75">&lt;/</span><span style="color:#268bd2;font-weight:700">label</span><span style="color:#586e75">&gt;</span>
+             <span style="color:#586e75">&lt;</span><span style="color:#268bd2;font-weight:700">input</span> <span style="color:#93a1a1">class</span>=<span style="color:#269186"><span style="color:#269186">&quot;</span>form-control<span style="color:#269186">&quot;</span></span> <span style="color:#93a1a1">name</span>=<span style="color:#269186"><span style="color:#269186">&quot;</span>userName<span style="color:#269186">&quot;</span></span> <span style="color:#93a1a1">type</span>=<span style="color:#269186"><span style="color:#269186">&quot;</span>text<span style="color:#269186">&quot;</span></span><span style="color:#586e75"> /&gt;</span>
+        <span style="color:#586e75">&lt;/</span><span style="color:#268bd2;font-weight:700">div</span><span style="color:#586e75">&gt;</span>
+        <span style="color:#586e75">&lt;</span><span style="color:#268bd2;font-weight:700">button</span> <span style="color:#93a1a1">type</span>=<span style="color:#269186"><span style="color:#269186">&quot;</span>submit<span style="color:#269186">&quot;</span></span><span style="color:#586e75">&gt;</span>Submit<span style="color:#586e75">&lt;/</span><span style="color:#268bd2;font-weight:700">button</span><span style="color:#586e75">&gt;</span>
+    <span style="color:#586e75">&lt;/</span><span style="color:#268bd2;font-weight:700">form</span><span style="color:#586e75">&gt;</span>
+    <span style="color:#586e75">&lt;</span><span style="color:#268bd2;font-weight:700">div</span> <span style="color:#93a1a1">class</span>=<span style="color:#269186"><span style="color:#269186">&quot;</span>col-md-6<span style="color:#269186">&quot;</span></span> <span style="color:#93a1a1">data-hr-view</span>=<span style="color:#269186"><span style="color:#269186">&quot;</span>output<span style="color:#269186">&quot;</span></span><span style="color:#586e75">&gt;</span>
+        <span style="color:#586e75">&lt;</span><span style="color:#268bd2;font-weight:700">p</span><span style="color:#586e75">&gt;</span>Hello {{userName}} you have input some data with HtmlRapier.<span style="color:#586e75">&lt;/</span><span style="color:#268bd2;font-weight:700">p</span><span style="color:#586e75">&gt;</span>
+    <span style="color:#586e75">&lt;/</span><span style="color:#268bd2;font-weight:700">div</span><span style="color:#586e75">&gt;</span>
+<span style="color:#586e75">&lt;/</span><span style="color:#268bd2;font-weight:700">div</span><span style="color:#586e75">&gt;</span>
+</pre>
 <p>Here we create a controller called <em>inputDemo </em>with 2 models named <em>input </em>and <em>output</em>. We also bind the function <em>outputInfo</em> from our controller object to the <em>submit</em> event on the form.</p>
 <p>The input model will create a FormModel since it is on a form element.</p>
 <p>The output model will create a TextNodeModel since it has variables, but no other special characteristics.</p>
 <h3>The Javascript</h3>
-<pre style="margin: 0px; line-height: 125%;"><span style="background-color: rgb(255, 240, 240);">&quot;use strict&quot;</span>;
+<pre style="background:#042029;color:#839496"><span style="color:#586e75">///&lt;amd-module name=&quot;simple-form-input-demo&quot;/&gt;</span>
 
-jsns.run([
-    <span style="background-color: rgb(255, 240, 240);">&quot;hr.controller&quot;</span>
-], <span style="color: rgb(0, 136, 0); font-weight: bold;">function</span> (exports, module, controller) {
-    <span style="color: rgb(0, 136, 0); font-weight: bold;">function</span> InputController(bindings) {
-        <span style="color: rgb(0, 136, 0); font-weight: bold;">var</span> inputModel <span style="color: rgb(51, 51, 51);">=</span> bindings.getModel(<span style="background-color: rgb(255, 240, 240);">&quot;input&quot;</span>);
-        <span style="color: rgb(0, 136, 0); font-weight: bold;">var</span> outputModel <span style="color: rgb(51, 51, 51);">=</span> bindings.getModel(<span style="background-color: rgb(255, 240, 240);">&quot;output&quot;</span>);
+<span style="color:#269186"><span style="color:#c60000">&quot;</span>use strict<span style="color:#c60000">&quot;</span></span>;
+<span style="color:#859900">import</span> <span style="color:#859900">*</span> as controller from <span style="color:#269186"><span style="color:#c60000">&quot;</span>hr.controller<span style="color:#c60000">&quot;</span></span>;
 
-        <span style="color: rgb(0, 136, 0); font-weight: bold;">function</span> outputInfo(evt) {
-            evt.preventDefault();
-            <span style="color: rgb(0, 136, 0); font-weight: bold;">var</span> data <span style="color: rgb(51, 51, 51);">=</span> inputModel.getData();
-            outputModel.setData(data);
-        }
-        <span style="color: rgb(0, 136, 0); font-weight: bold;">this</span>.outputInfo <span style="color: rgb(51, 51, 51);">=</span> outputInfo;
-    }
+<span style="color:#268bd2">interface</span> PersonInfo<span style="color:#268bd2">{</span>
+    userName: string;
+<span style="color:#268bd2">}</span>
 
-    controller.create(<span style="background-color: rgb(255, 240, 240);">&quot;inputDemo&quot;</span>, InputController);
-});</pre>
-<p>&nbsp;</p>
+<span style="color:#268bd2">class</span> FormDemoController<span style="color:#268bd2">{</span>
+    <span style="color:#738a05">public</span> <span style="color:#738a05">static</span> get InjectorArgs<span style="color:#93a1a1">(</span><span style="color:#93a1a1">)</span>: controller.DiFunction<span style="color:#859900">&lt;</span>any<span style="color:#859900">&gt;</span><span style="color:#268bd2">[</span><span style="color:#268bd2">]</span> <span style="color:#268bd2">{</span>
+        <span style="color:#859900">return</span> <span style="color:#268bd2">[</span>controller.BindingCollection<span style="color:#268bd2">]</span>;
+    <span style="color:#268bd2">}</span>
+
+    <span style="color:#738a05">private</span> input: controller.IForm<span style="color:#859900">&lt;</span>PersonInfo<span style="color:#859900">&gt;</span>;
+    <span style="color:#738a05">private</span> output: controller.IView<span style="color:#859900">&lt;</span>PersonInfo<span style="color:#859900">&gt;</span>;
+
+    <span style="color:#738a05">public</span> constructor<span style="color:#93a1a1">(</span>bindings: controller.BindingCollection<span style="color:#93a1a1">)</span><span style="color:#268bd2">{</span>
+        <span style="color:#268bd2">this</span>.input <span style="color:#859900">=</span> bindings.getForm<span style="color:#859900">&lt;</span>PersonInfo<span style="color:#859900">&gt;</span><span style="color:#93a1a1">(</span><span style="color:#269186"><span style="color:#c60000">&quot;</span>input<span style="color:#c60000">&quot;</span></span><span style="color:#93a1a1">)</span>;
+        <span style="color:#268bd2">this</span>.output <span style="color:#859900">=</span> bindings.getView<span style="color:#859900">&lt;</span>PersonInfo<span style="color:#859900">&gt;</span><span style="color:#93a1a1">(</span><span style="color:#269186"><span style="color:#c60000">&quot;</span>output<span style="color:#c60000">&quot;</span></span><span style="color:#93a1a1">)</span>;
+    <span style="color:#268bd2">}</span>
+
+    <span style="color:#738a05">public</span> outputInfo<span style="color:#93a1a1">(</span>evt: Event<span style="color:#93a1a1">)</span>: <span style="color:#268bd2">void</span> <span style="color:#268bd2">{</span>
+        evt.preventDefault<span style="color:#93a1a1">(</span><span style="color:#93a1a1">)</span>;
+        <span style="color:#268bd2">var</span> data <span style="color:#859900">=</span> <span style="color:#268bd2">this</span>.input.getData<span style="color:#93a1a1">(</span><span style="color:#93a1a1">)</span>;
+        <span style="color:#268bd2">this</span>.output.setData<span style="color:#93a1a1">(</span>data<span style="color:#93a1a1">)</span>;
+    <span style="color:#268bd2">}</span>
+<span style="color:#268bd2">}</span>
+
+<span style="color:#268bd2">var</span> builder <span style="color:#859900">=</span> <span style="color:#859900">new</span> controller.InjectedControllerBuilder<span style="color:#93a1a1">(</span><span style="color:#93a1a1">)</span>;
+builder.Services.addTransient<span style="color:#93a1a1">(</span>FormDemoController, FormDemoController<span style="color:#93a1a1">)</span>;
+builder.create<span style="color:#93a1a1">(</span><span style="color:#269186"><span style="color:#c60000">&quot;</span>inputDemo<span style="color:#c60000">&quot;</span></span>, FormDemoController<span style="color:#93a1a1">)</span>;
+</pre>
 <p>Here we create our controller constructor function called InputController. It is bound to the inputDemo controller in the markup. Inside we gather up the input and output model and create a function called outputInfo that is added to the this object for the constructor. The outputInfo function will be bound to the form submit (using addEventListener(submit, func)). As such we get the event passed by the browser and prevent its default. Then we grab the data from input and put it into output.</p>
