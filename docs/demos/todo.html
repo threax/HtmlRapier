@@ -1,17 +1,38 @@
 <h1>Todo List</h1>
 <p>Add Items to the Todo List. You can mark them important by checking the important box.</p>
 <p>&nbsp;</p>
-<div data-hr-controller="todo">
-	<ol data-hr-model="items"><template>
-		<li><span>{{text}}</span><span class="pull-right"><a data-hr-on-click="edit">Edit</a> <a data-hr-on-click="deleteItem">Delete</a></span></li>
-		</template><template data-hr-variant="important">
-		<li style="color: red;"><span>{{text}}</span><span class="pull-right"><a data-hr-on-click="edit">Edit</a> <a data-hr-on-click="deleteItem">Delete</a></span></li>
-		</template>
-		<li>&nbsp;</li>
-	</ol>
-	<form data-hr-model="add" data-hr-on-submit="addItem">
-		<div class="form-group"><label for="itemText">Enter A Todo Item</label> <input class="form-control" name="text" required="" type="text" /></div>
-		<div class="checkbox"><label><input name="important" type="checkbox" /> Important </label></div><button type="submit">Add</button></form></div>
+<div data-hr-controller="todo" data-hr-run="todo-demo">
+    <ol data-hr-view="items">
+        <template>
+            <li>
+                <span>{{text}}</span>
+                <span class="pull-right">
+                    <a data-hr-on-click="edit">Edit</a> 
+                    <a data-hr-on-click="deleteItem">Delete</a>
+                </span>
+            </li>
+        </template>
+        <template data-hr-variant="important">
+            <li style="color: red;">
+                <span>{{text}}</span>
+                <span class="pull-right">
+                    <a data-hr-on-click="edit">Edit</a> 
+                    <a data-hr-on-click="deleteItem">Delete</a>
+                </span>
+            </li>
+        </template>
+    </ol>
+    <form data-hr-form="add" data-hr-on-submit="addItem">
+        <div class="form-group">
+            <label for="itemText">Enter A Todo Item</label>
+            <input class="form-control" name="text" required="" type="text" />
+        </div>
+        <div class="checkbox">
+            <label><input name="important" type="checkbox" /> Important </label>
+        </div>
+        <button type="submit">Add</button>
+    </form>
+</div>
 <h2>How&nbsp;Does It Work?&nbsp;</h2>
 <h3>The Markup</h3>
 <pre style="margin: 0px; line-height: 125%;"><span style="color: rgb(0, 119, 0);">&lt;div</span> <span style="color: rgb(0, 0, 204);">data-hr-controller=</span><span style="background-color: rgb(255, 240, 240);">&quot;todo&quot;</span><span style="color: rgb(0, 119, 0);">&gt;</span>
@@ -42,7 +63,10 @@
         <span style="color: rgb(0, 119, 0);">&lt;button</span> <span style="color: rgb(0, 0, 204);">type=</span><span style="background-color: rgb(255, 240, 240);">&quot;submit&quot;</span><span style="color: rgb(0, 119, 0);">&gt;</span>Add<span style="color: rgb(0, 119, 0);">&lt;/button&gt;</span>
     <span style="color: rgb(0, 119, 0);">&lt;/form&gt;</span>
 <span style="color: rgb(0, 119, 0);">&lt;/div&gt;</span></pre>
-<p>Here we define a controller called todo with a model called items. Inside the items we define the template we want&nbsp;to use to display the items. This also defines a variant chain that defines a variant called important. This variant will be used to display items we mark as important. By linking all the variants together one after another they will become associated with each other when they are registered in the component system.</p>
+<p>Here we define a controller called todo with a model called items. Inside the items we define the template we want&nbsp;to
+    use to display the items. This also defines a variant chain that defines a variant called important. This variant will
+    be used to display items we mark as important. By linking all the variants together one after another they will become
+    associated with each other when they are registered in the component system.</p>
 <p>This page also defines a form for entering a new item with a name and a check box to determine if it is important.</p>
 <h3>The Javascript</h3>
 <pre style="margin: 0px; line-height: 125%;"><span style="background-color: rgb(255, 240, 240);">&quot;use strict&quot;</span>;
@@ -110,6 +134,12 @@ jsns.run([
 
     controller.create(<span style="background-color: rgb(255, 240, 240);">&quot;todo&quot;</span>, TodoDemoController);
 });</pre>
-<p>This javascript defines 2 controllers. One for the todo list itself that controls the form and the list display. The other is for the individual list items and one will be created each time a list item is created. That second controller shows the other arguments your controller constructors can take. <em>Context </em>is anything you want it to be when constructing the constructor. Here it is set to the TodoDemoController itself. The final argument is <em>data </em>and represents the data (or row of data) that was used when the controller was created.</p>
-<p>The TodoItemController is created for each individual list item, in addition these are all recreated when rebuildList is called since it throws away the old list. The lifecycles of these objects are up to the developer, but used this way they will fall out of scope when the list is rebuilt.</p>
+<p>This javascript defines 2 controllers. One for the todo list itself that controls the form and the list display. The other
+    is for the individual list items and one will be created each time a list item is created. That second controller shows
+    the other arguments your controller constructors can take. <em>Context </em>is anything you want it to be when constructing
+    the constructor. Here it is set to the TodoDemoController itself. The final argument is <em>data </em>and represents
+    the data (or row of data) that was used when the controller was created.</p>
+<p>The TodoItemController is created for each individual list item, in addition these are all recreated when rebuildList is
+    called since it throws away the old list. The lifecycles of these objects are up to the developer, but used this way
+    they will fall out of scope when the list is rebuilt.</p>
 <p>&nbsp;</p>
