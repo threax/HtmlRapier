@@ -23,15 +23,14 @@
     <span style="color:#586e75">&lt;/</span><span style="color:#268bd2;font-weight:700">div</span><span style="color:#586e75">&gt;</span>
 <span style="color:#586e75">&lt;/</span><span style="color:#268bd2;font-weight:700">div</span><span style="color:#586e75">&gt;</span>
 </pre>
-<p>Here we create a controller called <em>inputDemo </em>with 2 models named <em>input </em>and <em>output</em>. We also bind the function <em>outputInfo</em> from our controller object to the <em>submit</em> event on the form.</p>
-<p>The input model will create a FormModel since it is on a form element.</p>
-<p>The output model will create a TextNodeModel since it has variables, but no other special characteristics.</p>
+<p>Here we create a controller called <em>inputDemo </em>with a form named <em>input</em> and a view named <em>output</em>. We also bind the function <em>outputInfo</em> from our controller object to the <em>submit</em> event on the form. You will also see the data-hr-run attribute that fires off the module we have written below.</p>
 <h3>The Javascript</h3>
 <pre style="background:#042029;color:#839496"><span style="color:#586e75">///&lt;amd-module name=&quot;simple-form-input-demo&quot;/&gt;</span>
 
 <span style="color:#269186"><span style="color:#c60000">&quot;</span>use strict<span style="color:#c60000">&quot;</span></span>;
 <span style="color:#859900">import</span> <span style="color:#859900">*</span> as controller from <span style="color:#269186"><span style="color:#c60000">&quot;</span>hr.controller<span style="color:#c60000">&quot;</span></span>;
 
+<span style="color:#586e75">//Create an interface for the data we are handling, so we know what we can put on the form and in the view.</span>
 <span style="color:#268bd2">interface</span> PersonInfo<span style="color:#268bd2">{</span>
     userName: string;
 <span style="color:#268bd2">}</span>
@@ -45,10 +44,15 @@
     <span style="color:#738a05">private</span> output: controller.IView<span style="color:#859900">&lt;</span>PersonInfo<span style="color:#859900">&gt;</span>;
 
     <span style="color:#738a05">public</span> constructor<span style="color:#93a1a1">(</span>bindings: controller.BindingCollection<span style="color:#93a1a1">)</span><span style="color:#268bd2">{</span>
+        <span style="color:#586e75">//Get the form for the input</span>
         <span style="color:#268bd2">this</span>.input <span style="color:#859900">=</span> bindings.getForm<span style="color:#859900">&lt;</span>PersonInfo<span style="color:#859900">&gt;</span><span style="color:#93a1a1">(</span><span style="color:#269186"><span style="color:#c60000">&quot;</span>input<span style="color:#c60000">&quot;</span></span><span style="color:#93a1a1">)</span>;
+
+        <span style="color:#586e75">//Get the view</span>
         <span style="color:#268bd2">this</span>.output <span style="color:#859900">=</span> bindings.getView<span style="color:#859900">&lt;</span>PersonInfo<span style="color:#859900">&gt;</span><span style="color:#93a1a1">(</span><span style="color:#269186"><span style="color:#c60000">&quot;</span>output<span style="color:#c60000">&quot;</span></span><span style="color:#93a1a1">)</span>;
     <span style="color:#268bd2">}</span>
 
+    <span style="color:#586e75">//This function will be bound to the event labeled data-hr-event-submit=&quot;outputInfo&quot;</span>
+    <span style="color:#586e75">//It should be written as if you were adding it to addEventListener.</span>
     <span style="color:#738a05">public</span> outputInfo<span style="color:#93a1a1">(</span>evt: Event<span style="color:#93a1a1">)</span>: <span style="color:#268bd2">void</span> <span style="color:#268bd2">{</span>
         evt.preventDefault<span style="color:#93a1a1">(</span><span style="color:#93a1a1">)</span>;
         <span style="color:#268bd2">var</span> data <span style="color:#859900">=</span> <span style="color:#268bd2">this</span>.input.getData<span style="color:#93a1a1">(</span><span style="color:#93a1a1">)</span>;
@@ -60,4 +64,5 @@
 builder.Services.addTransient<span style="color:#93a1a1">(</span>FormDemoController, FormDemoController<span style="color:#93a1a1">)</span>;
 builder.create<span style="color:#93a1a1">(</span><span style="color:#269186"><span style="color:#c60000">&quot;</span>inputDemo<span style="color:#c60000">&quot;</span></span>, FormDemoController<span style="color:#93a1a1">)</span>;
 </pre>
-<p>Here we create our controller constructor function called InputController. It is bound to the inputDemo controller in the markup. Inside we gather up the input and output model and create a function called outputInfo that is added to the this object for the constructor. The outputInfo function will be bound to the form submit (using addEventListener(submit, func)). As such we get the event passed by the browser and prevent its default. Then we grab the data from input and put it into output.</p>
+<p>Here we create a controller called FormDemoController. Inside we get the named form and view. In the outputInfo function we grab the user input and put it on the view.</p>
+<p>The controller is created by creating a builder, adding the controller as a transient service and then finally creating the controller instance on all data-hr-controller=&quot;inputDemo&quot; elements.</p>
