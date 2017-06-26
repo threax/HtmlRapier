@@ -26,4 +26,5 @@
 	</ul></li>
 	<li><strong>Handle</strong> - <code>data-hr-handle</code> - Get direct access to the HtmlElement pointed to by the named handle. Mostly useful to pass elements into third party libraries that want them, otherwise should be avoided as much as possible.</li>
 	<li><strong>Ignore </strong>- <code><font face="Courier New">data-hr-ignored</font></code> - Add this to an element to ignore any components and controllers it has as children. This is mostly a special case to handle editors where you still need to run other HtmlRapier code.</li>
+	<li><strong>Run</strong> - <code>data-hr-run</code> - This is used to make jsns run a particular named javascript module. If you are using jsns (the default) you will need one of these in your code to kick off whatever runs your main code, otherwise you can do whatever is appropriate for your package manager. HtmlRapier does not mandate a project layout (beyond using typescript ideally in a flat dependency structure, and even then you can make it work in pure javascript).</li>
 </ul>

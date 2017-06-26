@@ -11,6 +11,14 @@
         {
           "name": "Data Attributes",
           "link": "/data-attributes"
+        },
+        {
+          "name": "Dependency Injection",
+          "link": "/dependency-injection"
+        },
+        {
+          "name": "Writing Controllers",
+          "link": "/writing-controllers"
         }
       ]
     },
