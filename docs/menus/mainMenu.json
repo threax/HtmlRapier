@@ -17,6 +17,10 @@
           "link": "/dependency-injection"
         },
         {
+          "name": "Fetcher",
+          "link": "/fetcher"
+        },
+        {
           "name": "Writing Controllers",
           "link": "/writing-controllers"
         }
