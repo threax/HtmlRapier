@@ -39,11 +39,11 @@
         },
         {
           "name": "Toggles",
-          "link": "/demos/toggles"
+          "link": "/demos/toggle-demo"
         },
         {
           "name": "Todo List",
-          "link": "/demos/todo-list"
+          "link": "/demos/todo"
         }
       ]
     }
