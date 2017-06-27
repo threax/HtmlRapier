@@ -16,14 +16,15 @@
   "vars": {
     "siteTitle": "HtmlRapier Docs"
   },
+  "buildVars":{
+    "pathBase": "HtmlRapierDocs"
+  },
   "compilers": [
     {
       "type": "Html",
       "template": "default.html",
       "extension": ".html",
-      "settings": {
-        "siteRoot": "/HtmlRapierDocs"
-      }
+      "pathBase": "/HtmlRapierDocs"
     }
   ]
 }
