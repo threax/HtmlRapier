@@ -32,7 +32,7 @@ class TodoDemoController{
     public addItem(evt: Event): void {
         evt.preventDefault();
         var item = this.addModel.getData();
-        this.itemsModel.appendData(item, this.builder.createOnCallback(TodoItemController));
+        this.itemsModel.appendData(item, this.builder.createOnCallback(TodoItemController), (item) => this.findItemVariant(item));
         this.todoItems.push(item);
         this.addModel.clear();
     }
