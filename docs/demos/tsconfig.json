@@ -14,12 +14,12 @@
     "moduleResolution": "node",
     "paths": {
       "hr.*": [
-        "../../src/*"
+        "node_modules/htmlrapier/src/*"
       ]
     }
   },
   "include": [
-    "**/*.ts"
+    "./*.ts"
   ],
   "exclude": [
     "**/*.js",
