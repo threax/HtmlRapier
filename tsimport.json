@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "hr.*": [
+        "src/*"
+      ]
+    }
+  },
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+
+  ],
+  "files": [
+    "src/polyfill.js"
+  ]
+}
