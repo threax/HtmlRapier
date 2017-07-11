@@ -1,6 +1,7 @@
 "use strict";
 
 import * as typeId from 'hr.typeidentifiers';
+import * as evts from 'hr.eventdispatcher';
 
 /**
  * An interface for toggles.
@@ -19,7 +20,10 @@ export interface Toggle {
 }
 
 var defaultStates = ['on', 'off']; //Reusuable states, so we don't end up creating tons of these arrays
-var togglePlugins = [];
+
+export type TogglePluginBuilder = (element: Element, states: string[], nextToggle: IToggleStates) => IToggleStates;
+
+var togglePlugins: TogglePluginBuilder[] = [];
 
 /**
  * Interface for typed toggles, provides a way to get the states as a string,
@@ -28,6 +32,7 @@ var togglePlugins = [];
 export class TypedToggle implements Toggle {
     protected states: IToggleStates;
     private _currentState: string;
+    private events: { [key: string]: evts.ActionEventDispatcher<Toggle>; } = {};
 
     /**
      * Get the states this toggle can activate.
@@ -40,13 +45,16 @@ export class TypedToggle implements Toggle {
      * Set the toggle states used by this strong toggle, should not be called outside of
      * the toggle build function.
      */
-    public setStates(toggle: IToggleStates) {
-        this.states = toggle;
+    public setStates(states: IToggleStates) {
+        this.states = states;
+        this.states.setToggle(this);
     }
 
     public applyState(name: string) {
         this._currentState = name;
-        this.states.applyState(name);
+        if (this.states.applyState(name)) {
+            this.fireStateChange(name);
+        }
     }
 
     public isUsable(): boolean {
@@ -55,6 +63,19 @@ export class TypedToggle implements Toggle {
 
     public get currentState() {
         return this._currentState;
+    }
+
+    public fireStateChange(name: string) {
+        if (this.events[name] !== undefined) {
+            this.events[name].fire(this);
+        }
+    }
+
+    public getStateEvent(name: string) {
+        if (this.events[name] === undefined) {
+            this.events[name] = new evts.ActionEventDispatcher<Toggle>();
+        }
+        return this.events[name];
     }
 }
 
@@ -72,6 +93,14 @@ export class OnOffToggle extends TypedToggle {
         this.applyState("off");
     }
 
+    public get onEvent() {
+        return this.getStateEvent('on').modifier;
+    }
+
+    public get offEvent() {
+        return this.getStateEvent('off').modifier;
+    }
+
     public getPossibleStates() {
         return OnOffToggle.states;
     }
@@ -85,16 +114,16 @@ export class OnOffToggle extends TypedToggle {
         }
     }
 
-    public get mode(): boolean{
+    public get mode(): boolean {
         return this.currentState === "on";
     }
 
-    public set mode(value: boolean){
+    public set mode(value: boolean) {
         var currentOn = this.mode;
-        if(currentOn && !value){
+        if (currentOn && !value) {
             this.off();
         }
-        else if(!currentOn && value){
+        else if (!currentOn && value) {
             this.on();
         }
     }
@@ -145,14 +174,25 @@ export class Group {
  * Add a toggle plugin that can create additional items on the toggle chain.
  * @param {type} plugin
  */
-export function addTogglePlugin(plugin) {
+export function addTogglePlugin(plugin: TogglePluginBuilder) {
     togglePlugins.push(plugin);
 }
 
 export interface IToggleStates {
-    addState(name: string, value: string);
+    addState(name: string, value: string): void;
 
-    applyState(name: string);
+    /**
+     * Apply the named state to the toggle. Return true to let the toggle fire the activated
+     * event and false to indicate that the subsystem will fire the event at the appropriate time.
+     * @param name The state to apply
+     */
+    applyState(name: string): boolean;
+
+    /**
+     * Set the toggle that these states will use. This should only be called from within setStates in TypedToggle.
+     * This provides the links needed to fire the events from the toggle.
+     */
+    setToggle(toggle: TypedToggle): void;
 }
 
 /**
@@ -160,10 +200,11 @@ export interface IToggleStates {
  * @param {ToggleStates} next
  */
 export abstract class ToggleStates implements IToggleStates {
-    private next: ToggleStates;
+    private next: IToggleStates;
     private states = {};
+    private toggle: TypedToggle;
 
-    constructor(next: ToggleStates) {
+    constructor(next: IToggleStates) {
         this.next = next;
     }
 
@@ -171,15 +212,32 @@ export abstract class ToggleStates implements IToggleStates {
         this.states[name] = value;
     }
 
-    public applyState(name: string): void {
+    public applyState(name: string): boolean {
         var state = this.states[name];
-        this.activateState(state);
+        var fireEvent = this.activateState(state);
         if (this.next) {
-            this.next.applyState(name);
+            fireEvent = this.next.applyState(name) || fireEvent;
         }
+        return fireEvent;
     }
 
-    protected abstract activateState(value: string): void;
+    /**
+     * This function does the work to actually activate a state. It will return true 
+     * to allow the toggle to fire the event associated with this state or false to 
+     * indicate that the subsystem will fire the event itself at the appropriate time.
+     * @param value The state to activate
+     */
+    protected abstract activateState(value: string): boolean;
+
+    public setToggle(toggle: TypedToggle): void {
+        this.toggle = toggle;
+    }
+
+    protected fireStateChange(name: string) {
+        if (this.toggle) {
+            this.toggle.fireStateChange(name);
+        }
+    }
 }
 
 /**
@@ -200,9 +258,17 @@ export class MultiToggleStates implements IToggleStates {
         }
     }
 
-    public applyState(name: string): void {
+    public applyState(name: string): boolean {
+        var fireEvent = true;
         for (var i = 0; i < this.childStates.length; ++i) {
-            this.childStates[i].applyState(name);
+            fireEvent = this.childStates[i].applyState(name) || fireEvent; //Fire event first so we always fire all the items in the chain
+        }
+        return fireEvent;
+    }
+
+    public setToggle(toggle: TypedToggle): void {
+        for (var i = 0; i < this.childStates.length; ++i) {
+            this.childStates[i].setToggle(toggle);
         }
     }
 }
@@ -215,8 +281,8 @@ class NullStates extends ToggleStates {
         super(next);
     }
 
-    public activateState(value: string): void {
-        
+    public activateState(value: string): boolean {
+        return true;
     }
 }
 
@@ -233,13 +299,14 @@ class StyleStates extends ToggleStates {
         this.originalStyles = element.style.cssText || "";
     }
 
-    public activateState(style) {
+    public activateState(style): boolean {
         if (style) {
             this.element.style.cssText = this.originalStyles + style;
         }
         else {
             this.element.style.cssText = this.originalStyles;
         }
+        return true;
     }
 }
 
@@ -262,7 +329,7 @@ class ClassStates extends ToggleStates {
         this.stopAnimationCb = () => { this.stopAnimation() };
     }
 
-    public activateState(classes) {
+    public activateState(classes): boolean {
         if (classes) {
             this.element.setAttribute("class", this.originalClasses + ' ' + classes);
         }
@@ -270,6 +337,7 @@ class ClassStates extends ToggleStates {
             this.element.setAttribute("class", this.originalClasses);
         }
         this.startAnimation();
+        return true;
     }
 
     private startAnimation() {
@@ -300,8 +368,8 @@ class ClassStates extends ToggleStates {
  * @param {type} nextToggle - The next toggle to use in the chain
  * @returns {type} The toggle that should be the next element in the chain, will be the new toggle if one was created or nextToggle if nothing was created.
  */
-function extractStates(element, states, attrPrefix, toggleConstructor, nextToggle) {
-    var toggleStates: ToggleStates = null;
+function extractStates(element: Element, states: string[], attrPrefix: string, toggleConstructor: any, nextToggle: IToggleStates): IToggleStates {
+    var toggleStates: IToggleStates = null;
     for (var i = 0; i < states.length; ++i) {
         var name = states[i];
         var attr = attrPrefix + name;
@@ -331,23 +399,23 @@ export function getStartState(element) {
 /**
  * Build a toggle chain from the given element
  * @param {string} element - The element to build toggles for
- * @param {string[]} [states] - The states the toggle needs, will create functions on 
+ * @param {string[]} [stateNames] - The states the toggle needs, will create functions on 
  * the toggle for each one. If this is undefined will default to "on" and "off".
  * @returns A new ToggleChain with the defined states as functions
  */
-export function build(element, states): IToggleStates {
-    if (states === undefined) {
-        states = defaultStates;
+export function build(element: Element, stateNames: string[]): IToggleStates {
+    if (stateNames === undefined) {
+        stateNames = defaultStates;
     }
     var toggle = null;
 
     if (element !== null) {
-        toggle = extractStates(element, states, 'data-hr-style-', StyleStates, toggle);
-        toggle = extractStates(element, states, 'data-hr-class-', ClassStates, toggle);
+        toggle = extractStates(element, stateNames, 'data-hr-style-', StyleStates, toggle);
+        toggle = extractStates(element, stateNames, 'data-hr-class-', ClassStates, toggle);
 
         //Now toggle plugin chain
         for (var i = 0; i < togglePlugins.length; ++i) {
-            toggle = togglePlugins[i](element, states, toggle);
+            toggle = togglePlugins[i](element, stateNames, toggle);
         }
     }
 
