@@ -148,23 +148,14 @@ export class AccessTokenManager extends Fetcher {
     }
 
     public reset(): void {
-        this.fire = true;
-        window.setTimeout(() => {
-            this.fire = false;
-            console.log("Logged out again");
-        }, 10000);
-
+        this.startTime = undefined; //Set this back to undefined to make the fetcher get the access token again.
         if (this.next) {
             this.next.reset();
         }
     }
 
-    private fire = false;
-
     private addToken(url: RequestInfo, init?: RequestInit) {
-        if (this.fire) {
-            (<any>init.headers).bearer = this.currentToken;
-        }
+        (<any>init.headers).bearer = this.currentToken;
         return this.next.fetch(url, init);
     }
 }
