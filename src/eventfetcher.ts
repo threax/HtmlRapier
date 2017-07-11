@@ -1,47 +1,12 @@
 import { Fetcher, RequestInfo, RequestInit, Response, Request } from 'hr.fetcher';
 import * as events from 'hr.eventdispatcher';
 
-function isRequest(url: RequestInfo): url is Request {
-    return url !== undefined && url !== null && (<Request>url).url !== undefined;
-}
-
-/**
- * This interface wraps a fetch request that can be retried.
- */
-export interface IRetryFetcher{
-
-    /**
-     * Try the fetch request again.
-     */
-    retryFetch(): Promise<Response>;
-}
-
-/**
- * Concrete retry fetcher.
- */
-class RetryFetcher implements IRetryFetcher{
-    constructor(private url: RequestInfo, private init: RequestInit, private eventFetcher: EventFetcher, private next: Fetcher){
-
-    }
-
-    public async retryFetch(): Promise<Response>{
-        var realUrl: RequestInfo;
-        if(isRequest(this.url)){
-            realUrl = Object.create(this.url);
-        }
-        else{
-            realUrl = this.url;
-        }
-
-        var result = await this.next.fetch(realUrl, Object.create(this.init));
-
-        return await this.eventFetcher.handleResult(result, this);
-    }
-}
-
 /**
  * A fetcher that fires events when status codes are returned from the server.
  * You can subscribe to any status code you want by calling onStatusCode.
+ * When this fetcher fetches it will keep copies of your original request objects
+ * if you need to retry the chain will reexecute with the values you originally sent in.
+ * Ideally this will be the first item in your fetcher chain.
  * @param {type} next - The next fetcher in the chain.
  * @returns
  */
@@ -86,5 +51,47 @@ export class EventFetcher extends Fetcher{
             }
         }
         return result;
+    }
+}
+
+function isRequest(url: RequestInfo): url is Request {
+    return url !== undefined && url !== null && (<Request>url).url !== undefined;
+}
+
+export function isEventFetcher(f: Fetcher): f is EventFetcher {
+    return (<EventFetcher>f).onStatusCode !== undefined;
+}
+
+/**
+ * This interface wraps a fetch request that can be retried.
+ */
+export interface IRetryFetcher {
+
+    /**
+     * Try the fetch request again.
+     */
+    retryFetch(): Promise<Response>;
+}
+
+/**
+ * Concrete retry fetcher.
+ */
+class RetryFetcher implements IRetryFetcher {
+    constructor(private url: RequestInfo, private init: RequestInit, private eventFetcher: EventFetcher, private next: Fetcher) {
+
+    }
+
+    public async retryFetch(): Promise<Response> {
+        var realUrl: RequestInfo;
+        if (isRequest(this.url)) {
+            realUrl = Object.create(this.url);
+        }
+        else {
+            realUrl = this.url;
+        }
+
+        var result = await this.next.fetch(realUrl, Object.create(this.init));
+
+        return await this.eventFetcher.handleResult(result, this);
     }
 }
