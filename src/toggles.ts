@@ -51,9 +51,11 @@ export class TypedToggle implements Toggle {
     }
 
     public applyState(name: string) {
-        this._currentState = name;
-        if (this.states.applyState(name)) {
-            this.fireStateChange(name);
+        if (this._currentState !== name) {
+            this._currentState = name;
+            if (this.states.applyState(name)) {
+                this.fireStateChange(name);
+            }
         }
     }
 
@@ -66,6 +68,8 @@ export class TypedToggle implements Toggle {
     }
 
     public fireStateChange(name: string) {
+        this._currentState = name; //This only should happen as the result of an applystate call or the state being changed externally to the library
+                                   //The event will only fire on the current state, so it is safe to set the current state here.
         if (this.events[name] !== undefined) {
             this.events[name].fire(this);
         }

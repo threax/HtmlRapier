@@ -52,6 +52,12 @@ export class EventFetcher extends Fetcher{
         }
         return result;
     }
+
+    reset() {
+        if (this.next) {
+            this.next.reset();
+        }
+    }
 }
 
 function isRequest(url: RequestInfo): url is Request {
@@ -71,6 +77,11 @@ export interface IRetryFetcher {
      * Try the fetch request again.
      */
     retryFetch(): Promise<Response>;
+
+    /**
+     * Reset cached info on the wrapper fetcher.
+     */
+    reset(): void;
 }
 
 /**
@@ -93,5 +104,9 @@ class RetryFetcher implements IRetryFetcher {
         var result = await this.next.fetch(realUrl, Object.create(this.init));
 
         return await this.eventFetcher.handleResult(result, this);
+    }
+
+    public reset(): void {
+        this.eventFetcher.reset();
     }
 }

@@ -13,4 +13,8 @@ export class WindowFetch extends Fetcher {
     fetch(url: RequestInfo, init?: RequestInit): Promise<Response> {
         return fetch(url, init);
     }
+
+    reset() {
+        
+    }
 }

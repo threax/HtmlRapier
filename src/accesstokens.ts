@@ -147,8 +147,24 @@ export class AccessTokenManager extends Fetcher {
         }
     }
 
+    public reset(): void {
+        this.fire = true;
+        window.setTimeout(() => {
+            this.fire = false;
+            console.log("Logged out again");
+        }, 10000);
+
+        if (this.next) {
+            this.next.reset();
+        }
+    }
+
+    private fire = false;
+
     private addToken(url: RequestInfo, init?: RequestInit) {
-        (<any>init.headers).bearer = this.currentToken;
+        if (this.fire) {
+            (<any>init.headers).bearer = this.currentToken;
+        }
         return this.next.fetch(url, init);
     }
 }
