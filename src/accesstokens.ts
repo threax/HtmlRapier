@@ -166,13 +166,6 @@ export class AccessTokenManager extends Fetcher {
         }
     }
 
-    public reset(): void {
-        this.startTime = undefined; //Set this back to undefined to make the fetcher get the access token again.
-        if (this.next) {
-            this.next.reset();
-        }
-    }
-
     /**
      * Get an event listener for the given status code. Since this fires as part of the
      * fetch request the events can return promises to delay sending the event again

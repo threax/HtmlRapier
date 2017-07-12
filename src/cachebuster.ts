@@ -29,12 +29,6 @@ export class CacheBuster extends Fetcher {
         }
         return this.next.fetch(url, init);
     }
-
-    reset() {
-        if (this.next) {
-            this.next.reset();
-        }
-    }
 }
 
 function addTimestampQuery(url: string): string {

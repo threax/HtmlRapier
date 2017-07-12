@@ -109,12 +109,4 @@ export type ResponseType = "basic" | "cors" | "default" | "error" | "opaque" | "
 
 export abstract class Fetcher {
     abstract fetch(url: RequestInfo, init?: RequestInit): Promise<Response>;
-
-    /**
-     * The reset function will reset any internal state in the fetcher to what it was when
-     * the fetcher was first created. Pretty rare to need in practice, but if you want to clear
-     * out cached credentials or something else recomputed for fetchers since the page started
-     * use this function.
-     */
-    abstract reset(): void;
 }
