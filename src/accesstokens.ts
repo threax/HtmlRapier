@@ -1,6 +1,7 @@
 ﻿import * as http from 'hr.http';
 import * as uri from 'hr.uri';
 import { Fetcher, RequestInfo, RequestInit, Response, Request } from 'hr.fetcher';
+import * as events from 'hr.eventdispatcher';
 
 //From https://github.com/auth0/jwt-decode/blob/master/lib/base64_url_decode.js
 function b64DecodeUnicode(str: string) {
@@ -98,6 +99,11 @@ export class AccessWhitelist implements IAccessWhitelist {
 }
 
 export class AccessTokenManager extends Fetcher {
+    public static isInstance(t: any): t is AccessTokenManager {
+        return (<AccessTokenManager>t).onNeedLogin !== undefined
+            && (<AccessTokenManager>t).fetch !== undefined;
+    }
+
     private tokenPath: string;
     private accessToken: string;
     private next: Fetcher;
@@ -107,6 +113,7 @@ export class AccessTokenManager extends Fetcher {
     private startTime: number;
     private expirationTick: number;
     private accessWhitelist: IAccessWhitelist;
+    private needLoginEvent: events.PromiseEventDispatcher<boolean, AccessTokenManager> = new events.PromiseEventDispatcher<boolean, AccessTokenManager>();
 
     constructor(tokenPath: string, accessWhitelist: IAccessWhitelist, next: Fetcher) {
         super();
@@ -130,12 +137,24 @@ export class AccessTokenManager extends Fetcher {
 
                         return this.addToken(url, init);
                     })
-                    .catch(err => { //This error happens only if we can't get the access token, that is also ok and we will try the request anyway.
-                        if (err && err.message) {
-                            console.log("Could not get access token. Reason: " + err.message + " will try connection anyway");
+                    .catch(err => { //This error happens only if we can't get the access token, if we previously had logged in then try to refresh, otherwise just do the request
+                        if (this.currentToken !== undefined) {
+                            return this.fireNeedLogin()
+                                .then(needsLogin => {
+                                    if (needsLogin) {
+                                        //url and init will not have been changed yet, fire fetch again.
+                                        return this.fetch(url, init); 
+                                    }
+                                    else {
+                                        //Got no result, return an error
+                                        this.startTime = undefined;
+                                        throw "Could not get access token or log back in.";
+                                    }
+                                });
                         }
-
-                        return this.addToken(url, init);
+                        else {
+                            return this.addToken(url, init);
+                        }
                     });
             }
             else {
@@ -154,8 +173,33 @@ export class AccessTokenManager extends Fetcher {
         }
     }
 
+    /**
+     * Get an event listener for the given status code. Since this fires as part of the
+     * fetch request the events can return promises to delay sending the event again
+     * until the promise resolves.
+     * @param status The status code for the event.
+     */
+    public get onNeedLogin(): events.EventModifier<events.FuncEventListener<Promise<boolean>, AccessTokenManager>> {
+        return this.needLoginEvent.modifier;
+    }
+
     private addToken(url: RequestInfo, init?: RequestInit) {
         (<any>init.headers).bearer = this.currentToken;
         return this.next.fetch(url, init);
+    }
+
+    private async fireNeedLogin(): Promise<boolean> {
+        var retryResults = await this.needLoginEvent.fire(this);
+
+        if (retryResults) {
+            //Take first result that is actually defined, if none are the original result will be used again
+            for (var i = 0; i < retryResults.length; ++i) {
+                if (retryResults[i]) {
+                    return retryResults[i];
+                }
+            }
+        }
+
+        return false;
     }
 }
