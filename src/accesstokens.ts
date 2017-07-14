@@ -104,53 +104,53 @@ class TokenManager {
     private startTime: number;
     private expirationTick: number;
     private needLoginEvent: events.PromiseEventDispatcher<boolean, TokenManager> = new events.PromiseEventDispatcher<boolean, TokenManager>();
-    private queuePromise: ep.ExternalPromise<void> = null;
+    private queuePromise: ep.ExternalPromise<string> = null;
 
     constructor(private tokenPath: string) {
 
     }
 
-    public async getToken(): Promise<string> {
+    public getToken(): Promise<string> {
+        //First check if we should queue the request
         if (this.queuePromise !== null) {
-            await this.queuePromise.Promise;
+            return this.queuePromise.Promise;
         }
-        else {
-            await this.doRefreshToken();
+
+        //Do we need to refresh?
+        if (this.startTime === undefined || Date.now() / 1000 - this.startTime > this.expirationTick) {
+            //If we need to refresh, create the queue and fire the refresh
+            this.queuePromise = new ep.ExternalPromise<string>();
+            this.doRefreshToken(); //Do NOT await this, we want execution to continue.
+            return this.queuePromise.Promise; //Here we return the queued promise that will resolve when doRefreshToken is done.
         }
-        return this.currentToken;
+
+        //Didn't need refresh, return current token.
+        return Promise.resolve(this.currentToken);
     }
 
     private async doRefreshToken(): Promise<void> {
-        if (this.startTime === undefined || Date.now() / 1000 - this.startTime > this.expirationTick) {
-            //Queue all requests until the access token is recovered
-            this.queuePromise = new ep.ExternalPromise<void>();
-            try {
-                var data: any = await http.post(this.tokenPath);
-                this.currentToken = data.accessToken;
+        try {
+            var data: any = await http.post(this.tokenPath);
+            this.currentToken = data.accessToken;
 
-                var tokenObj = parseJwt(this.currentToken);
-                this.startTime = tokenObj.nbf;
-                this.expirationTick = (tokenObj.exp - this.startTime) / 2; //After half the token time has expired we will turn it in for another one.
+            var tokenObj = parseJwt(this.currentToken);
+            this.startTime = tokenObj.nbf;
+            this.expirationTick = (tokenObj.exp - this.startTime) / 2; //After half the token time has expired we will turn it in for another one.
 
-                this.queuePromise.resolve();
+            this.resolveQueue();
+        }
+        catch (err) {
+            //This error happens only if we can't get the access token
+            //If we did not yet have a token, allow the request to finish, the user is not logged in
+            //Otherwise try to get the login
+            if (this.currentToken === undefined || await this.fireNeedLogin()) {
+                this.resolveQueue();
             }
-            catch (err) {
-                //This error happens only if we can't get the access token
-                //If we did not yet have a token, allow the request to finish, the user is not logged in
-                //Otherwise try to get the login
-                if (this.currentToken === undefined || await this.fireNeedLogin()) {
-                    this.queuePromise.resolve();
-                }
-                else {
-                    //Got false, which means no login was performed, return an error
-                    this.startTime = undefined;
-                    const message = "Could not refresh access token or log back in.";
-                    this.queuePromise.reject(message);
-                    //The first request does not get the queued promise, but instead works off this funciton call, so make sure to throw the error too
-                    throw message;
-                }
+            else {
+                //Got false, which means no login was performed, return an error
+                this.startTime = undefined;
+                this.rejectQueue("Could not refresh access token or log back in.");
             }
-            this.queuePromise = null; //clear promise, it will have been handled above
         }
     }
 
@@ -177,6 +177,18 @@ class TokenManager {
         }
 
         return false;
+    }
+
+    private resolveQueue() {
+        var promise = this.queuePromise;
+        this.queuePromise = null;
+        promise.resolve(this.currentToken);
+    }
+
+    private rejectQueue(err: any){
+        var promise = this.queuePromise;
+        this.queuePromise = null;
+        promise.reject(this.currentToken);
     }
 }
 
