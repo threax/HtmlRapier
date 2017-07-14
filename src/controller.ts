@@ -63,7 +63,9 @@ export class InjectedControllerBuilder {
     }
 
     /**
-     * Get the service collection to define services for this builder.
+     * Get the service collection to define services for this builder. Don't create scopes with this
+     * use createUnbound if you need to make an instance of something in the service collection, this 
+     * will prevent your scopes from getting messed up.
      */
     public get Services(): di.ServiceCollection {
         return this.serviceCollection;
@@ -116,14 +118,16 @@ export class InjectedControllerBuilder {
     }
 
     /**
-     * This will create a controller without looking for html elements, it will not have a binding collection.
-     * Only one instance will be created per call.
+     * This will create a single instance of the service that resolves to constructorFunc 
+     * without looking for html elements, it will not have a binding collection.
+     * This can be used to create any kind of object, not just controllers. Do this for anything
+     * you want to use from the service scope for this controller.
      */
-    public createUnbound<T>(controllerConstructor: di.DiFunction<T>): T {
+    public createUnbound<T>(constructorFunc: di.DiFunction<T>): T {
         var services = new di.ServiceCollection();
         var scope = this.baseScope.createChildScope(services);
         services.addTransient(InjectedControllerBuilder, s => new InjectedControllerBuilder(scope));
-        var controller = scope.getRequiredService(controllerConstructor);
+        var controller = scope.getRequiredService(constructorFunc);
         if ((<any>controller).postBind !== undefined) {
             (<any>controller).postBind();
         }
