@@ -99,32 +99,28 @@ export class AccessWhitelist implements IAccessWhitelist {
     }
 }
 
-class TokenManager{
+class TokenManager {
     private currentToken: string;
     private startTime: number;
     private expirationTick: number;
     private needLoginEvent: events.PromiseEventDispatcher<boolean, TokenManager> = new events.PromiseEventDispatcher<boolean, TokenManager>();
     private queuePromise: ep.ExternalPromise<void> = null;
 
-    constructor(private tokenPath: string){
+    constructor(private tokenPath: string) {
 
     }
 
     public async getToken(): Promise<string> {
-        await this.checkRefresh();
+        if (this.queuePromise !== null) {
+            await this.queuePromise.Promise;
+        }
+        else {
+            await this.doRefreshToken();
+        }
         return this.currentToken;
     }
 
-    private checkRefresh(): Promise<void> {
-        //If we have a promise to queue from, return that, any requests after the first one to refresh the token
-        //will wait on this promise, the first one will wait on the call to doRefreshToken.
-        if(this.queuePromise !== null){
-            return this.queuePromise.Promise;
-        }
-        return this.doRefreshToken();
-    }
-
-    private async doRefreshToken(): Promise<void>{
+    private async doRefreshToken(): Promise<void> {
         if (this.startTime === undefined || Date.now() / 1000 - this.startTime > this.expirationTick) {
             //Queue all requests until the access token is recovered
             this.queuePromise = new ep.ExternalPromise<void>();
@@ -142,16 +138,16 @@ class TokenManager{
                 //This error happens only if we can't get the access token
                 //If we did not yet have a token, allow the request to finish, the user is not logged in
                 //Otherwise try to get the login
-                if(this.currentToken === undefined || await this.fireNeedLogin()){
+                if (this.currentToken === undefined || await this.fireNeedLogin()) {
                     this.queuePromise.resolve();
                 }
-                else{
-                        //Got false, which means no login was performed, return an error
-                        this.startTime = undefined;
-                        const message = "Could not refresh access token or log back in.";
-                        this.queuePromise.reject(message);
-                        //The first request does not get the queued promise, but instead works off this funciton call, so make sure to throw the error too
-                        throw message;
+                else {
+                    //Got false, which means no login was performed, return an error
+                    this.startTime = undefined;
+                    const message = "Could not refresh access token or log back in.";
+                    this.queuePromise.reject(message);
+                    //The first request does not get the queued promise, but instead works off this funciton call, so make sure to throw the error too
+                    throw message;
                 }
             }
             this.queuePromise = null; //clear promise, it will have been handled above
@@ -198,7 +194,7 @@ export class AccessTokenManager extends Fetcher {
     constructor(tokenPath: string, accessWhitelist: IAccessWhitelist, next: Fetcher) {
         super();
         this.tokenManager = new TokenManager(tokenPath);
-        this.tokenManager.onNeedLogin.add((t) => this.fireNeedLogin() );
+        this.tokenManager.onNeedLogin.add((t) => this.fireNeedLogin());
         this.next = next;
         this.accessWhitelist = accessWhitelist;
     }
@@ -206,7 +202,7 @@ export class AccessTokenManager extends Fetcher {
     public async fetch(url: RequestInfo, init?: RequestInit): Promise<Response> {
         //Make sure the request is allowed to send an access token
         if (this.accessWhitelist.canSendAccessToken(url)) {
-            var token: string =  await this.tokenManager.getToken();
+            var token: string = await this.tokenManager.getToken();
             (<any>init.headers).bearer = token;
             return this.next.fetch(url, init);
         }
