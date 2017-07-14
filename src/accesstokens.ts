@@ -84,7 +84,7 @@ export class AccessWhitelist implements IAccessWhitelist {
             var item = this.whitelist[i];
             //Check to see if the urls match here, check that authorities match and
             //that the path for the item starts with the whitelisted path.
-            if (item.protocol === 'HTTPS'
+            if ((item.protocol === 'HTTPS' || item.protocol === '') //Accept https or empty protocol only 
                 && item.authority == testUri.authority
                 && (<any>testUri.path).startsWith(item.path)) {
                 return true;
@@ -190,6 +190,7 @@ export class AccessTokenManager extends Fetcher {
     private accessWhitelist: IAccessWhitelist;
     private tokenManager: TokenManager;
     private needLoginEvent: events.PromiseEventDispatcher<boolean, AccessTokenManager> = new events.PromiseEventDispatcher<boolean, AccessTokenManager>();
+    private _alwaysRefreshToken: boolean = false;
 
     constructor(tokenPath: string, accessWhitelist: IAccessWhitelist, next: Fetcher) {
         super();
@@ -201,14 +202,18 @@ export class AccessTokenManager extends Fetcher {
 
     public async fetch(url: RequestInfo, init?: RequestInit): Promise<Response> {
         //Make sure the request is allowed to send an access token
-        if (this.accessWhitelist.canSendAccessToken(url)) {
+        var whitelisted: boolean = this.accessWhitelist.canSendAccessToken(url);
+
+        //Sometimes we always refresh the token even if the item is not on the whitelist
+        //This is configured by the user
+        if (whitelisted || this._alwaysRefreshToken) {
             var token: string = await this.tokenManager.getToken();
-            (<any>init.headers).bearer = token;
-            return this.next.fetch(url, init);
+            if (whitelisted) {
+                (<any>init.headers).bearer = token;
+            }
         }
-        else {
-            return this.next.fetch(url, init);
-        }
+
+        return this.next.fetch(url, init);
     }
 
     /**
@@ -217,6 +222,14 @@ export class AccessTokenManager extends Fetcher {
      */
     public get onNeedLogin(): events.EventModifier<events.FuncEventListener<Promise<boolean>, AccessTokenManager>> {
         return this.needLoginEvent;
+    }
+
+    public get alwaysRefreshToken(): boolean {
+        return this._alwaysRefreshToken;
+    }
+
+    public set alwaysRefreshToken(value: boolean) {
+        this._alwaysRefreshToken = value;
     }
 
     private async fireNeedLogin(): Promise<boolean> {
