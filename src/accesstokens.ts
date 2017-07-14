@@ -2,6 +2,7 @@
 import * as uri from 'hr.uri';
 import { Fetcher, RequestInfo, RequestInit, Response, Request } from 'hr.fetcher';
 import * as events from 'hr.eventdispatcher';
+import * as ep from 'hr.externalpromise';
 
 //From https://github.com/auth0/jwt-decode/blob/master/lib/base64_url_decode.js
 function b64DecodeUnicode(str: string) {
@@ -98,71 +99,62 @@ export class AccessWhitelist implements IAccessWhitelist {
     }
 }
 
-export class AccessTokenManager extends Fetcher {
-    public static isInstance(t: any): t is AccessTokenManager {
-        return (<AccessTokenManager>t).onNeedLogin !== undefined
-            && (<AccessTokenManager>t).fetch !== undefined;
-    }
-
-    private tokenPath: string;
-    private accessToken: string;
-    private next: Fetcher;
-    //Remove this
-    private tokenPromise: Promise<string>; //The promise that gets the token
-    private currentToken: any;
+class TokenManager{
+    private currentToken: string;
     private startTime: number;
     private expirationTick: number;
-    private accessWhitelist: IAccessWhitelist;
-    private needLoginEvent: events.PromiseEventDispatcher<boolean, AccessTokenManager> = new events.PromiseEventDispatcher<boolean, AccessTokenManager>();
+    private needLoginEvent: events.PromiseEventDispatcher<boolean, TokenManager> = new events.PromiseEventDispatcher<boolean, TokenManager>();
+    private queuePromise: ep.ExternalPromise<void> = null;
 
-    constructor(tokenPath: string, accessWhitelist: IAccessWhitelist, next: Fetcher) {
-        super();
-        this.tokenPath = tokenPath;
-        this.next = next;
-        this.accessWhitelist = accessWhitelist;
+    constructor(private tokenPath: string){
+
     }
 
-    fetch(url: RequestInfo, init?: RequestInit): Promise<Response> {
-        //Make sure the request is allowed to send an access token
-        if (this.accessWhitelist.canSendAccessToken(url)) {
-            //Does token need refresh?
-            if (this.startTime === undefined || Date.now() / 1000 - this.startTime > this.expirationTick) {
-                return http.post(this.tokenPath)
-                    .then((data: any) => {
-                        this.currentToken = data.accessToken;
+    public async getToken(): Promise<string> {
+        await this.checkRefresh();
+        return this.currentToken;
+    }
 
-                        var tokenObj = parseJwt(this.currentToken);
-                        this.startTime = tokenObj.nbf;
-                        this.expirationTick = (tokenObj.exp - this.startTime) / 2; //After half the token time has expired we will turn it in for another one.
-
-                        return this.addToken(url, init);
-                    })
-                    .catch(err => { //This error happens only if we can't get the access token, if we previously had logged in then try to refresh, otherwise just do the request
-                        if (this.currentToken !== undefined) {
-                            return this.fireNeedLogin()
-                                .then(needsLogin => {
-                                    if (needsLogin) {
-                                        //url and init will not have been changed yet, fire fetch again.
-                                        return this.fetch(url, init); 
-                                    }
-                                    else {
-                                        //Got no result, return an error
-                                        this.startTime = undefined;
-                                        throw "Could not get access token or log back in.";
-                                    }
-                                });
-                        }
-                        else {
-                            return this.addToken(url, init);
-                        }
-                    });
-            }
-            else {
-                return this.addToken(url, init);
-            }
+    private checkRefresh(): Promise<void> {
+        //If we have a promise to queue from, return that, any requests after the first one to refresh the token
+        //will wait on this promise, the first one will wait on the call to doRefreshToken.
+        if(this.queuePromise !== null){
+            return this.queuePromise.Promise;
         }
-        else {
-            return this.next.fetch(url, init);
+        return this.doRefreshToken();
+    }
+
+    private async doRefreshToken(): Promise<void>{
+        if (this.startTime === undefined || Date.now() / 1000 - this.startTime > this.expirationTick) {
+            //Queue all requests until the access token is recovered
+            this.queuePromise = new ep.ExternalPromise<void>();
+            try {
+                var data: any = await http.post(this.tokenPath);
+                this.currentToken = data.accessToken;
+
+                var tokenObj = parseJwt(this.currentToken);
+                this.startTime = tokenObj.nbf;
+                this.expirationTick = (tokenObj.exp - this.startTime) / 2; //After half the token time has expired we will turn it in for another one.
+
+                this.queuePromise.resolve();
+            }
+            catch (err) {
+                //This error happens only if we can't get the access token
+                //If we did not yet have a token, allow the request to finish, the user is not logged in
+                //Otherwise try to get the login
+                if(this.currentToken === undefined || await this.fireNeedLogin()){
+                    this.queuePromise.resolve();
+                }
+                else{
+                        //Got false, which means no login was performed, return an error
+                        this.startTime = undefined;
+                        const message = "Could not refresh access token or log back in.";
+                        this.queuePromise.reject(message);
+                        //The first request does not get the queued promise, but instead works off this funciton call, so make sure to throw the error too
+                        throw message;
+                }
+            }
+            this.queuePromise = null; //clear promise, it will have been handled above
         }
     }
 
@@ -172,20 +164,69 @@ export class AccessTokenManager extends Fetcher {
      * until the promise resolves.
      * @param status The status code for the event.
      */
-    public get onNeedLogin(): events.EventModifier<events.FuncEventListener<Promise<boolean>, AccessTokenManager>> {
+    public get onNeedLogin(): events.EventModifier<events.FuncEventListener<Promise<boolean>, TokenManager>> {
         return this.needLoginEvent.modifier;
-    }
-
-    private addToken(url: RequestInfo, init?: RequestInit) {
-        (<any>init.headers).bearer = this.currentToken;
-        return this.next.fetch(url, init);
     }
 
     private async fireNeedLogin(): Promise<boolean> {
         var retryResults = await this.needLoginEvent.fire(this);
 
         if (retryResults) {
-            //Take first result that is actually defined, if none are the original result will be used again
+            //Take first result that is actually defined
+            for (var i = 0; i < retryResults.length; ++i) {
+                if (retryResults[i]) {
+                    return retryResults[i];
+                }
+            }
+        }
+
+        return false;
+    }
+}
+
+export class AccessTokenManager extends Fetcher {
+    public static isInstance(t: any): t is AccessTokenManager {
+        return (<AccessTokenManager>t).onNeedLogin !== undefined
+            && (<AccessTokenManager>t).fetch !== undefined;
+    }
+
+    private next: Fetcher;
+    private accessWhitelist: IAccessWhitelist;
+    private tokenManager: TokenManager;
+    private needLoginEvent: events.PromiseEventDispatcher<boolean, AccessTokenManager> = new events.PromiseEventDispatcher<boolean, AccessTokenManager>();
+
+    constructor(tokenPath: string, accessWhitelist: IAccessWhitelist, next: Fetcher) {
+        super();
+        this.tokenManager = new TokenManager(tokenPath);
+        this.tokenManager.onNeedLogin.add((t) => this.fireNeedLogin() );
+        this.next = next;
+        this.accessWhitelist = accessWhitelist;
+    }
+
+    public async fetch(url: RequestInfo, init?: RequestInit): Promise<Response> {
+        //Make sure the request is allowed to send an access token
+        if (this.accessWhitelist.canSendAccessToken(url)) {
+            var token: string =  await this.tokenManager.getToken();
+            (<any>init.headers).bearer = token;
+            return this.next.fetch(url, init);
+        }
+        else {
+            return this.next.fetch(url, init);
+        }
+    }
+
+    /**
+     * This event will fire if the token manager tried to get an access token and failed. You can try
+     * to log the user back in at this point.
+     */
+    public get onNeedLogin(): events.EventModifier<events.FuncEventListener<Promise<boolean>, AccessTokenManager>> {
+        return this.needLoginEvent;
+    }
+
+    private async fireNeedLogin(): Promise<boolean> {
+        var retryResults = await this.needLoginEvent.fire(this);
+
+        if (retryResults) {
             for (var i = 0; i < retryResults.length; ++i) {
                 if (retryResults[i]) {
                     return retryResults[i];
