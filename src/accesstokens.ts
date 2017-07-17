@@ -102,6 +102,7 @@ export class AccessWhitelist implements IAccessWhitelist {
 class TokenManager {
     private currentToken: string;
     private startTime: number;
+    private currentSub: string;
     private expirationTick: number;
     private needLoginEvent: events.PromiseEventDispatcher<boolean, TokenManager> = new events.PromiseEventDispatcher<boolean, TokenManager>();
     private queuePromise: ep.ExternalPromise<string> = null;
@@ -134,6 +135,19 @@ class TokenManager {
             this.currentToken = data.accessToken;
 
             var tokenObj = parseJwt(this.currentToken);
+
+            if (this.currentSub !== undefined) {
+                if (this.currentSub !== tokenObj.sub) {
+                    //Subjects do not match, clear tokens
+                    this.currentToken = undefined;
+                    this.startTime = undefined;
+                    throw new Error("Sub did not match on new token, likely a different user. Aborting refresh.");
+                }
+            }
+            else {
+                this.currentSub = tokenObj.sub;
+            }
+
             this.startTime = tokenObj.nbf;
             this.expirationTick = (tokenObj.exp - this.startTime) / 2; //After half the token time has expired we will turn it in for another one.
 
