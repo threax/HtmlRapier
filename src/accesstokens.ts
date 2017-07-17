@@ -6,7 +6,7 @@ import * as ep from 'hr.externalpromise';
 
 //From https://github.com/auth0/jwt-decode/blob/master/lib/base64_url_decode.js
 function b64DecodeUnicode(str: string) {
-    return decodeURIComponent(atob(str).replace(/(.)/g, function (m, p) {
+    return decodeURIComponent(atob(str).replace(/(.)/g, function(m, p) {
         var code = p.charCodeAt(0).toString(16).toUpperCase();
         if (code.length < 2) {
             code = '0' + code;
@@ -137,10 +137,9 @@ class TokenManager {
             var tokenObj = parseJwt(this.currentToken);
 
             if (this.currentSub !== undefined) {
-                if (this.currentSub !== tokenObj.sub) {
+                if (this.currentSub !== tokenObj.sub) { //Do not combine ifs
                     //Subjects do not match, clear tokens
-                    this.currentToken = undefined;
-                    this.startTime = undefined;
+                    this.clearToken();
                     throw new Error("Sub did not match on new token, likely a different user. Aborting refresh.");
                 }
             }
@@ -166,6 +165,12 @@ class TokenManager {
                 this.rejectQueue("Could not refresh access token or log back in.");
             }
         }
+    }
+
+    private clearToken(): void {
+        this.currentToken = undefined;
+        this.startTime = undefined;
+        this.currentSub = undefined;
     }
 
     /**
@@ -199,7 +204,7 @@ class TokenManager {
         promise.resolve(this.currentToken);
     }
 
-    private rejectQueue(err: any){
+    private rejectQueue(err: any) {
         var promise = this.queuePromise;
         this.queuePromise = null;
         promise.reject(this.currentToken);
