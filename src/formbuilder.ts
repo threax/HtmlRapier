@@ -23,6 +23,7 @@ export interface ProcessedJsonProperty extends JsonProperty {
     buildName: string;
     buildType: string;
     buildOrder: number;
+    buildValues?: JsonLabel[];
 }
 
 export type JsonPropertyMap = { [key: string]: JsonProperty };
@@ -55,12 +56,36 @@ export function buildForm(componentName: string, schema: JsonSchema, formElement
             var item = propArray[i];
             var existing = domquery.first('[name=' + item.buildName + ']', formElement);
             if(existing === null){
+                //Create component if it is null
                 component.one(componentName, item, formElement, undefined, undefined, (i) => {
                     return i.buildType;
                 });
+                
+                //Refresh existing, should be found now.
+                existing = domquery.first('[name=' + item.buildName + ']', formElement);
+                if(existing === null){
+                    throw new Error("Problem creating form element '" + item.buildName + "' could not get created element");
+                }
+            }
+            //If there are values defined for the element, put them on the page, this works for both
+            //predefined and generated elements, which allows you to have predefined selects that can have dynamic values
+            if(item.buildValues !== undefined){
+                if(IsSelectElement(existing)){
+                    for(var q = 0; q < item.buildValues.length; ++q){
+                        var current = item.buildValues[q];
+                        var option = document.createElement("option");
+                        option.text = current.label;
+                        option.value = current.value;
+                        existing.options.add(option);
+                    }
+                }
             }
         }
     }
+}
+
+function IsSelectElement(element: Node): element is HTMLSelectElement{
+    return element && (element.nodeName === 'SELECT');
 }
 
 function processProperty(prop: JsonProperty, key: string): ProcessedJsonProperty{
@@ -77,18 +102,42 @@ function processProperty(prop: JsonProperty, key: string): ProcessedJsonProperty
         processed.buildOrder = Number.MAX_VALUE;
     }
 
-    if(prop["x-ui-type"]){
-        processed.buildType = prop["x-ui-type"];
+    //Set this build type to what has been passed in, this will be processed further below
+    processed.buildType = getPropertyType(prop).toLowerCase();
+
+    //Look for collections, anything defined as an array or that has x-values defined
+    if(processed.buildType === 'array'){
+
     }
     else{
-        processed.buildType = getPropertyType(prop).toLowerCase();
-        switch(processed.buildType){
-            case 'integer':
-                processed.buildType = 'number';
-                break;
-            case 'boolean':
-                processed.buildType = 'checkbox';
-                break;
+        //Not an array type, handle as single value
+        if(prop["x-values"] !== undefined){
+            //Type with values, make a combo box or checkboxes depending on what the user asked for
+            var xValues = prop["x-values"];
+            processed.buildValues = xValues;
+            if(prop["x-ui-type"] !== undefined){
+                processed.buildType = prop["x-ui-type"];
+            }
+            else{
+                processed.buildType = "select";
+            }
+        }
+        else
+        {
+            //Regular type, no options, derive html type
+            if(prop["x-ui-type"] !== undefined){
+                processed.buildType = prop["x-ui-type"];
+            }
+            else{
+                switch(processed.buildType){
+                    case 'integer':
+                        processed.buildType = 'number';
+                        break;
+                    case 'boolean':
+                        processed.buildType = 'checkbox';
+                        break;
+                }
+            }
         }
     }
 

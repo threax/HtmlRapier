@@ -11,6 +11,13 @@
         </label>
     </div>
 </template>
+<template data-hr-variant="select">
+    <div class="form-group">
+        <label>{{{title}}}</label>
+        <select class="form-control" name="{{buildName}}">
+    </div>
+</template>
+
 <h1 data-hr-run="form-demo">Form Demo</h1>
 <div data-hr-controller="formDemo">
     <form data-hr-form="form" data-hr-on-submit="submit">
