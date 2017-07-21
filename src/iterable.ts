@@ -1,4 +1,6 @@
-﻿"use strict";
+﻿///<amd-module name="hr.iterable"/>
+
+"use strict";
 
 import * as typeId from 'hr.typeidentifiers';
 

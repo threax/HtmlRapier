@@ -1,3 +1,5 @@
+///<amd-module name="hr.di"/>
+
 export type ResolverFunction<T> = (scope: Scope) => T;
 
 //Thanks Tehau Cave at http://stackoverflow.com/questions/36886082/abstract-constructor-type-in-typescript

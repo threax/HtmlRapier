@@ -1,3 +1,5 @@
+///<amd-module name="hr.formbuilder"/>
+
 import * as component from 'hr.components';
 
 interface JsonSchema {

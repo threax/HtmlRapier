@@ -1,3 +1,5 @@
+///<amd-module name="hr.view"/>
+
 import { TextStream } from 'hr.textstream';
 import * as components from 'hr.components';
 import * as typeId from 'hr.typeidentifiers';

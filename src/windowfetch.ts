@@ -1,4 +1,6 @@
-﻿import { Fetcher, RequestInfo, RequestInit, Response, fetch } from 'hr.fetcher';
+﻿///<amd-module name="hr.windowfetch"/>
+
+import { Fetcher, RequestInfo, RequestInit, Response, fetch } from 'hr.fetcher';
 
 /**
  * A fetcher implementation that calls the global window fetch function.

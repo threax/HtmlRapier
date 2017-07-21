@@ -1,3 +1,5 @@
+///<amd-module name="hr.toggles"/>
+
 "use strict";
 
 import * as typeId from 'hr.typeidentifiers';

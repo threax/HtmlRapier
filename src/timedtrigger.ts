@@ -1,4 +1,6 @@
-﻿"use strict";
+﻿///<amd-module name="hr.timedtrigger"/>
+
+"use strict";
 
 import {ActionEventDispatcher, ActionEventListener} from 'hr.eventdispatcher';
 

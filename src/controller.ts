@@ -1,4 +1,6 @@
-﻿"use strict";
+﻿///<amd-module name="hr.controller"/>
+
+"use strict";
 
 import { BindingCollection } from 'hr.bindingcollection';
 export { BindingCollection } from 'hr.bindingcollection';

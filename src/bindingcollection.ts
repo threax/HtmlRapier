@@ -1,4 +1,6 @@
-﻿"use strict";
+﻿///<amd-module name="hr.bindingcollection"/>
+
+"use strict";
 
 import * as escape from 'hr.escape';
 import * as typeId from 'hr.typeidentifiers';

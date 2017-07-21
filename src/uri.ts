@@ -1,4 +1,6 @@
-﻿"use strict";
+﻿///<amd-module name="hr.uri"/>
+
+"use strict";
 
 import { escape } from 'hr.escape';
 

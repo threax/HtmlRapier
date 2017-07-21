@@ -1,4 +1,6 @@
-﻿// Type definitions for Fetch API
+﻿///<amd-module name="hr.fetcher"/>
+
+// Type definitions for Fetch API
 // Altered to fit htmlrapier by Andrew Piper
 // Based on:
 // Project: https://github.com/github/fetch

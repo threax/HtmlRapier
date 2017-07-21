@@ -1,3 +1,5 @@
+///<amd-module name="hr.error"/>
+
 /**
  * This interface defines a common way to handle validation errors for a model.
  */

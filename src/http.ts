@@ -1,4 +1,6 @@
-﻿"use strict";
+﻿///<amd-module name="hr.http"/>
+
+"use strict";
 
 import {Fetcher, Response} from 'hr.fetcher';
 import {WindowFetch} from 'hr.windowfetch';

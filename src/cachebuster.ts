@@ -1,4 +1,6 @@
-﻿import { Fetcher, RequestInfo, RequestInit, Response, Request } from 'hr.fetcher';
+﻿///<amd-module name="hr.cachebuster"/>
+
+import { Fetcher, RequestInfo, RequestInit, Response, Request } from 'hr.fetcher';
 
 function isRequest(url: RequestInfo): url is Request {
     return url !== undefined && url !== null && (<Request>url).url !== undefined;

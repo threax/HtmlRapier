@@ -1,4 +1,6 @@
-﻿import * as http from 'hr.http';
+﻿///<amd-module name="hr.accesstokens"/>
+
+import * as http from 'hr.http';
 import * as uri from 'hr.uri';
 import { Fetcher, RequestInfo, RequestInit, Response, Request } from 'hr.fetcher';
 import * as events from 'hr.eventdispatcher';
