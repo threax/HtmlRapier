@@ -22,6 +22,7 @@ export interface JsonProperty {
 export interface ProcessedJsonProperty extends JsonProperty {
     buildName: string;
     buildType: string;
+    buildOrder: number;
 }
 
 export type JsonPropertyMap = { [key: string]: JsonProperty };
@@ -47,7 +48,7 @@ export function buildForm(componentName: string, schema: JsonSchema, formElement
         }
 
         propArray.sort((a, b) =>{
-            return a["x-ui-order"] - b["x-ui-order"];
+            return a.buildOrder - b.buildOrder;
         });
 
         for(var i = 0; i < propArray.length; ++i){
@@ -55,7 +56,7 @@ export function buildForm(componentName: string, schema: JsonSchema, formElement
             var existing = domquery.first('[name=' + item.buildName + ']', formElement);
             if(existing === null){
                 component.one(componentName, item, formElement, undefined, undefined, (i) => {
-                    return i.buildName;
+                    return i.buildType;
                 });
             }
         }
@@ -69,14 +70,32 @@ function processProperty(prop: JsonProperty, key: string): ProcessedJsonProperty
         processed.title = processed.buildName;
     }
 
+    if(prop["x-ui-order"] !== undefined){
+        processed.buildOrder = prop["x-ui-order"];
+    }
+    else{
+        processed.buildOrder = Number.MAX_VALUE;
+    }
+
     if(prop["x-ui-type"]){
         processed.buildType = prop["x-ui-type"];
+    }
+    else{
+        processed.buildType = getPropertyType(prop).toLowerCase();
+        switch(processed.buildType){
+            case 'integer':
+                processed.buildType = 'number';
+                break;
+            case 'boolean':
+                processed.buildType = 'checkbox';
+                break;
+        }
     }
 
     return processed;
 }
 
-function getPropertyType(prop: ProcessedJsonProperty) {
+function getPropertyType(prop: JsonProperty) {
     if (Array.isArray(prop.type)) {
         for (var j = 0; j < prop.type.length; ++j) {
             if (prop.type[j] !== "null") {

@@ -1,7 +1,14 @@
 <template data-hr-component="hr.defaultform">
     <div class="form-group">
         <label>{{{title}}}</label>
-        <input class="form-control" name="{{buildName}}">
+        <input class="form-control" name="{{buildName}}" type="{{buildType}}">
+    </div>
+</template>
+<template data-hr-variant="checkbox">
+    <div class="checkbox">
+        <label>
+            <input type="checkbox" name="{{buildName}}"> {{{title}}}
+        </label>
     </div>
 </template>
 <h1 data-hr-run="form-demo">Form Demo</h1>
