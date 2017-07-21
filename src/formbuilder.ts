@@ -38,9 +38,8 @@ export function buildForm(componentName: string, schema: JsonSchema, formElement
     //while (formElement.lastChild) {
     //    formElement.removeChild(formElement.lastChild);
     //}
-
-    console.log("still updating");
     
+    var dynamicInsertElement = domquery.first("[data-hr-form-end]");
     var propArray: ProcessedJsonProperty[] = [];
     var props = schema.properties;
     if (props) {
@@ -57,7 +56,7 @@ export function buildForm(componentName: string, schema: JsonSchema, formElement
             var existing = domquery.first('[name=' + item.buildName + ']', formElement);
             if(existing === null){
                 //Create component if it is null
-                component.one(componentName, item, formElement, undefined, undefined, (i) => {
+                component.one(componentName, item, formElement, dynamicInsertElement, undefined, (i) => {
                     return i.buildType;
                 });
                 

@@ -21,9 +21,16 @@
 <h1 data-hr-run="form-demo">Form Demo</h1>
 <div data-hr-controller="formDemo">
     <form data-hr-form="form" data-hr-on-submit="submit">
-        <div class="form-control">
-            <input name="first" type="text" />
+        <div class="form-group">
+            <label>First Name Custom</label>
+            <input class="form-control" name="first" type="text" />
         </div>
-        <button type="submit">Submit</button>
+
+        <div class="form-group">
+            <label>Site</label>
+            <select class="form-control" name="siteId" />
+        </div>
+
+        <button type="submit" data-hr-form-end="true">Submit</button>
     </form>
 </div>
