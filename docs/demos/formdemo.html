@@ -23,10 +23,17 @@
         <select class="form-control" name="{{buildName}}" multiple="">
     </div>
 </template>
-<template data-hr-variant="arrayEditor">
+<template data-hr-component="hr.defaultform" data-hr-variant="arrayEditor">
     <div>
         <label>{{{title}}}</label>
-        <div data-hr-handle="items"></div>
+        <div data-hr-view="items">
+            <template>
+                <div data-hr-handle="item">
+                    
+                </div>
+                <button data-hr-on-click="remove">Remove</button>
+            </template>
+        </div>
         <button data-hr-on-click="add">Add</button>
     </div>
 </template>

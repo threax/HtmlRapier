@@ -5,6 +5,7 @@
 import * as component from 'hr.components';
 import * as domquery from 'hr.domquery';
 import { BindingCollection } from 'hr.bindingcollection';
+import * as view from 'hr.view';
 
 export interface JsonSchema {
     title?: string;
@@ -68,27 +69,35 @@ export interface ISpecialFormValue{
 }
 
 class ArrayEditorRow {
+    private root;
 
+    constructor(bindings: BindingCollection, schema: JsonSchema, name: string){
+        this.root = bindings.rootElement;
+
+        buildForm('hr.defaultform', schema, this.root, name, true);
+
+        bindings.setListener(this);
+    }
+
+    public remove(evt: Event): void{
+        evt.preventDefault();
+        this.root.remove();
+    }
 }
 
 class ArrayEditor implements ISpecialFormValue {
-    private itemsHandle: HTMLElement;
+    private itemsHandle: view.IView<JsonSchema>;
 
     constructor(private name: string, bindings: BindingCollection, private schema: JsonSchema){
-        if(schema){
-
-        }
-
-        this.itemsHandle = bindings.getHandle("items");
-        if(this.itemsHandle === null){
-            throw new Error("Could not find a handle named items when creating an array editor. Does your template define a data-hr-handle='items' attribute?");
-        }
+        this.itemsHandle = bindings.getView<JsonSchema>("items");
         bindings.setListener(this);
     }
 
     public add(evt: Event): void {
         evt.preventDefault();
-        buildForm('hr.defaultform', this.schema, this.itemsHandle, this.name, true);
+        this.itemsHandle.appendData(this.schema, (bindings, data) => {
+            new ArrayEditorRow(bindings, data, this.name);
+        });
     }
 
     public getData(): any {

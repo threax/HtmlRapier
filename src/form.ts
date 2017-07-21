@@ -128,8 +128,8 @@ function addValue(q, name, value) {
 
 /**
  * Serialze a form to a javascript object
- * @param {HTMLElement|string} form - A selector or form element for the form to serialize.
- * @returns {object} - The object that represents the form contents as an object.
+ * @param form - A selector or form element for the form to serialize.
+ * @returns - The object that represents the form contents as an object.
  */
 function serialize(form: HTMLFormElement, proto?: any) {
     //This is from https://code.google.com/archive/p/form-serialize/downloads
@@ -201,8 +201,8 @@ function serialize(form: HTMLFormElement, proto?: any) {
 
 /**
  * Populate a form with data.
- * @param {HTMLElement|string} form - The form to populate or a query string for the form.
- * @param {object} data - The data to bind to the form, form name attributes will be mapped to the keys in the object.
+ * @param form - The form to populate or a query string for the form.
+ * @param data - The data to bind to the form, form name attributes will be mapped to the keys in the object.
  */
 function populate(form: HTMLElement | string, data:any) {
     var formElement = domQuery.first(form);
