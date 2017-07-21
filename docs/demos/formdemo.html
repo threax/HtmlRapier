@@ -1,8 +1,15 @@
-<template data-hr-component="formtest">
-    <div>Hi {{buildName}}</div>
+<template data-hr-component="hr.defaultform">
+    <div class="form-group">
+        <label>{{{title}}}</label>
+        <input class="form-control" name="{{buildName}}">
+    </div>
 </template>
 <h1 data-hr-run="form-demo">Form Demo</h1>
 <div data-hr-controller="formDemo">
-    <form data-hr-handle="form">
+    <form data-hr-form="form" data-hr-on-submit="submit">
+        <div class="form-control">
+            <input name="first" type="text" />
+        </div>
+        <button type="submit">Submit</button>
     </form>
 </div>

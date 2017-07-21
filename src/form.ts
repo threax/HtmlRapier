@@ -4,6 +4,7 @@
 
 import * as domQuery from 'hr.domquery';
 import * as typeIds from 'hr.typeidentifiers';
+import * as formBuilder from 'hr.formbuilder';
 
 export interface IForm<T> {    
      /**
@@ -30,6 +31,14 @@ export interface IForm<T> {
      * @param proto The prototype object.
      */
     setPrototype(proto: T): void;
+
+    /**
+     * Set the schema for this form. This will add any properties found in the
+     * schema that you did not already define on the form. It will match the form
+     * property names to the name attribute on the elements. If you had a blank form
+     * this would generate the whole thing for you from the schema.
+     */
+    setSchema(schema: formBuilder.JsonSchema, componentName?: string): void;
 }
 
 class Form<T> {
@@ -54,6 +63,13 @@ class Form<T> {
     public setPrototype(proto: T): void { 
         this.proto = proto;
     }
+
+    public setSchema(schema: formBuilder.JsonSchema, componentName?: string): void{
+        if(componentName === undefined){
+            componentName = "hr.defaultform";
+        }
+        formBuilder.buildForm(componentName, schema, this.form)
+    }
 }
 
 class NullForm<T> implements IForm<T> {
@@ -74,6 +90,10 @@ class NullForm<T> implements IForm<T> {
     }
 
     public setPrototype(proto: T): void { 
+
+    }
+
+    public setSchema(schema: formBuilder.JsonSchema, componentName?: string): void{
 
     }
 }

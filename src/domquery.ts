@@ -15,7 +15,7 @@ export type ElementIteratorCallback = (element: Element) => void;
 export function first(element: Node | string, context?: HTMLElement): Node {
     if (typeof element === 'string') {
         if (context !== undefined) {
-            if (this.matches(context, element)) {
+            if (matches(context, element)) {
                 return context;
             }
             else {
@@ -45,7 +45,7 @@ export function all(element: HTMLElement | HTMLElement[] | string, context?: HTM
         }
 
         if (context !== undefined) {
-            if (this.matches(context, element)) {
+            if (matches(context, element)) {
                 results.push(context);
             }
             else {
@@ -86,7 +86,7 @@ export function all(element: HTMLElement | HTMLElement[] | string, context?: HTM
 export function iterate(element: HTMLElement | HTMLElement[] | string, context: HTMLElement, cb: ElementIteratorCallback) {
     if (typeId.isString(element)) {
         if (context) {
-            if (this.matches(context, element)) {
+            if (matches(context, element)) {
                 cb(context);
             }
             else {
