@@ -154,6 +154,7 @@ function serialize(form: HTMLFormElement, proto?: any) {
                     case 'password':
                     case 'button':
                     case 'reset':
+                    case 'date':
                     case 'submit':
                         addValue(q, element.name, element.value);
                         break;
