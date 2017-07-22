@@ -29,7 +29,7 @@ builder.create("formDemo", HelloWorldController);
 
 function createTestSchema(){
     return {
-        "title": "StudentInput",
+        "title": "Title of Input",
         "type": "object",
         "additionalProperties": false,
         "properties": {
