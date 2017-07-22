@@ -29,6 +29,7 @@ export interface ProcessedJsonProperty extends JsonProperty {
     buildType: string;
     buildOrder: number;
     buildValues?: JsonLabel[];
+    size?: number;
 }
 
 export type JsonPropertyMap = { [key: string]: JsonProperty };
@@ -232,6 +233,10 @@ function processProperty(prop: JsonProperty, name: string, defaultTitle: string)
             }
             else{
                 processed.buildType = "multiselect";
+                processed.size = xValues.length;
+                if(processed.size > 15){
+                    processed.size = 15;
+                }
             }
         }
         else{
