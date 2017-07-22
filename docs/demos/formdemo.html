@@ -41,14 +41,26 @@
 <h1 data-hr-run="form-demo">Form Demo</h1>
 <div data-hr-controller="formDemo">
     <form data-hr-form="form" data-hr-on-submit="submit">
-        <div class="form-group">
-            <label>First Name Custom</label>
-            <input class="form-control" name="first" type="text" />
+        <div class="row">
+            <div class="form-group col-sm-3">
+                <label>First Name</label>
+                <input class="form-control" name="first" type="text" />
+            </div>
+
+            <div class="form-group col-sm-3">
+                <label>Middle Name</label>
+                <input class="form-control" name="middle" type="text" />
+            </div>
+
+            <div class="form-group col-sm-3">
+                <label>Last Name</label>
+                <input class="form-control" name="last" type="text" />
+            </div>
         </div>
 
         <div class="form-group">
-            <label>Site</label>
-            <select class="form-control" name="siteId" />
+            <label>comboTest</label>
+            <select class="form-control" name="comboTest" />
         </div>
 
         <button type="submit" data-hr-form-end="">Submit</button>
