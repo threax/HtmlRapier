@@ -44,6 +44,10 @@
         {
           "name": "Todo List",
           "link": "/demos/todo"
+        },
+        {
+          "name": "Form Demo",
+          "link": "/demos/formdemo"
         }
       ]
     }
