@@ -69,19 +69,15 @@ export interface ISpecialFormValue{
 }
 
 class ArrayEditorRow {
-    private root;
-
-    constructor(bindings: BindingCollection, schema: JsonSchema, name: string){
-        this.root = bindings.rootElement;
-
-        buildForm('hr.defaultform', schema, this.root, name, true);
+    constructor(private bindings: BindingCollection, schema: JsonSchema, name: string){
+        buildForm('hr.defaultform', schema, this.bindings.rootElement, name, true);
 
         bindings.setListener(this);
     }
 
     public remove(evt: Event): void{
         evt.preventDefault();
-        this.root.remove();
+        this.bindings.remove();
     }
 }
 
@@ -133,11 +129,17 @@ export function buildForm(componentName: string, schema: JsonSchema, parentEleme
     var props = schema.properties;
     if(props === undefined){
         //No props, add the schema itself as a property
-        propArray.push(processProperty(schema, baseName));
+        propArray.push(processProperty(schema, baseName, baseName));
     }
     else {
+        
+        var baseNameWithSep = baseName;
+        if(baseNameWithSep !== ""){
+            baseNameWithSep = baseNameWithSep + '-';
+        }
+
         for(var key in props){
-            propArray.push(processProperty(props[key], baseName + key));
+            propArray.push(processProperty(props[key], baseNameWithSep + key, key));
         }
 
         propArray.sort((a, b) =>{
@@ -200,11 +202,11 @@ function IsSelectElement(element: Node): element is HTMLSelectElement{
     return element && (element.nodeName === 'SELECT');
 }
 
-function processProperty(prop: JsonProperty, name: string): ProcessedJsonProperty{
+function processProperty(prop: JsonProperty, name: string, defaultTitle: string): ProcessedJsonProperty{
     var processed = Object.create(prop);
     processed.buildName = name;
     if(processed.title === undefined){ //Set title if it is not set
-        processed.title = processed.buildName;
+        processed.title = defaultTitle;
     }
 
     if(prop["x-ui-order"] !== undefined){

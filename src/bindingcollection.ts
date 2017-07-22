@@ -264,4 +264,14 @@ export class BindingCollection {
     public get rootElement(): HTMLElement{
         return this.elements.length > 0 ? this.elements[0] : null;
     }
+
+    /**
+     * Remove all contained elements from the document. Be sure to use this to 
+     * remove the collection so all elements are properly removed.
+     */
+    public remove(): void{
+        for (var eIx = 0; eIx < this.elements.length; ++eIx) {
+            this.elements[eIx].remove();
+        }
+    }
 };

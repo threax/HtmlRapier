@@ -59,6 +59,35 @@ function createTestSchema(){
                 "items": { "type": "string" },
                 "x-ui-order": 1,
             },
+            "complexArray": {
+                "type": [ "array", "null" ],
+                "items": { "type": "object",
+                    "properties": {
+                        "first": {
+                            "type": [
+                                "null",
+                                "string"
+                            ],
+                            "x-ui-order": 18
+                        },
+                        "middle": {
+                            "type": [
+                                "null",
+                                "string"
+                            ],
+                            "x-ui-order": 21
+                        },
+                        "last": {
+                            "type": [
+                                "null",
+                                "string"
+                            ],
+                            "x-ui-order": 24
+                        }
+                    }
+                },
+                "x-ui-order": 2,
+            },
             "multiChoice": {
                 "title": "Multi Choice",
                 "type": [

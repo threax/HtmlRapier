@@ -1,3 +1,4 @@
+/docs
 /node_modules
 /npm-debug.log
 
@@ -16,4 +17,3 @@
 /obj
 /dist
 /docs/demos/node_modules
-docs/demos/npm-debug.log

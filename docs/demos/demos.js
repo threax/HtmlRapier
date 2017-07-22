@@ -1596,6 +1596,7 @@ define("hr.form", ["require", "exports", "hr.domquery", "hr.typeidentifiers", "n
                         case 'password':
                         case 'button':
                         case 'reset':
+                        case 'date':
                         case 'submit':
                             addValue(q, element.name, element.value);
                             break;
@@ -2496,7 +2497,7 @@ define("form-demo", ["require", "exports", "hr.controller"], function (require, 
     builder.create("formDemo", HelloWorldController);
     function createTestSchema() {
         return {
-            "title": "StudentInput",
+            "title": "Title of Input",
             "type": "object",
             "additionalProperties": false,
             "properties": {
@@ -2525,6 +2526,35 @@ define("form-demo", ["require", "exports", "hr.controller"], function (require, 
                     "type": ["array", "null"],
                     "items": { "type": "string" },
                     "x-ui-order": 1,
+                },
+                "complexArray": {
+                    "type": ["array", "null"],
+                    "items": { "type": "object",
+                        "properties": {
+                            "first": {
+                                "type": [
+                                    "null",
+                                    "string"
+                                ],
+                                "x-ui-order": 18
+                            },
+                            "middle": {
+                                "type": [
+                                    "null",
+                                    "string"
+                                ],
+                                "x-ui-order": 21
+                            },
+                            "last": {
+                                "type": [
+                                    "null",
+                                    "string"
+                                ],
+                                "x-ui-order": 24
+                            }
+                        }
+                    },
+                    "x-ui-order": 2,
                 },
                 "multiChoice": {
                     "title": "Multi Choice",
