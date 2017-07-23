@@ -2696,7 +2696,7 @@ define("form-demo", ["require", "exports", "hr.controller"], function (require, 
                     }]
             };
             this.form.setData(data);
-            data.stringArray = ["first", "second"];
+            data.stringArray = null; // ["first", "second"];
             this.form.setData(data);
         }
         Object.defineProperty(FormDemoController, "InjectorArgs", {

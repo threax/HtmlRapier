@@ -35,7 +35,7 @@ class FormDemoController {
         
         this.form.setData(data);
 
-        data.stringArray = ["first", "second"];
+        data.stringArray = null;// ["first", "second"];
 
         this.form.setData(data);
     }

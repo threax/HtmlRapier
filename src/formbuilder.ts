@@ -180,8 +180,8 @@ class ArrayEditor implements ISpecialFormValue {
 
     public setData(data: any, serializer: FormSerializer) {
         var itemData: any[] = data[this.name];
+        var i = 0;
         if(itemData) {
-            var i = 0;
             for(; i < itemData.length; ++i){
                 if(i >= this.rows.length){
                     this.addRow();
@@ -194,9 +194,9 @@ class ArrayEditor implements ISpecialFormValue {
                 }
                 this.rows[i].setData(rowData, serializer);
             }
-            for(; i < this.rows.length;){ //Does not increment, removing rows will de index for us
-                this.rows[i].remove();
-            }
+        }
+        for(; i < this.rows.length;){ //Does not increment, removing rows will de index for us
+            this.rows[i].remove();
         }
     }
 
