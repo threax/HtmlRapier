@@ -126,9 +126,7 @@ function IsFormElement(element: Node): element is HTMLFormElement{
 }
 
 function addValue(q: {}, name: string, value: any, level: string) {
-    if(level !== undefined && level !== null && level.length > 0){
-        name = name.substring(level.length + 1); //Account for delimiter, but we don't care what it is
-    }
+    name = extractLevelName(level, name);
 
     if (q[name] === undefined) {
         q[name] = value;
@@ -235,6 +233,13 @@ function containsCoerced(items: any[], search: any){
     return false;
 }
 
+function extractLevelName(level: string, name: string): string{
+    if(level !== undefined && level !== null && level.length > 0){
+        name = name.substring(level.length + 1); //Account for delimiter, but we don't care what it is
+    }
+    return name;
+}
+
 /**
  * Populate a form with data.
  * @param form - The form to populate or a query string for the form.
@@ -259,10 +264,7 @@ function populate(form: HTMLElement | string, data:any, level?: string): void {
 
         if(allowWrite(element, level)){
             var itemData: any;
-            var dataName = element.getAttribute('name');
-            if(level !== undefined && level !== null && level.length > 0){
-                dataName = dataName.substring(level.length + 1); //Account for delimiter, but we don't care what it is
-            }
+            var dataName = extractLevelName(level, element.getAttribute('name'));
             switch(dataType){
                 case DataType.Object:
                     itemData = data[dataName];
