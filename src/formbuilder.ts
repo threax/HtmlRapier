@@ -86,7 +86,7 @@ class InfiniteIndex{
     public getNext(): string {
         ++this.num;
         if(this.num === indexMax){
-            this.base += "-"; //Each time we hit index max we just add a - to the base
+            this.base += "b"; //Each time we hit index max we just add a 'b' to the base
             this.num = 0;
         }
         return this.base + this.num;
