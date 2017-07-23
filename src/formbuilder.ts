@@ -74,7 +74,7 @@ export interface ISpecialFormValue{
     setData(data: any, serializer: FormSerializer);
 }
 
-const indexMax = 3;
+const indexMax = 2147483647;//Sticking with 32 bit;
 
 class InfiniteIndex{
     private num: number = 0;
