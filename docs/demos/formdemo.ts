@@ -4,7 +4,7 @@
 "use strict";
 import * as controller from 'hr.controller';
 
-class HelloWorldController {
+class FormDemoController {
     public static get InjectorArgs(): controller.DiFunction<any>[] {
         return [controller.BindingCollection];
     }
@@ -14,6 +14,13 @@ class HelloWorldController {
     public constructor(bindings: controller.BindingCollection) {
         this.form = bindings.getForm("form");
         this.form.setSchema(createTestSchema());
+        this.form.setData({
+            first: "Test First",
+            middle: "Test Middle",
+            last: "Test Last",
+            comboTest: "two",
+            multiChoice: [1,2]
+        });
     }
 
     public submit(evt: Event): void{
@@ -24,8 +31,8 @@ class HelloWorldController {
 }
 
 var builder = new controller.InjectedControllerBuilder();
-builder.Services.addTransient(HelloWorldController, HelloWorldController);
-builder.create("formDemo", HelloWorldController);
+builder.Services.addTransient(FormDemoController, FormDemoController);
+builder.create("formDemo", FormDemoController);
 
 function createTestSchema(){
     return {

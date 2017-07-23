@@ -124,7 +124,7 @@ class ArrayEditorRow {
     }
 
     public setData(data: any, serializer: FormSerializer) {
-
+        serializer.populate(data, this.name);
     }
 }
 

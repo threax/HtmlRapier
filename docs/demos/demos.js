@@ -1285,7 +1285,7 @@ define("hr.view", ["require", "exports", "hr.textstream", "hr.components", "hr.t
         return "";
     }
 });
-define("node_modules/HtmlRapier/src/formbuilder", ["require", "exports", "hr.components", "hr.domquery"], function (require, exports, component, domquery) {
+define("node_modules/HtmlRapier/src/formbuilder", ["require", "exports", "hr.components", "hr.domquery", "hr.eventdispatcher"], function (require, exports, component, domquery, event) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     var SpecialFormValues = (function () {
@@ -1295,30 +1295,67 @@ define("node_modules/HtmlRapier/src/formbuilder", ["require", "exports", "hr.com
         SpecialFormValues.prototype.add = function (value) {
             this.special.push(value);
         };
-        SpecialFormValues.prototype.setData = function (data) {
+        SpecialFormValues.prototype.setData = function (data, serializer) {
             for (var i = 0; i < this.special.length; ++i) {
-                this.special[i].setData(data);
+                this.special[i].setData(data, serializer);
             }
         };
-        SpecialFormValues.prototype.recoverData = function (data) {
+        SpecialFormValues.prototype.recoverData = function (data, serializer) {
             for (var i = 0; i < this.special.length; ++i) {
                 var item = this.special[i];
-                var subData = item.getData();
+                var subData = item.getData(serializer);
                 data[item.getName()] = subData;
             }
         };
         return SpecialFormValues;
     }());
     exports.SpecialFormValues = SpecialFormValues;
+    var indexMax = 2147483647; //Sticking with 32 bit;
+    var InfiniteIndex = (function () {
+        function InfiniteIndex() {
+            this.num = 0;
+            this.base = "";
+        }
+        InfiniteIndex.prototype.getNext = function () {
+            ++this.num;
+            if (this.num === indexMax) {
+                this.base += "-"; //Each time we hit index max we just add a - to the base
+                this.num = 0;
+            }
+            return this.base + this.num;
+        };
+        return InfiniteIndex;
+    }());
     var ArrayEditorRow = (function () {
         function ArrayEditorRow(bindings, schema, name) {
-            this.root = bindings.rootElement;
-            buildForm('hr.defaultform', schema, this.root, name, true);
+            this.bindings = bindings;
+            this.name = name;
+            this.removed = new event.ActionEventDispatcher();
+            buildForm('hr.defaultform', schema, this.bindings.rootElement, this.name, true);
             bindings.setListener(this);
         }
+        Object.defineProperty(ArrayEditorRow.prototype, "onRemoved", {
+            get: function () {
+                return this.removed.modifier;
+            },
+            enumerable: true,
+            configurable: true
+        });
         ArrayEditorRow.prototype.remove = function (evt) {
             evt.preventDefault();
-            this.root.remove();
+            this.pooled = this.bindings.pool();
+            this.removed.fire(this);
+        };
+        ArrayEditorRow.prototype.restore = function () {
+            if (this.pooled) {
+                this.pooled.restore(null);
+            }
+        };
+        ArrayEditorRow.prototype.getData = function (serializer) {
+            return serializer.serialize(this.name);
+        };
+        ArrayEditorRow.prototype.setData = function (data, serializer) {
+            serializer.populate(data, this.name);
         };
         return ArrayEditorRow;
     }());
@@ -1326,19 +1363,47 @@ define("node_modules/HtmlRapier/src/formbuilder", ["require", "exports", "hr.com
         function ArrayEditor(name, bindings, schema) {
             this.name = name;
             this.schema = schema;
-            this.itemsHandle = bindings.getView("items");
+            this.pooledRows = [];
+            this.rows = [];
+            this.indexGen = new InfiniteIndex();
+            this.itemsView = bindings.getView("items");
             bindings.setListener(this);
+            this.isSimple = schema.type !== "object";
         }
         ArrayEditor.prototype.add = function (evt) {
             var _this = this;
             evt.preventDefault();
-            this.itemsHandle.appendData(this.schema, function (bindings, data) {
-                new ArrayEditorRow(bindings, data, _this.name);
-            });
+            if (this.pooledRows.length == 0) {
+                this.itemsView.appendData(this.schema, function (bindings, data) {
+                    var row = new ArrayEditorRow(bindings, data, _this.name + '-' + _this.indexGen.getNext());
+                    row.onRemoved.add(function (r) {
+                        _this.rows.splice(_this.rows.indexOf(r), 1); //It will always be there
+                        _this.pooledRows.push(r);
+                    });
+                    _this.rows.push(row);
+                });
+            }
+            else {
+                var row = this.pooledRows.pop();
+                row.restore();
+                this.rows.push(row);
+            }
         };
-        ArrayEditor.prototype.getData = function () {
+        ArrayEditor.prototype.getData = function (serializer) {
+            var items = [];
+            for (var i = 0; i < this.rows.length; ++i) {
+                var data = this.rows[i].getData(serializer);
+                if (this.isSimple) {
+                    data = data[""];
+                }
+                items.push(data);
+            }
+            return items;
         };
-        ArrayEditor.prototype.setData = function (data) {
+        ArrayEditor.prototype.setData = function (data, serializer) {
+            for (var i = 0; i < this.rows.length; ++i) {
+                this.rows[i].setData(data, serializer);
+            }
         };
         ArrayEditor.prototype.getName = function () {
             return this.name;
@@ -1362,11 +1427,15 @@ define("node_modules/HtmlRapier/src/formbuilder", ["require", "exports", "hr.com
         var props = schema.properties;
         if (props === undefined) {
             //No props, add the schema itself as a property
-            propArray.push(processProperty(schema, baseName));
+            propArray.push(processProperty(schema, baseName, baseName));
         }
         else {
+            var baseNameWithSep = baseName;
+            if (baseNameWithSep !== "") {
+                baseNameWithSep = baseNameWithSep + '-';
+            }
             for (var key in props) {
-                propArray.push(processProperty(props[key], baseName + key));
+                propArray.push(processProperty(props[key], baseNameWithSep + key, key));
             }
             propArray.sort(function (a, b) {
                 return a.buildOrder - b.buildOrder;
@@ -1420,11 +1489,26 @@ define("node_modules/HtmlRapier/src/formbuilder", ["require", "exports", "hr.com
     function IsSelectElement(element) {
         return element && (element.nodeName === 'SELECT');
     }
-    function processProperty(prop, name) {
+    function extractLabels(prop) {
+        var values = [];
+        var theEnum = prop.enum;
+        var enumNames = theEnum;
+        if (prop["x-enumNames"] !== undefined) {
+            enumNames = prop["x-enumNames"];
+        }
+        for (var i = 0; i < theEnum.length; ++i) {
+            values.push({
+                label: enumNames[i],
+                value: theEnum[i]
+            });
+        }
+        return values;
+    }
+    function processProperty(prop, name, defaultTitle) {
         var processed = Object.create(prop);
         processed.buildName = name;
         if (processed.title === undefined) {
-            processed.title = processed.buildName;
+            processed.title = defaultTitle;
         }
         if (prop["x-ui-order"] !== undefined) {
             processed.buildOrder = prop["x-ui-order"];
@@ -1434,12 +1518,15 @@ define("node_modules/HtmlRapier/src/formbuilder", ["require", "exports", "hr.com
         }
         //Set this build type to what has been passed in, this will be processed further below
         processed.buildType = getPropertyType(prop).toLowerCase();
+        if (prop["x-values"] !== undefined) {
+            processed.buildValues = prop["x-values"];
+        }
+        else if (prop.enum !== undefined) {
+            processed.buildValues = extractLabels(prop);
+        }
         //Look for collections, anything defined as an array or that has x-values defined
         if (processed.buildType === 'array') {
-            if (prop["x-values"] !== undefined) {
-                //Type with values, make a combo box or checkboxes depending on what the user asked for
-                var xValues = prop["x-values"];
-                processed.buildValues = xValues;
+            if (processed.buildValues !== undefined) {
                 //Only supports checkbox and multiselect ui types. Checkboxes have to be requested.
                 if (prop["x-ui-type"] === "checkbox") {
                     //Nothing for checkboxes yet, just be a basic multiselect until they are implemented
@@ -1447,6 +1534,10 @@ define("node_modules/HtmlRapier/src/formbuilder", ["require", "exports", "hr.com
                 }
                 else {
                     processed.buildType = "multiselect";
+                    processed.size = processed.buildValues.length;
+                    if (processed.size > 15) {
+                        processed.size = 15;
+                    }
                 }
             }
             else {
@@ -1455,11 +1546,7 @@ define("node_modules/HtmlRapier/src/formbuilder", ["require", "exports", "hr.com
             }
         }
         else {
-            //Not an array type, handle as single value
-            if (prop["x-values"] !== undefined) {
-                //Type with values, make a combo box or checkboxes depending on what the user asked for
-                var xValues = prop["x-values"];
-                processed.buildValues = xValues;
+            if (processed.buildValues !== undefined) {
                 if (prop["x-ui-type"] !== undefined) {
                     processed.buildType = prop["x-ui-type"];
                 }
@@ -1507,15 +1594,23 @@ define("hr.form", ["require", "exports", "hr.domquery", "hr.typeidentifiers", "n
     var Form = (function () {
         function Form(form) {
             this.form = form;
+            this.baseLevel = undefined;
         }
         Form.prototype.setData = function (data) {
-            populate(this.form, data);
+            populate(this.form, data, this.baseLevel);
+            if (this.specialValues) {
+                this.specialValues.setData(data, this.formSerializer);
+            }
         };
         Form.prototype.clear = function () {
             populate(this.form, sharedClearer);
         };
         Form.prototype.getData = function () {
-            return serialize(this.form, this.proto);
+            var data = serialize(this.form, this.proto, this.baseLevel);
+            if (this.specialValues) {
+                this.specialValues.recoverData(data, this.formSerializer);
+            }
+            return data;
         };
         Form.prototype.setPrototype = function (proto) {
             this.proto = proto;
@@ -1524,7 +1619,9 @@ define("hr.form", ["require", "exports", "hr.domquery", "hr.typeidentifiers", "n
             if (componentName === undefined) {
                 componentName = "hr.defaultform";
             }
-            formBuilder.buildForm(componentName, schema, this.form);
+            this.specialValues = formBuilder.buildForm(componentName, schema, this.form);
+            this.baseLevel = "";
+            this.formSerializer = new Serializer(this.form);
         };
         return Form;
     }());
@@ -1558,7 +1655,10 @@ define("hr.form", ["require", "exports", "hr.domquery", "hr.typeidentifiers", "n
     function IsFormElement(element) {
         return element && (element.nodeName === 'FORM' || element.nodeName == 'INPUT' || element.nodeName == 'TEXTAREA');
     }
-    function addValue(q, name, value) {
+    function addValue(q, name, value, level) {
+        if (level !== undefined && level !== null && level.length > 0) {
+            name = name.substring(level.length + 1); //Account for delimiter, but we don't care what it is
+        }
         if (q[name] === undefined) {
             q[name] = value;
         }
@@ -1570,12 +1670,15 @@ define("hr.form", ["require", "exports", "hr.domquery", "hr.typeidentifiers", "n
             q[name].push(value);
         }
     }
+    function allowWrite(element, level) {
+        return level === undefined || element.getAttribute('data-hr-form-level') === level;
+    }
     /**
      * Serialze a form to a javascript object
      * @param form - A selector or form element for the form to serialize.
      * @returns - The object that represents the form contents as an object.
      */
-    function serialize(form, proto) {
+    function serialize(form, proto, level) {
         //This is from https://code.google.com/archive/p/form-serialize/downloads
         //Modified to return an object instead of a query string
         //form = domQuery.first(form);
@@ -1583,9 +1686,10 @@ define("hr.form", ["require", "exports", "hr.domquery", "hr.typeidentifiers", "n
             return;
         }
         var i, j, q = Object.create(proto || null);
-        for (i = form.elements.length - 1; i >= 0; i = i - 1) {
+        var elementsLength = form.elements.length;
+        for (i = 0; i < elementsLength; ++i) {
             var element = form.elements[i];
-            if (element.name === "") {
+            if (element.name === "" || !allowWrite(element, level)) {
                 continue;
             }
             switch (element.nodeName) {
@@ -1598,31 +1702,31 @@ define("hr.form", ["require", "exports", "hr.domquery", "hr.typeidentifiers", "n
                         case 'reset':
                         case 'date':
                         case 'submit':
-                            addValue(q, element.name, element.value);
+                            addValue(q, element.name, element.value, level);
                             break;
                         case 'file':
-                            addValue(q, element.name, element.files);
+                            addValue(q, element.name, element.files, level);
                             break;
                         case 'checkbox':
                         case 'radio':
                             if (element.checked) {
-                                addValue(q, element.name, element.value);
+                                addValue(q, element.name, element.value, level);
                             }
                             break;
                     }
                     break;
                 case 'TEXTAREA':
-                    addValue(q, element.name, element.value);
+                    addValue(q, element.name, element.value, level);
                     break;
                 case 'SELECT':
                     switch (element.type) {
                         case 'select-one':
-                            addValue(q, element.name, element.value);
+                            addValue(q, element.name, element.value, level);
                             break;
                         case 'select-multiple':
                             for (j = element.options.length - 1; j >= 0; j = j - 1) {
                                 if (element.options[j].selected) {
-                                    addValue(q, element.name, element.options[j].value);
+                                    addValue(q, element.name, element.options[j].value, level);
                                 }
                             }
                             break;
@@ -1633,7 +1737,7 @@ define("hr.form", ["require", "exports", "hr.domquery", "hr.typeidentifiers", "n
                         case 'reset':
                         case 'submit':
                         case 'button':
-                            addValue(q, element.name, element.value);
+                            addValue(q, element.name, element.value, level);
                             break;
                     }
                     break;
@@ -1646,32 +1750,36 @@ define("hr.form", ["require", "exports", "hr.domquery", "hr.typeidentifiers", "n
      * @param form - The form to populate or a query string for the form.
      * @param data - The data to bind to the form, form name attributes will be mapped to the keys in the object.
      */
-    function populate(form, data) {
+    function populate(form, data, level) {
         var formElement = domQuery.first(form);
         var nameAttrs = domQuery.all('[name]', formElement);
         if (typeIds.isObject(data)) {
             for (var i = 0; i < nameAttrs.length; ++i) {
                 var element = nameAttrs[i];
-                switch (element.type) {
-                    case 'checkbox':
-                        element.checked = data[element.getAttribute('name')];
-                        break;
-                    default:
-                        element.value = data[element.getAttribute('name')];
-                        break;
+                if (allowWrite(element, level)) {
+                    switch (element.type) {
+                        case 'checkbox':
+                            element.checked = data[element.getAttribute('name')];
+                            break;
+                        default:
+                            element.value = data[element.getAttribute('name')];
+                            break;
+                    }
                 }
             }
         }
         else if (typeIds.isFunction(data)) {
             for (var i = 0; i < nameAttrs.length; ++i) {
                 var element = nameAttrs[i];
-                switch (element.type) {
-                    case 'checkbox':
-                        element.checked = data(element.getAttribute('name'));
-                        break;
-                    default:
-                        element.value = data(element.getAttribute('name'));
-                        break;
+                if (allowWrite(element, level)) {
+                    switch (element.type) {
+                        case 'checkbox':
+                            element.checked = data(element.getAttribute('name'));
+                            break;
+                        default:
+                            element.value = data(element.getAttribute('name'));
+                            break;
+                    }
                 }
             }
         }
@@ -1679,6 +1787,18 @@ define("hr.form", ["require", "exports", "hr.domquery", "hr.typeidentifiers", "n
     function sharedClearer(i) {
         return "";
     }
+    var Serializer = (function () {
+        function Serializer(form) {
+            this.form = form;
+        }
+        Serializer.prototype.serialize = function (level) {
+            return serialize(this.form, undefined, level);
+        };
+        Serializer.prototype.populate = function (data, level) {
+            populate(this.form, data, level);
+        };
+        return Serializer;
+    }());
 });
 ///<amd-module name="hr.models"/>
 define("hr.models", ["require", "exports", "hr.form", "hr.view"], function (require, exports, forms, views) {
@@ -1870,6 +1990,17 @@ define("hr.bindingcollection", ["require", "exports", "hr.domquery", "hr.toggles
             domQuery.iterate('[data-hr-controller="' + name + '"]', element, cb);
         }
     }
+    var PooledBindings = (function () {
+        function PooledBindings(docFrag, parent) {
+            this.docFrag = docFrag;
+            this.parent = parent;
+        }
+        PooledBindings.prototype.restore = function (insertBefore) {
+            this.parent.insertBefore(this.docFrag, insertBefore);
+        };
+        return PooledBindings;
+    }());
+    exports.PooledBindings = PooledBindings;
     /**
      * The BindingCollection class allows you to get access to the HtmlElements defined on your
      * page with objects that help manipulate them. You won't get the elements directly and you
@@ -1990,6 +2121,27 @@ define("hr.bindingcollection", ["require", "exports", "hr.domquery", "hr.toggles
             enumerable: true,
             configurable: true
         });
+        /**
+         * Remove all contained elements from the document. Be sure to use this to
+         * remove the collection so all elements are properly removed.
+         */
+        BindingCollection.prototype.remove = function () {
+            for (var eIx = 0; eIx < this.elements.length; ++eIx) {
+                this.elements[eIx].remove();
+            }
+        };
+        /**
+         * Pool the elements into a document fragment. Will return a pooled bindings
+         * class that can be used to restore the pooled elements to the document.
+         */
+        BindingCollection.prototype.pool = function () {
+            var parent = this.elements[0].parentElement;
+            var docFrag = document.createDocumentFragment();
+            for (var eIx = 0; eIx < this.elements.length; ++eIx) {
+                docFrag.appendChild(this.elements[eIx]);
+            }
+            return new PooledBindings(docFrag, parent);
+        };
         return BindingCollection;
     }());
     exports.BindingCollection = BindingCollection;
@@ -2473,28 +2625,35 @@ define("hr.controller", ["require", "exports", "hr.bindingcollection", "hr.bindi
 define("form-demo", ["require", "exports", "hr.controller"], function (require, exports, controller) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    var HelloWorldController = (function () {
-        function HelloWorldController(bindings) {
+    var FormDemoController = (function () {
+        function FormDemoController(bindings) {
             this.form = bindings.getForm("form");
             this.form.setSchema(createTestSchema());
+            this.form.setData({
+                first: "Test First",
+                middle: "Test Middle",
+                last: "Test Last",
+                comboTest: "two",
+                multiChoice: [1, 2]
+            });
         }
-        Object.defineProperty(HelloWorldController, "InjectorArgs", {
+        Object.defineProperty(FormDemoController, "InjectorArgs", {
             get: function () {
                 return [controller.BindingCollection];
             },
             enumerable: true,
             configurable: true
         });
-        HelloWorldController.prototype.submit = function (evt) {
+        FormDemoController.prototype.submit = function (evt) {
             evt.preventDefault();
             var data = this.form.getData();
             console.log(JSON.stringify(data));
         };
-        return HelloWorldController;
+        return FormDemoController;
     }());
     var builder = new controller.InjectedControllerBuilder();
-    builder.Services.addTransient(HelloWorldController, HelloWorldController);
-    builder.create("formDemo", HelloWorldController);
+    builder.Services.addTransient(FormDemoController, FormDemoController);
+    builder.create("formDemo", FormDemoController);
     function createTestSchema() {
         return {
             "title": "Title of Input",

@@ -52,7 +52,10 @@ class Form<T> {
     }
     
     public setData(data: T) {
-        populate(this.form, data);
+        populate(this.form, data, this.baseLevel);
+        if(this.specialValues) {
+            this.specialValues.setData(data, this.formSerializer);
+        }
     }
 
     public clear() {
