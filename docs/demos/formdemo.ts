@@ -20,7 +20,17 @@ class FormDemoController {
             last: "Test Last",
             comboTest: "two",
             multiChoice: [2],
-            stringArray: ["first", "second", "thrid", "fourth"]
+            stringArray: ["first", "second", "thrid", "fourth"],
+            complexArray: [{
+                first: "first 1",
+                middle: "middle 1",
+                last: "last 1"
+            },
+            {
+                first: "first 2",
+                middle: "middle 2",
+                last: "last 2"
+            }]
         });
     }
 

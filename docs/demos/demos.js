@@ -1342,7 +1342,9 @@ define("node_modules/HtmlRapier/src/formbuilder", ["require", "exports", "hr.com
             configurable: true
         });
         ArrayEditorRow.prototype.remove = function (evt) {
-            evt.preventDefault();
+            if (evt) {
+                evt.preventDefault();
+            }
             this.pooled = this.bindings.pool();
             this.removed.fire(this);
         };
@@ -1371,8 +1373,11 @@ define("node_modules/HtmlRapier/src/formbuilder", ["require", "exports", "hr.com
             this.isSimple = schema.type !== "object";
         }
         ArrayEditor.prototype.add = function (evt) {
-            var _this = this;
             evt.preventDefault();
+            this.addRow();
+        };
+        ArrayEditor.prototype.addRow = function () {
+            var _this = this;
             if (this.pooledRows.length == 0) {
                 this.itemsView.appendData(this.schema, function (bindings, data) {
                     var row = new ArrayEditorRow(bindings, data, _this.name + '-' + _this.indexGen.getNext());
@@ -1401,8 +1406,24 @@ define("node_modules/HtmlRapier/src/formbuilder", ["require", "exports", "hr.com
             return items;
         };
         ArrayEditor.prototype.setData = function (data, serializer) {
-            for (var i = 0; i < this.rows.length; ++i) {
-                this.rows[i].setData(data, serializer);
+            var itemData = data[this.name];
+            if (itemData) {
+                var i = 0;
+                for (; i < itemData.length; ++i) {
+                    if (i >= this.rows.length) {
+                        this.addRow();
+                    }
+                    var rowData = itemData[i];
+                    if (this.isSimple) {
+                        rowData = {
+                            "": rowData
+                        };
+                    }
+                    this.rows[i].setData(rowData, serializer);
+                }
+                for (; i < this.rows.length;) {
+                    this.rows[i].remove();
+                }
             }
         };
         ArrayEditor.prototype.getName = function () {
@@ -1656,9 +1677,7 @@ define("hr.form", ["require", "exports", "hr.domquery", "hr.typeidentifiers", "n
         return element && (element.nodeName === 'FORM' || element.nodeName == 'INPUT' || element.nodeName == 'TEXTAREA');
     }
     function addValue(q, name, value, level) {
-        if (level !== undefined && level !== null && level.length > 0) {
-            name = name.substring(level.length + 1); //Account for delimiter, but we don't care what it is
-        }
+        name = extractLevelName(level, name);
         if (q[name] === undefined) {
             q[name] = value;
         }
@@ -1758,6 +1777,12 @@ define("hr.form", ["require", "exports", "hr.domquery", "hr.typeidentifiers", "n
         }
         return false;
     }
+    function extractLevelName(level, name) {
+        if (level !== undefined && level !== null && level.length > 0) {
+            name = name.substring(level.length + 1); //Account for delimiter, but we don't care what it is
+        }
+        return name;
+    }
     /**
      * Populate a form with data.
      * @param form - The form to populate or a query string for the form.
@@ -1778,13 +1803,17 @@ define("hr.form", ["require", "exports", "hr.domquery", "hr.typeidentifiers", "n
             var element = nameAttrs[i];
             if (allowWrite(element, level)) {
                 var itemData;
+                var dataName = extractLevelName(level, element.getAttribute('name'));
                 switch (dataType) {
                     case DataType.Object:
-                        itemData = data[element.getAttribute('name')];
+                        itemData = data[dataName];
                         break;
                     case DataType.Function:
-                        itemData = data(element.getAttribute('name'));
+                        itemData = data(dataName);
                         break;
+                }
+                if (itemData === undefined) {
+                    itemData = "";
                 }
                 switch (element.type) {
                     case 'checkbox':
@@ -2654,7 +2683,17 @@ define("form-demo", ["require", "exports", "hr.controller"], function (require, 
                 last: "Test Last",
                 comboTest: "two",
                 multiChoice: [2],
-                stringArray: ["first", "second", "thrid", "fourth"]
+                stringArray: ["first", "second", "thrid", "fourth"],
+                complexArray: [{
+                        first: "first 1",
+                        middle: "middle 1",
+                        last: "last 1"
+                    },
+                    {
+                        first: "first 2",
+                        middle: "middle 2",
+                        last: "last 2"
+                    }]
             });
         }
         Object.defineProperty(FormDemoController, "InjectorArgs", {
