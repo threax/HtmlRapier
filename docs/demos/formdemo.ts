@@ -19,7 +19,7 @@ class FormDemoController {
             middle: "Test Middle",
             last: "Test Last",
             comboTest: "two",
-            multiChoice: [1,2]
+            multiChoice: [2]
         });
     }
 

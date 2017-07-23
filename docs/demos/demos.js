@@ -1745,6 +1745,19 @@ define("hr.form", ["require", "exports", "hr.domquery", "hr.typeidentifiers", "n
         }
         return q;
     }
+    var DataType;
+    (function (DataType) {
+        DataType[DataType["Object"] = 0] = "Object";
+        DataType[DataType["Function"] = 1] = "Function";
+    })(DataType || (DataType = {}));
+    function containsCoerced(items, search) {
+        for (var i = 0; i < items.length; ++i) {
+            if (items[i] == search) {
+                return true;
+            }
+        }
+        return false;
+    }
     /**
      * Populate a form with data.
      * @param form - The form to populate or a query string for the form.
@@ -1753,33 +1766,39 @@ define("hr.form", ["require", "exports", "hr.domquery", "hr.typeidentifiers", "n
     function populate(form, data, level) {
         var formElement = domQuery.first(form);
         var nameAttrs = domQuery.all('[name]', formElement);
+        var getData;
+        var dataType;
         if (typeIds.isObject(data)) {
-            for (var i = 0; i < nameAttrs.length; ++i) {
-                var element = nameAttrs[i];
-                if (allowWrite(element, level)) {
-                    switch (element.type) {
-                        case 'checkbox':
-                            element.checked = data[element.getAttribute('name')];
-                            break;
-                        default:
-                            element.value = data[element.getAttribute('name')];
-                            break;
-                    }
-                }
-            }
+            dataType = DataType.Object;
         }
         else if (typeIds.isFunction(data)) {
-            for (var i = 0; i < nameAttrs.length; ++i) {
-                var element = nameAttrs[i];
-                if (allowWrite(element, level)) {
-                    switch (element.type) {
-                        case 'checkbox':
-                            element.checked = data(element.getAttribute('name'));
-                            break;
-                        default:
-                            element.value = data(element.getAttribute('name'));
-                            break;
-                    }
+            dataType = DataType.Function;
+        }
+        for (var i = 0; i < nameAttrs.length; ++i) {
+            var element = nameAttrs[i];
+            if (allowWrite(element, level)) {
+                var itemData;
+                switch (dataType) {
+                    case DataType.Object:
+                        itemData = data[element.getAttribute('name')];
+                        break;
+                    case DataType.Function:
+                        itemData = data(element.getAttribute('name'));
+                        break;
+                }
+                switch (element.type) {
+                    case 'checkbox':
+                        element.checked = itemData;
+                        break;
+                    case 'select-multiple':
+                        var options = element.options;
+                        for (var j = options.length - 1; j >= 0; j = j - 1) {
+                            options[j].selected = containsCoerced(itemData, options[j].value);
+                        }
+                        break;
+                    default:
+                        element.value = itemData;
+                        break;
                 }
             }
         }
@@ -2634,7 +2653,7 @@ define("form-demo", ["require", "exports", "hr.controller"], function (require, 
                 middle: "Test Middle",
                 last: "Test Last",
                 comboTest: "two",
-                multiChoice: [1, 2]
+                multiChoice: [2]
             });
         }
         Object.defineProperty(FormDemoController, "InjectorArgs", {

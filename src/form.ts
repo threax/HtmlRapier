@@ -221,6 +221,20 @@ function serialize(form: HTMLFormElement, proto?: any, level?: string): any {
     return q;
 }
 
+enum DataType{
+    Object,
+    Function
+}
+
+function containsCoerced(items: any[], search: any){
+    for(var i = 0; i < items.length; ++i){
+        if(items[i] == search){
+            return true;
+        }
+    }
+    return false;
+}
+
 /**
  * Populate a form with data.
  * @param form - The form to populate or a query string for the form.
@@ -229,35 +243,44 @@ function serialize(form: HTMLFormElement, proto?: any, level?: string): any {
 function populate(form: HTMLElement | string, data:any, level?: string): void {
     var formElement = domQuery.first(form);
     var nameAttrs = domQuery.all('[name]', <HTMLElement>formElement);
-    if (typeIds.isObject(data)) {
-        for (var i = 0; i < nameAttrs.length; ++i) {
-            var element = nameAttrs[i] as HTMLInputElement;
 
-            if(allowWrite(element, level)){
-                switch (element.type) {
-                    case 'checkbox':
-                        element.checked = data[element.getAttribute('name')];
-                        break;
-                    default:
-                        element.value = data[element.getAttribute('name')];
-                        break;
-                }
-            }
-        }
+    var getData: (key: string) => any;
+
+    var dataType: DataType;
+    if (typeIds.isObject(data)) {
+        dataType = DataType.Object;
     }
     else if (typeIds.isFunction(data)) {
-        for (var i = 0; i < nameAttrs.length; ++i) {
-            var element = nameAttrs[i] as HTMLInputElement;
-            
-            if(allowWrite(element, level)){
-                switch (element.type) {
-                    case 'checkbox':
-                        element.checked = data(element.getAttribute('name'));
-                        break;
-                    default:
-                        element.value = data(element.getAttribute('name'));
-                        break;
-                }
+        dataType = DataType.Function;
+    }
+
+    for (var i = 0; i < nameAttrs.length; ++i) {
+        var element = nameAttrs[i] as HTMLInputElement | HTMLSelectElement;
+
+        if(allowWrite(element, level)){
+            var itemData: any;
+            switch(dataType){
+                case DataType.Object:
+                    itemData = data[element.getAttribute('name')];
+                    break;
+                case DataType.Function:
+                    itemData = data(element.getAttribute('name'));
+                    break;
+            }
+
+            switch (element.type) {
+                case 'checkbox':
+                    (<HTMLInputElement>element).checked = itemData;
+                    break;
+                case 'select-multiple':
+                    var options = (<HTMLSelectElement>element).options;
+                    for (var j = options.length - 1; j >= 0; j = j - 1) {
+                        options[j].selected = containsCoerced((<any[]>itemData), options[j].value);
+                    }
+                    break;
+                default:
+                    element.value = itemData;
+                    break;
             }
         }
     }
