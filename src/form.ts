@@ -43,6 +43,9 @@ export interface IForm<T> {
 
 class Form<T> {
     private proto: T;
+    private baseLevel: string = undefined;
+    private specialValues: formBuilder.SpecialFormValues;
+    private formSerializer: Serializer;
 
     constructor(private form: HTMLFormElement) {
 
@@ -57,7 +60,11 @@ class Form<T> {
     }
 
     public getData(): T {
-        return <T>serialize(this.form, this.proto);
+        var data = <T>serialize(this.form, this.proto, this.baseLevel);
+        if(this.specialValues) {
+            this.specialValues.recoverData(data, this.formSerializer);
+        }
+        return data;
     }
 
     public setPrototype(proto: T): void { 
@@ -68,7 +75,9 @@ class Form<T> {
         if(componentName === undefined){
             componentName = "hr.defaultform";
         }
-        formBuilder.buildForm(componentName, schema, this.form)
+        this.specialValues = formBuilder.buildForm(componentName, schema, this.form);
+        this.baseLevel = "";
+        this.formSerializer = new Serializer(this.form);
     }
 }
 
@@ -113,7 +122,11 @@ function IsFormElement(element: Node): element is HTMLFormElement{
     return element && (element.nodeName === 'FORM' || element.nodeName == 'INPUT' || element.nodeName == 'TEXTAREA');
 }
 
-function addValue(q, name, value) {
+function addValue(q: {}, name: string, value: any, level: string) {
+    if(level !== undefined && level !== null && level.length > 0){
+        name = name.substring(level.length + 1); //Account for delimiter, but we don't care what it is
+    }
+
     if (q[name] === undefined) {
         q[name] = value;
     }
@@ -126,12 +139,16 @@ function addValue(q, name, value) {
     }
 }
 
+function allowWrite(element: HTMLElement, level: string): boolean{
+    return level === undefined || element.getAttribute('data-hr-form-level') === level;
+}
+
 /**
  * Serialze a form to a javascript object
  * @param form - A selector or form element for the form to serialize.
  * @returns - The object that represents the form contents as an object.
  */
-function serialize(form: HTMLFormElement, proto?: any) {
+function serialize(form: HTMLFormElement, proto?: any, level?: string): any {
     //This is from https://code.google.com/archive/p/form-serialize/downloads
     //Modified to return an object instead of a query string
     //form = domQuery.first(form);
@@ -140,10 +157,11 @@ function serialize(form: HTMLFormElement, proto?: any) {
         return;
     }
     var i, j, q = Object.create(proto || null);
-    for (i = form.elements.length - 1; i >= 0; i = i - 1) {
+    var elementsLength = form.elements.length;
+    for (i = 0; i < elementsLength; ++i) {
         var element: any = form.elements[i];
 
-        if (element.name === "") {
+        if (element.name === "" || !allowWrite(element, level)) {
             continue;
         }
         switch (element.nodeName) {
@@ -156,31 +174,31 @@ function serialize(form: HTMLFormElement, proto?: any) {
                     case 'reset':
                     case 'date':
                     case 'submit':
-                        addValue(q, element.name, element.value);
+                        addValue(q, element.name, element.value, level);
                         break;
                     case 'file':
-                        addValue(q, element.name, element.files);
+                        addValue(q, element.name, element.files, level);
                         break;
                     case 'checkbox':
                     case 'radio':
                         if (element.checked) {
-                            addValue(q, element.name, element.value);
+                            addValue(q, element.name, element.value, level);
                         }
                         break;
                 }
                 break;
             case 'TEXTAREA':
-                addValue(q, element.name, element.value);
+                addValue(q, element.name, element.value, level);
                 break;
             case 'SELECT':
                 switch (element.type) {
                     case 'select-one':
-                        addValue(q, element.name, element.value);
+                        addValue(q, element.name, element.value, level);
                         break;
                     case 'select-multiple':
                         for (j = element.options.length - 1; j >= 0; j = j - 1) {
                             if (element.options[j].selected) {
-                                addValue(q, element.name, element.options[j].value);
+                                addValue(q, element.name, element.options[j].value, level);
                             }
                         }
                         break;
@@ -191,7 +209,7 @@ function serialize(form: HTMLFormElement, proto?: any) {
                     case 'reset':
                     case 'submit':
                     case 'button':
-                        addValue(q, element.name, element.value);
+                        addValue(q, element.name, element.value, level);
                         break;
                 }
                 break;
@@ -205,34 +223,38 @@ function serialize(form: HTMLFormElement, proto?: any) {
  * @param form - The form to populate or a query string for the form.
  * @param data - The data to bind to the form, form name attributes will be mapped to the keys in the object.
  */
-function populate(form: HTMLElement | string, data:any) {
+function populate(form: HTMLElement | string, data:any, level?: string): void {
     var formElement = domQuery.first(form);
     var nameAttrs = domQuery.all('[name]', <HTMLElement>formElement);
     if (typeIds.isObject(data)) {
         for (var i = 0; i < nameAttrs.length; ++i) {
             var element = nameAttrs[i] as HTMLInputElement;
 
-            switch (element.type) {
-                case 'checkbox':
-                    element.checked = data[element.getAttribute('name')];
-                    break;
-                default:
-                    element.value = data[element.getAttribute('name')];
-                    break;
+            if(allowWrite(element, level)){
+                switch (element.type) {
+                    case 'checkbox':
+                        element.checked = data[element.getAttribute('name')];
+                        break;
+                    default:
+                        element.value = data[element.getAttribute('name')];
+                        break;
+                }
             }
         }
     }
     else if (typeIds.isFunction(data)) {
         for (var i = 0; i < nameAttrs.length; ++i) {
             var element = nameAttrs[i] as HTMLInputElement;
-
-            switch (element.type) {
-                case 'checkbox':
-                    element.checked = data(element.getAttribute('name'));
-                    break;
-                default:
-                    element.value = data(element.getAttribute('name'));
-                    break;
+            
+            if(allowWrite(element, level)){
+                switch (element.type) {
+                    case 'checkbox':
+                        element.checked = data(element.getAttribute('name'));
+                        break;
+                    default:
+                        element.value = data(element.getAttribute('name'));
+                        break;
+                }
             }
         }
     }
@@ -240,4 +262,18 @@ function populate(form: HTMLElement | string, data:any) {
 
 function sharedClearer(i: number) {
     return "";
+}
+
+class Serializer implements formBuilder.FormSerializer{
+    constructor(private form: HTMLFormElement){
+
+    }
+
+    public serialize(level?: string): any {
+        return serialize(this.form, undefined, level);
+    }
+
+    public populate(data: any, level?: string): void {
+        populate(this.form, data, level);
+    }
 }

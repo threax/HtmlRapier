@@ -39,6 +39,11 @@ export interface JsonLabel {
     value: any;
 }
 
+export interface FormSerializer {
+    serialize: (level?: string) => any;
+    populate: (data: any, level?: string) => void;
+}
+
 export class SpecialFormValues{
     private special: ISpecialFormValue[] = [];
 
@@ -46,16 +51,16 @@ export class SpecialFormValues{
         this.special.push(value);
     }
 
-    public setData(data: any): void {
+    public setData(data: any, serializer: FormSerializer): void {
         for(var i = 0; i < this.special.length; ++i){
-            this.special[i].setData(data);
+            this.special[i].setData(data, serializer);
         }
     }
 
-    public recoverData(data: any): void {
+    public recoverData(data: any, serializer: FormSerializer): void {
         for(var i = 0; i < this.special.length; ++i){
             var item = this.special[i];
-            var subData = item.getData();
+            var subData = item.getData(serializer);
             data[item.getName()] = subData;
         }
     }
@@ -64,9 +69,9 @@ export class SpecialFormValues{
 export interface ISpecialFormValue{
     getName(): string;
 
-    getData(): any;
+    getData(serializer: FormSerializer): any;
 
-    setData(data: any);
+    setData(data: any, serializer: FormSerializer);
 }
 
 class ArrayEditorRow {
@@ -97,11 +102,11 @@ class ArrayEditor implements ISpecialFormValue {
         });
     }
 
-    public getData(): any {
-
+    public getData(serializer: FormSerializer): any {
+        return serializer.serialize(this.name);
     }
 
-    public setData(data: any) {
+    public setData(data: any, serializer: FormSerializer) {
 
     }
 
