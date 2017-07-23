@@ -23,6 +23,8 @@ export interface JsonProperty {
     "x-ui-order"?: number;
     "x-ui-type"?: string;
     "x-values"?: JsonLabel[];
+    enum?: string[];
+    "x-enumNames"?: string[];
 }
 
 export interface ProcessedJsonProperty extends JsonProperty {
@@ -274,6 +276,22 @@ function IsSelectElement(element: Node): element is HTMLSelectElement{
     return element && (element.nodeName === 'SELECT');
 }
 
+function extractLabels(prop: JsonProperty): JsonLabel[]{
+    var values: JsonLabel[] = [];
+    var theEnum = prop.enum;
+    var enumNames = theEnum;
+    if(prop["x-enumNames"] !== undefined){
+        enumNames = prop["x-enumNames"];
+    }
+    for(var i = 0; i < theEnum.length; ++i){
+        values.push({
+            label: enumNames[i],
+            value: theEnum[i]
+        });
+    }
+    return values;
+}
+
 function processProperty(prop: JsonProperty, name: string, defaultTitle: string): ProcessedJsonProperty{
     var processed = Object.create(prop);
     processed.buildName = name;
@@ -291,12 +309,16 @@ function processProperty(prop: JsonProperty, name: string, defaultTitle: string)
     //Set this build type to what has been passed in, this will be processed further below
     processed.buildType = getPropertyType(prop).toLowerCase();
 
+    if(prop["x-values"] !== undefined){
+        processed.buildValues = prop["x-values"];
+    }
+    else if(prop.enum !== undefined){
+        processed.buildValues = extractLabels(prop);
+    }
+
     //Look for collections, anything defined as an array or that has x-values defined
     if(processed.buildType === 'array'){
-        if(prop["x-values"] !== undefined){
-            //Type with values, make a combo box or checkboxes depending on what the user asked for
-            var xValues = prop["x-values"];
-            processed.buildValues = xValues;
+        if(processed.buildValues !== undefined) {
             //Only supports checkbox and multiselect ui types. Checkboxes have to be requested.
             if(prop["x-ui-type"] === "checkbox"){
                 //Nothing for checkboxes yet, just be a basic multiselect until they are implemented
@@ -304,7 +326,7 @@ function processProperty(prop: JsonProperty, name: string, defaultTitle: string)
             }
             else{
                 processed.buildType = "multiselect";
-                processed.size = xValues.length;
+                processed.size = processed.buildValues.length;
                 if(processed.size > 15){
                     processed.size = 15;
                 }
@@ -316,11 +338,7 @@ function processProperty(prop: JsonProperty, name: string, defaultTitle: string)
         }
     }
     else{
-        //Not an array type, handle as single value
-        if(prop["x-values"] !== undefined){
-            //Type with values, make a combo box or checkboxes depending on what the user asked for
-            var xValues = prop["x-values"];
-            processed.buildValues = xValues;
+        if(processed.buildValues !== undefined) {
             if(prop["x-ui-type"] !== undefined){
                 processed.buildType = prop["x-ui-type"];
             }
