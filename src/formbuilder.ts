@@ -185,7 +185,13 @@ class ArrayEditor implements ISpecialFormValue {
             if(i >= this.rows.length){
                 this.addRow();
             }
-            this.rows[i].setData(itemData[i], serializer);
+            var rowData = itemData[i];
+            if(this.isSimple){
+                rowData = {
+                    "": rowData
+                }
+            }
+            this.rows[i].setData(rowData, serializer);
         }
         for(; i < this.rows.length;){ //Does not increment, removing rows will de index for us
             this.rows[i].remove();

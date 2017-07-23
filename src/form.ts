@@ -259,12 +259,16 @@ function populate(form: HTMLElement | string, data:any, level?: string): void {
 
         if(allowWrite(element, level)){
             var itemData: any;
+            var dataName = element.getAttribute('name');
+            if(level !== undefined && level !== null && level.length > 0){
+                dataName = dataName.substring(level.length + 1); //Account for delimiter, but we don't care what it is
+            }
             switch(dataType){
                 case DataType.Object:
-                    itemData = data[element.getAttribute('name')];
+                    itemData = data[dataName];
                     break;
                 case DataType.Function:
-                    itemData = data(element.getAttribute('name'));
+                    itemData = data(dataName);
                     break;
             }
 
