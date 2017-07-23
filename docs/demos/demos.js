@@ -2653,7 +2653,8 @@ define("form-demo", ["require", "exports", "hr.controller"], function (require, 
                 middle: "Test Middle",
                 last: "Test Last",
                 comboTest: "two",
-                multiChoice: [2]
+                multiChoice: [2],
+                stringArray: ["first", "second", "thrid", "fourth"]
             });
         }
         Object.defineProperty(FormDemoController, "InjectorArgs", {

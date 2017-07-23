@@ -107,8 +107,10 @@ class ArrayEditorRow {
         return this.removed.modifier;
     }
 
-    public remove(evt: Event): void{
-        evt.preventDefault();
+    public remove(evt?: Event): void{
+        if(evt){
+            evt.preventDefault();
+        }
         this.pooled = this.bindings.pool();
         this.removed.fire(this);
     }
@@ -143,6 +145,10 @@ class ArrayEditor implements ISpecialFormValue {
 
     public add(evt: Event): void {
         evt.preventDefault();
+        this.addRow();
+    }
+
+    private addRow(): void{
         if(this.pooledRows.length == 0){
             this.itemsView.appendData(this.schema, (bindings, data) => {
                 var row = new ArrayEditorRow(bindings, data, this.name + '-' + this.indexGen.getNext());
@@ -173,8 +179,16 @@ class ArrayEditor implements ISpecialFormValue {
     }
 
     public setData(data: any, serializer: FormSerializer) {
-        for(var i = 0; i < this.rows.length; ++i){
-            this.rows[i].setData(data, serializer);
+        var itemData: any[] = data[this.name];
+        var i = 0;
+        for(; i < itemData.length; ++i){
+            if(i >= this.rows.length){
+                this.addRow();
+            }
+            this.rows[i].setData(itemData[i], serializer);
+        }
+        for(; i < this.rows.length;){ //Does not increment, removing rows will de index for us
+            this.rows[i].remove();
         }
     }
 

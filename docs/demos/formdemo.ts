@@ -19,7 +19,8 @@ class FormDemoController {
             middle: "Test Middle",
             last: "Test Last",
             comboTest: "two",
-            multiChoice: [2]
+            multiChoice: [2],
+            stringArray: ["first", "second", "thrid", "fourth"]
         });
     }
 
