@@ -74,9 +74,25 @@ export interface ISpecialFormValue{
     setData(data: any, serializer: FormSerializer);
 }
 
+const indexMax = 3;
+
+class InfiniteIndex{
+    private num: number = 0;
+    private base: string = "";
+
+    public getNext(): string {
+        ++this.num;
+        if(this.num === indexMax){
+            this.base += "-"; //Each time we hit index max we just add a - to the base
+            this.num = 0;
+        }
+        return this.base + this.num;
+    }
+}
+
 class ArrayEditorRow {
-    constructor(private bindings: BindingCollection, schema: JsonSchema, name: string){
-        buildForm('hr.defaultform', schema, this.bindings.rootElement, name, true);
+    constructor(private bindings: BindingCollection, schema: JsonSchema, private name: string){
+        buildForm('hr.defaultform', schema, this.bindings.rootElement, this.name, true);
 
         bindings.setListener(this);
     }
@@ -85,22 +101,6 @@ class ArrayEditorRow {
         evt.preventDefault();
         this.bindings.remove();
     }
-}
-
-class ArrayEditor implements ISpecialFormValue {
-    private itemsHandle: view.IView<JsonSchema>;
-
-    constructor(private name: string, bindings: BindingCollection, private schema: JsonSchema){
-        this.itemsHandle = bindings.getView<JsonSchema>("items");
-        bindings.setListener(this);
-    }
-
-    public add(evt: Event): void {
-        evt.preventDefault();
-        this.itemsHandle.appendData(this.schema, (bindings, data) => {
-            new ArrayEditorRow(bindings, data, this.name);
-        });
-    }
 
     public getData(serializer: FormSerializer): any {
         return serializer.serialize(this.name);
@@ -108,6 +108,44 @@ class ArrayEditor implements ISpecialFormValue {
 
     public setData(data: any, serializer: FormSerializer) {
 
+    }
+}
+
+class ArrayEditor implements ISpecialFormValue {
+    private itemsHandle: view.IView<JsonSchema>;
+    private rows: ArrayEditorRow[] = [];
+    private indexGen: InfiniteIndex = new InfiniteIndex();
+    private isSimple: boolean;
+
+    constructor(private name: string, bindings: BindingCollection, private schema: JsonSchema){
+        this.itemsHandle = bindings.getView<JsonSchema>("items");
+        bindings.setListener(this);
+        this.isSimple = schema.type !== "object";
+    }
+
+    public add(evt: Event): void {
+        evt.preventDefault();
+        this.itemsHandle.appendData(this.schema, (bindings, data) => {
+            this.rows.push(new ArrayEditorRow(bindings, data, this.name + '-' + this.indexGen.getNext()));
+        });
+    }
+
+    public getData(serializer: FormSerializer): any {
+        var items = [];
+        for(var i = 0; i < this.rows.length; ++i){
+            var data = this.rows[i].getData(serializer);
+            if(this.isSimple){
+                data = data[""];
+            }
+            items.push(data);
+        }
+        return items;
+    }
+
+    public setData(data: any, serializer: FormSerializer) {
+        for(var i = 0; i < this.rows.length; ++i){
+            this.rows[i].setData(data, serializer);
+        }
     }
 
     public getName(): string{
