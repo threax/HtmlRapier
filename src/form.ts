@@ -273,6 +273,10 @@ function populate(form: HTMLElement | string, data:any, level?: string): void {
                     itemData = data(dataName);
                     break;
             }
+            
+            if(itemData === undefined){
+                itemData = "";
+            }
 
             switch (element.type) {
                 case 'checkbox':
