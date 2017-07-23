@@ -14,7 +14,7 @@ class FormDemoController {
     public constructor(bindings: controller.BindingCollection) {
         this.form = bindings.getForm("form");
         this.form.setSchema(createTestSchema());
-        this.form.setData({
+        var data = {
             first: "Test First",
             middle: "Test Middle",
             last: "Test Last",
@@ -31,7 +31,13 @@ class FormDemoController {
                 middle: "middle 2",
                 last: "last 2"
             }]
-        });
+        };
+        
+        this.form.setData(data);
+
+        data.stringArray = ["first", "second"];
+
+        this.form.setData(data);
     }
 
     public submit(evt: Event): void{
