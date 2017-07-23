@@ -131,6 +131,16 @@ function iterateControllers(name: string, elements: HTMLElement[], cb: domQuery.
     }
 }
 
+export class PooledBindings{
+    constructor(private docFrag: DocumentFragment, private parent: Node){
+
+    }
+
+    public restore(insertBefore: Node){
+        this.parent.insertBefore(this.docFrag, insertBefore);
+    }
+}
+
 /**
  * The BindingCollection class allows you to get access to the HtmlElements defined on your
  * page with objects that help manipulate them. You won't get the elements directly and you
@@ -273,5 +283,18 @@ export class BindingCollection {
         for (var eIx = 0; eIx < this.elements.length; ++eIx) {
             this.elements[eIx].remove();
         }
+    }
+
+    /**
+     * Pool the elements into a document fragment. Will return a pooled bindings
+     * class that can be used to restore the pooled elements to the document.
+     */
+    public pool(): PooledBindings{
+        var parent = this.elements[0].parentElement;
+        var docFrag = document.createDocumentFragment();
+        for (var eIx = 0; eIx < this.elements.length; ++eIx) {
+            docFrag.appendChild(this.elements[eIx]);
+        }
+        return new PooledBindings(docFrag, parent);
     }
 };

@@ -4,8 +4,9 @@
 
 import * as component from 'hr.components';
 import * as domquery from 'hr.domquery';
-import { BindingCollection } from 'hr.bindingcollection';
+import { BindingCollection, PooledBindings } from 'hr.bindingcollection';
 import * as view from 'hr.view';
+import * as event from 'hr.eventdispatcher';
 
 export interface JsonSchema {
     title?: string;
@@ -91,15 +92,29 @@ class InfiniteIndex{
 }
 
 class ArrayEditorRow {
+    private pooled: PooledBindings;
+    private removed = new event.ActionEventDispatcher<ArrayEditorRow>();
+
     constructor(private bindings: BindingCollection, schema: JsonSchema, private name: string){
         buildForm('hr.defaultform', schema, this.bindings.rootElement, this.name, true);
 
         bindings.setListener(this);
     }
 
+    public get onRemoved(): event.EventModifier<event.ActionEventListener<ArrayEditorRow>>{
+        return this.removed.modifier;
+    }
+
     public remove(evt: Event): void{
         evt.preventDefault();
-        this.bindings.remove();
+        this.pooled = this.bindings.pool();
+        this.removed.fire(this);
+    }
+
+    public restore(){
+        if(this.pooled) {
+            this.pooled.restore(null);
+        }
     }
 
     public getData(serializer: FormSerializer): any {
@@ -112,22 +127,35 @@ class ArrayEditorRow {
 }
 
 class ArrayEditor implements ISpecialFormValue {
-    private itemsHandle: view.IView<JsonSchema>;
+    private itemsView: view.IView<JsonSchema>;
+    private pooledRows: ArrayEditorRow[] = [];
     private rows: ArrayEditorRow[] = [];
     private indexGen: InfiniteIndex = new InfiniteIndex();
     private isSimple: boolean;
 
     constructor(private name: string, bindings: BindingCollection, private schema: JsonSchema){
-        this.itemsHandle = bindings.getView<JsonSchema>("items");
+        this.itemsView = bindings.getView<JsonSchema>("items");
         bindings.setListener(this);
         this.isSimple = schema.type !== "object";
     }
 
     public add(evt: Event): void {
         evt.preventDefault();
-        this.itemsHandle.appendData(this.schema, (bindings, data) => {
-            this.rows.push(new ArrayEditorRow(bindings, data, this.name + '-' + this.indexGen.getNext()));
-        });
+        if(this.pooledRows.length == 0){
+            this.itemsView.appendData(this.schema, (bindings, data) => {
+                var row = new ArrayEditorRow(bindings, data, this.name + '-' + this.indexGen.getNext());
+                row.onRemoved.add((r) =>{
+                    this.rows.splice(this.rows.indexOf(r), 1); //It will always be there
+                    this.pooledRows.push(r);
+                });
+                this.rows.push(row);
+            });
+        }
+        else{
+            var row = this.pooledRows.pop();
+            row.restore();
+            this.rows.push(row);
+        }
     }
 
     public getData(serializer: FormSerializer): any {
