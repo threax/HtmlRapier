@@ -135,7 +135,10 @@ class Form<T> {
         if(this.specialValues) {
             this.specialValues.recoverData(data, this.formSerializer);
         }
-        return data;
+        for(var key in data){ //This will pass if there is a key in data, ok to also check prototype, if user set it they want it.
+            return data;
+        }
+        return null; //Return null if the data returned has no keys in it, which means it is empty.
     }
 
     public setPrototype(proto: T): void { 
@@ -236,15 +239,6 @@ function serialize(form: HTMLFormElement, proto?: any, level?: string): any {
         switch (element.nodeName) {
             case 'INPUT':
                 switch (element.type) {
-                    case 'text':
-                    case 'hidden':
-                    case 'password':
-                    case 'button':
-                    case 'reset':
-                    case 'date':
-                    case 'submit':
-                        addValue(q, element.name, element.value, level);
-                        break;
                     case 'file':
                         addValue(q, element.name, element.files, level);
                         break;
@@ -253,6 +247,9 @@ function serialize(form: HTMLFormElement, proto?: any, level?: string): any {
                         if (element.checked) {
                             addValue(q, element.name, element.value, level);
                         }
+                        break;
+                    default:
+                        addValue(q, element.name, element.value, level);
                         break;
                 }
                 break;
