@@ -11,12 +11,12 @@ export interface IForm<T> {
       * Set the data on the form.
       * @param data The data to set.
       */
-    setData(data: T);
+    setData(data: T): void;
 
     /**
      * Remove all data from the form.
      */
-    clear();
+    clear(): void;
 
     /**
      * Get the data on the form. If you set a prototype
@@ -39,6 +39,74 @@ export interface IForm<T> {
      * this would generate the whole thing for you from the schema.
      */
     setSchema(schema: formBuilder.JsonSchema, componentName?: string): void;
+}
+
+/**
+ * This form decorator will ensure that a schema is loaded before any data is added to the
+ * form. You can call setData and setSchema in any order you want, but the data will not
+ * be set until the schema is loaded. Just wrap your real IForm in this decorator to get this
+ * feature.
+ */
+export class NeedsSchemaForm<T> implements IForm<T> {
+    private loadedSchema: boolean = false;
+    private waitingData: T;
+
+    constructor(private wrapped: IForm<T>){
+
+    }
+
+    /**
+      * Set the data on the form.
+      * @param data The data to set.
+      */
+    public setData(data: T): void {
+        if(this.loadedSchema){
+            this.wrapped.setData(data);
+        }
+        else{
+            this.waitingData = data;
+        }
+    }
+
+    /**
+     * Remove all data from the form.
+     */
+    public clear(): void {
+        this.wrapped.clear();
+    }
+
+    /**
+     * Get the data on the form. If you set a prototype
+     * it will be used as the prototype of the returned
+     * object.
+     */
+    public getData(): T {
+        return this.wrapped.getData();
+    }
+
+    /**
+     * Set the prototype object to use when getting the
+     * form data with getData.
+     * @param proto The prototype object.
+     */
+    public setPrototype(proto: T): void {
+        this.wrapped.setPrototype(proto);
+    }
+
+    /**
+     * Set the schema for this form. This will add any properties found in the
+     * schema that you did not already define on the form. It will match the form
+     * property names to the name attribute on the elements. If you had a blank form
+     * this would generate the whole thing for you from the schema.
+     */
+    public setSchema(schema: formBuilder.JsonSchema, componentName?: string): void {
+        this.wrapped.setSchema(schema, componentName);
+        if(this.waitingData !== undefined){
+            this.wrapped.setData(this.waitingData);
+            this.waitingData = undefined;
+        }
+        this.loadedSchema = true;
+    }
 }
 
 class Form<T> {

@@ -640,9 +640,9 @@ define("hr.toggles", ["require", "exports", "tslib", "hr.typeidentifiers", "hr.e
             enumerable: true,
             configurable: true
         });
+        OnOffToggle.states = ['on', 'off'];
         return OnOffToggle;
     }(TypedToggle));
-    OnOffToggle.states = ['on', 'off'];
     exports.OnOffToggle = OnOffToggle;
     /**
      * The Group defines a collection of toggles that can be manipulated together.
@@ -1319,7 +1319,7 @@ define("node_modules/HtmlRapier/src/formbuilder", ["require", "exports", "hr.com
         InfiniteIndex.prototype.getNext = function () {
             ++this.num;
             if (this.num === indexMax) {
-                this.base += "-"; //Each time we hit index max we just add a - to the base
+                this.base += "b"; //Each time we hit index max we just add a 'b' to the base
                 this.num = 0;
             }
             return this.base + this.num;
@@ -1407,8 +1407,8 @@ define("node_modules/HtmlRapier/src/formbuilder", ["require", "exports", "hr.com
         };
         ArrayEditor.prototype.setData = function (data, serializer) {
             var itemData = data[this.name];
+            var i = 0;
             if (itemData) {
-                var i = 0;
                 for (; i < itemData.length; ++i) {
                     if (i >= this.rows.length) {
                         this.addRow();
@@ -1421,9 +1421,9 @@ define("node_modules/HtmlRapier/src/formbuilder", ["require", "exports", "hr.com
                     }
                     this.rows[i].setData(rowData, serializer);
                 }
-                for (; i < this.rows.length;) {
-                    this.rows[i].remove();
-                }
+            }
+            for (; i < this.rows.length;) {
+                this.rows[i].remove();
             }
         };
         ArrayEditor.prototype.getName = function () {
@@ -2399,9 +2399,9 @@ define("hr.di", ["require", "exports"], function (require, exports) {
         ServiceCollection.prototype.createScope = function () {
             return new Scope(this);
         };
+        ServiceCollection.idIndex = 0;
         return ServiceCollection;
     }());
-    ServiceCollection.idIndex = 0;
     exports.ServiceCollection = ServiceCollection;
     /**
      * A scope for dependency injection.

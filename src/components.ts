@@ -23,6 +23,10 @@ export function register(name: string, createFunc: ComponentCreateFunc) {
     factory[name] = createFunc;
 }
 
+export function isDefined(name: string){
+    return factory[name] !== undefined;
+}
+
 export interface VariantFinderCallback<T> {
     (item: T) : string
 }
