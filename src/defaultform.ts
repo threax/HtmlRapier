@@ -9,7 +9,7 @@ if(!component.isDefined("hr.defaultform")){
         '<div class="form-group"><label>{{title}}</label><input class="form-control" name="{{buildName}}" type="{{buildType}}" /></div>'
     );
     builder.addVariant("checkbox", new VariantBuilder(
-        '<div class="checkbox"><label><input type="checkbox" name="{{buildName}}" />&nbsp;{{title}}</label></div>'
+        '<div class="checkbox"><label><input type="checkbox" name="{{buildName}}" value="{{buildValue}}" />&nbsp;{{title}}</label></div>'
     ));
     builder.addVariant("hidden", new VariantBuilder(
         '<input type="hidden" name="{{buildName}}" />'

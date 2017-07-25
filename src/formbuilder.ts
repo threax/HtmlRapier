@@ -22,17 +22,19 @@ export interface JsonProperty {
     items?: JsonSchema;
     "x-ui-order"?: number;
     "x-ui-type"?: string;
-    "x-values"?: JsonLabel[];
+    "x-values"?: JsonLabel[]; //The source values if there are multiple
     enum?: string[];
-    "x-enumNames"?: string[];
+    "x-enumNames"?: string[]; //The enum names, will be combined with enum to make values
+    "x-value"?: JsonLabel[]; //If there is a single value for the field, use that, can override default values for things like checkboxes
 }
 
 export interface ProcessedJsonProperty extends JsonProperty {
     buildName: string;
     buildType: string;
     buildOrder: number;
-    buildValues?: JsonLabel[];
+    buildValues?: JsonLabel[]; //The values if there are multiple value choices, e.g. combo boxes
     size?: number;
+    buildValue?: string; //The value if there is a single value for this item, e.g. checkboxes
 }
 
 export type JsonPropertyMap = { [key: string]: JsonProperty };
@@ -363,22 +365,17 @@ function processProperty(prop: JsonProperty, name: string, defaultTitle: string)
             processed.buildType = "arrayEditor";
         }
     }
-    else{
-        if(processed.buildValues !== undefined) {
-            if(prop["x-ui-type"] !== undefined){
-                processed.buildType = prop["x-ui-type"];
-            }
-            else{
+    else {
+        if(prop["x-ui-type"] !== undefined) {
+            processed.buildType = prop["x-ui-type"];
+        }
+        else {
+            if(processed.buildValues !== undefined) {
+                //Has build options, force to select unless the user chose something else.
                 processed.buildType = "select";
             }
-        }
-        else
-        {
-            //Regular type, no options, derive html type
-            if(prop["x-ui-type"] !== undefined){
-                processed.buildType = prop["x-ui-type"];
-            }
-            else{
+            else {
+                //Regular type, no options, derive html type
                 switch(processed.buildType){
                     case 'integer':
                         processed.buildType = 'number';
@@ -388,6 +385,17 @@ function processProperty(prop: JsonProperty, name: string, defaultTitle: string)
                         break;
                 }
             }
+        }
+
+        //Post process elements that might have more special properties
+        //Do this here, since we don't really know how we got to this build type
+        switch(processed.buildType){
+            case 'checkbox':
+                processed.buildValue = "true";
+                if(prop["x-value"] !== undefined){
+                    processed.buildValue = prop["x-value"];
+                }
+                break;
         }
     }
 
