@@ -21,12 +21,12 @@ if(!component.isDefined("hr.defaultform")){
         '<div class="form-group"><label>{{title}}</label><select class="form-control" name="{{buildName}}" multiple size="{{size}}"/></div>'
     ));
     builder.addVariant("arrayEditor", new VariantBuilder(
-        '<div><label>{{title}}</label><div data-hr-view="items" data-hr-view-component="hr.defaultform-arrayEditorItem"></div><button data-hr-on-click="add">Add</button></div>'
+        '<div><label>{{title}}</label><div data-hr-view="items" data-hr-view-component="hr.defaultform-arrayEditorItem"></div><button class="btn btn-default" data-hr-on-click="add">Add</button></div>'
     ));
     component.register("hr.defaultform", builder.getFactory());
 
     var arrayEditorItem = new ComponentBuilder(
-        '<div><button data-hr-on-click="remove" data-hr-form-end>Remove</button></div>'
+        '<div><button data-hr-on-click="remove" class="btn btn-default" data-hr-form-end>Remove</button></div>'
     );
     component.register("hr.defaultform-arrayEditorItem", arrayEditorItem.getFactory());
 }
