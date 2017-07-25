@@ -221,6 +221,10 @@ export function buildForm(componentName: string, schema: JsonSchema, parentEleme
     }
     
     var dynamicInsertElement = domquery.first("[data-hr-form-end]", parentElement);
+    if(dynamicInsertElement !== null){
+        //Adjust parent to end element if one was found
+        parentElement = dynamicInsertElement.parentElement;
+    }
     var propArray: ProcessedJsonProperty[] = [];
     var props = schema.properties;
     if(props === undefined){
