@@ -91,17 +91,22 @@ class InfiniteIndex{
     }
 }
 
+function sharedClearer(i: number) {
+    return "";
+}
+
 class ArrayEditorRow {
     private pooled: PooledBindings;
     private removed = new event.ActionEventDispatcher<ArrayEditorRow>();
+    private root: HTMLElement;
 
     constructor(private bindings: BindingCollection, schema: JsonSchema, private name: string){
-        var root = this.bindings.rootElement;
+        this.root = this.bindings.rootElement;
         var itemHandle = this.bindings.getHandle("item"); //Also supports adding to a handle named item, otherwise uses the root
         if(itemHandle !== null){
-            root = itemHandle;
+            this.root = itemHandle;
         }
-        buildForm('hr.defaultform', schema, root, this.name, true);
+        buildForm('hr.defaultform', schema, this.root, this.name, true);
 
         bindings.setListener(this);
     }
@@ -115,6 +120,7 @@ class ArrayEditorRow {
             evt.preventDefault();
         }
         this.pooled = this.bindings.pool();
+        formHelper.populate(this.root, sharedClearer, this.name); //Clear existing data
         this.removed.fire(this);
     }
 

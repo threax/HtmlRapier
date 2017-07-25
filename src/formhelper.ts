@@ -127,8 +127,8 @@ function extractLevelName(level: string, name: string): string{
  * @param data - The data to bind to the form, form name attributes will be mapped to the keys in the object.
  */
 export function populate(form: HTMLElement | string, data:any, level?: string): void {
-    var formElement = domQuery.first(form);
-    var nameAttrs = domQuery.all('[name]', <HTMLElement>formElement);
+    var formElement = <HTMLElement>domQuery.first(form);
+    var nameAttrs = domQuery.all('[name]', formElement);
 
     var getData: (key: string) => any;
 
