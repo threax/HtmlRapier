@@ -6,10 +6,13 @@ import {ComponentBuilder, VariantBuilder} from 'hr.componentbuilder';
 //Register default components
 if(!component.isDefined("hr.defaultform")){
     var builder = new ComponentBuilder(
-        '<div class="form-group"><label>{{title}}</label><input class="form-control" name="{{buildName}}" type="{{buildType}}"></div>'
+        '<div class="form-group"><label>{{title}}</label><input class="form-control" name="{{buildName}}" type="{{buildType}}" /></div>'
     );
     builder.addVariant("checkbox", new VariantBuilder(
-        '<div class="checkbox"><label><input type="checkbox" name="{{buildName}}">&nbsp;{{title}}</label></div>'
+        '<div class="checkbox"><label><input type="checkbox" name="{{buildName}}" />&nbsp;{{title}}</label></div>'
+    ));
+    builder.addVariant("hidden", new VariantBuilder(
+        '<input type="hidden" name="{{buildName}}" />'
     ));
     builder.addVariant("select", new VariantBuilder(
         '<div class="form-group"><label>{{title}}</label><select class="form-control" name="{{buildName}}"/></div>'
