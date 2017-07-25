@@ -1,0 +1,16 @@
+[
+  {
+    "pathBase": "src",
+    "outDir": "lib",
+    "copy": [
+      "src/polyfill.js"
+    ]
+  },
+  {
+    "pathBase": "../tslib",
+    "outDir": "lib",
+    "copy": [
+      "../tslib/tslib.js"
+    ]
+  }
+]

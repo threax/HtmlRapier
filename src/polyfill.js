@@ -723,12 +723,6 @@ var fillPolys = function(){
     })([Element.prototype, CharacterData.prototype, DocumentType.prototype]);
 };
 
-if(jsns){
-    jsns.define("hr.polyfill", [], fillPolys);
-    jsns.run("hr.polyfill");
-}
-else{
-    fillPolys();
-}
+fillPolys();
 
 })();
