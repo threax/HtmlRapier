@@ -220,18 +220,21 @@ function allowWrite(element: HTMLElement, level: string): boolean{
  * @param form - A selector or form element for the form to serialize.
  * @returns - The object that represents the form contents as an object.
  */
-function serialize(form: HTMLFormElement, proto?: any, level?: string): any {
+function serialize(form: HTMLElement, proto?: any, level?: string): any {
     //This is from https://code.google.com/archive/p/form-serialize/downloads
     //Modified to return an object instead of a query string
-    //form = domQuery.first(form);
 
-    if (!IsFormElement(form)) {
-        return;
+    var formElements;
+    if (IsFormElement(form)) {
+        formElements = form.elements;
+    }
+    else{
+        formElements = domQuery.all("[name]", form); //All elements with a name, they will be filtered by what is supported below
     }
     var i, j, q = Object.create(proto || null);
-    var elementsLength = form.elements.length;
+    var elementsLength = formElements.length;
     for (i = 0; i < elementsLength; ++i) {
-        var element: any = form.elements[i];
+        var element: any = formElements[i];
 
         if (element.name === "" || !allowWrite(element, level)) {
             continue;
