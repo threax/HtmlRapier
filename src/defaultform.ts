@@ -26,7 +26,7 @@ if(!component.isDefined("hr.defaultform")){
     component.register("hr.defaultform", builder.getFactory());
 
     var arrayEditorItem = new ComponentBuilder(
-        '<div data-hr-handle="item"></div><button data-hr-on-click="remove">Remove</button>'
+        '<div><button data-hr-on-click="remove" data-hr-form-end>Remove</button></div>'
     );
     component.register("hr.defaultform-arrayEditorItem", arrayEditorItem.getFactory());
 }

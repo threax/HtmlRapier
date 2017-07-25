@@ -100,7 +100,12 @@ class ArrayEditorRow {
     private removed = new event.ActionEventDispatcher<ArrayEditorRow>();
 
     constructor(private bindings: BindingCollection, schema: JsonSchema, private name: string){
-        buildForm('hr.defaultform', schema, this.bindings.rootElement, this.name, true);
+        var root = this.bindings.rootElement;
+        var itemHandle = this.bindings.getHandle("item"); //Also supports adding to a handle named item, otherwise uses the root
+        if(itemHandle !== null){
+            root = itemHandle;
+        }
+        buildForm('hr.defaultform', schema, root, this.name, true);
 
         bindings.setListener(this);
     }
@@ -212,7 +217,7 @@ interface RefNode{
 }
 
 /**
- * 
+ * Find the ref and return it for node if it exists.
  * @param node The node to expand
  */
 function resolveRef(node: RefNode, schema: JsonSchema): any{
