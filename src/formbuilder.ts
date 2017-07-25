@@ -207,6 +207,30 @@ class ArrayEditor implements ISpecialFormValue {
     }
 }
 
+interface RefNode{
+    $ref?: string;
+}
+
+/**
+ * 
+ * @param node The node to expand
+ */
+function resolveRef(node: RefNode, schema: JsonSchema): any{
+    if(node.$ref !== undefined){
+        var walker = schema;
+        var refs = node.$ref.split('/');
+        for(var i = 1; i < refs.length; ++i){
+            walker = walker[refs[i]];
+            if(walker === undefined){
+                throw new Error("Cannot find ref '" + node.$ref + "' in schema.")
+            }
+        }
+
+        return walker;
+    }
+    return node;
+}
+
 export function buildForm(componentName: string, schema: JsonSchema, parentElement: HTMLElement, baseName?: string, ignoreExisting?: boolean): SpecialFormValues {
     ////Clear existing elements
     //while (formElement.lastChild) {
@@ -268,7 +292,8 @@ export function buildForm(componentName: string, schema: JsonSchema, parentEleme
                 }
 
                 if(item.buildType === "arrayEditor"){
-                    var editor = new ArrayEditor(item.buildName, bindings, item.items);
+                    var resolvedItems = resolveRef(<RefNode>item.items, schema);
+                    var editor = new ArrayEditor(item.buildName, bindings, resolvedItems);
                     specialValues.add(editor);
                 }
             }
