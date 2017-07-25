@@ -262,11 +262,13 @@ function serialize(form: HTMLFormElement, proto?: any, level?: string): any {
                         addValue(q, element.name, element.value, level);
                         break;
                     case 'select-multiple':
+                        var selected: string[] = [];
                         for (j = element.options.length - 1; j >= 0; j = j - 1) {
                             if (element.options[j].selected) {
-                                addValue(q, element.name, element.options[j].value, level);
+                                selected.push(element.options[j].value);
                             }
                         }
+                        addValue(q, element.name, selected, level);
                         break;
                 }
                 break;
