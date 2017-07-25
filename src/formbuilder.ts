@@ -7,6 +7,7 @@ import * as domquery from 'hr.domquery';
 import { BindingCollection, PooledBindings } from 'hr.bindingcollection';
 import * as view from 'hr.view';
 import * as event from 'hr.eventdispatcher';
+import * as formHelper from 'hr.formhelper';
 
 export interface JsonSchema {
     title?: string;
@@ -44,11 +45,6 @@ export interface JsonLabel {
     value: any;
 }
 
-export interface FormSerializer {
-    serialize: (level?: string) => any;
-    populate: (data: any, level?: string) => void;
-}
-
 export class SpecialFormValues{
     private special: ISpecialFormValue[] = [];
 
@@ -56,13 +52,13 @@ export class SpecialFormValues{
         this.special.push(value);
     }
 
-    public setData(data: any, serializer: FormSerializer): void {
+    public setData(data: any, serializer: formHelper.IFormSerializer): void {
         for(var i = 0; i < this.special.length; ++i){
             this.special[i].setData(data, serializer);
         }
     }
 
-    public recoverData(data: any, serializer: FormSerializer): void {
+    public recoverData(data: any, serializer: formHelper.IFormSerializer): void {
         for(var i = 0; i < this.special.length; ++i){
             var item = this.special[i];
             var subData = item.getData(serializer);
@@ -74,9 +70,9 @@ export class SpecialFormValues{
 export interface ISpecialFormValue{
     getName(): string;
 
-    getData(serializer: FormSerializer): any;
+    getData(serializer: formHelper.IFormSerializer): any;
 
-    setData(data: any, serializer: FormSerializer);
+    setData(data: any, serializer: formHelper.IFormSerializer);
 }
 
 const indexMax = 2147483647;//Sticking with 32 bit;
@@ -128,11 +124,11 @@ class ArrayEditorRow {
         }
     }
 
-    public getData(serializer: FormSerializer): any {
+    public getData(serializer: formHelper.IFormSerializer): any {
         return serializer.serialize(this.name);
     }
 
-    public setData(data: any, serializer: FormSerializer) {
+    public setData(data: any, serializer: formHelper.IFormSerializer) {
         serializer.populate(data, this.name);
     }
 }
@@ -173,7 +169,7 @@ class ArrayEditor implements ISpecialFormValue {
         }
     }
 
-    public getData(serializer: FormSerializer): any {
+    public getData(serializer: formHelper.IFormSerializer): any {
         var items = [];
         for(var i = 0; i < this.rows.length; ++i){
             var data = this.rows[i].getData(serializer);
@@ -185,7 +181,7 @@ class ArrayEditor implements ISpecialFormValue {
         return items;
     }
 
-    public setData(data: any, serializer: FormSerializer) {
+    public setData(data: any, serializer: formHelper.IFormSerializer) {
         var itemData: any[] = data[this.name];
         var i = 0;
         if(itemData) {

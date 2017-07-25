@@ -5,7 +5,6 @@
     "removeComments": false,
     "sourceMap": true,
     "noEmitHelpers": true,
-    "importHelpers": true,
     "target": "es5",
     "outDir": "obj/tsc",
     "outFile": "obj/tsbin.js",
@@ -18,6 +17,9 @@
       ]
     }
   },
+  "include": [
+    "src/*"
+  ],
   "exclude": [
     "node_modules",
     "dist",
