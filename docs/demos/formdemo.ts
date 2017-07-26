@@ -3,6 +3,50 @@
 
 "use strict";
 import * as controller from 'hr.controller';
+import { ValidationError, ErrorMap } from 'hr.error';
+
+class FakeErrors implements ValidationError {
+    public name;
+    public message = "OMG Something is wrong!";
+    public stack?;
+
+    private errors = {
+        first: "You call that a first name?",
+        middle: "You call that a middle name?",
+        address: "You call that an address?",
+        enumTest: "Not a valid value.",
+        multiChoice: "Not a valid multi choice.",
+        "complexArray[0].Name": "You must include a name"
+    }
+
+    /**
+     * Get the validation error named name.
+     */
+    getValidationError(name: string): string | undefined{
+        return this.errors[name];
+    }
+
+    /**
+     * Check to see if a named validation error exists.
+     */
+    hasValidationError(name: string): boolean{
+        return this.getValidationError(name) !== undefined;
+    }
+
+    /**
+     * Get all validation errors.
+     */
+    getValidationErrors(): ErrorMap {
+        return this.errors;
+    }
+
+    /**
+     * Determine if there are any validation errors.
+     */
+    hasValidationErrors() : boolean{
+        return true;
+    }
+}
 
 class FormDemoController {
     public static get InjectorArgs(): controller.DiFunction<any>[] {
@@ -38,6 +82,8 @@ class FormDemoController {
         data.stringArray = null;// ["first", "second"];
 
         this.form.setData(data);
+        
+        this.form.setError(new FakeErrors());
     }
 
     public submit(evt: Event): void{

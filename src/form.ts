@@ -4,8 +4,14 @@
 
 import * as formHelper from 'hr.formhelper';
 import { JsonSchema } from 'hr.schema';
+import { ValidationError } from 'hr.error';
 
-export interface IForm<T> {    
+export interface IForm<T> {
+    /**
+     * Set the error currently on the form. Will match property names to form values and display the errors.
+     */
+    setError(err: ValidationError): void;
+
      /**
       * Set the data on the form.
       * @param data The data to set.
@@ -52,6 +58,10 @@ export class NeedsSchemaForm<T> implements IForm<T> {
 
     constructor(private wrapped: IForm<T>){
 
+    }
+
+    public setError(err: ValidationError) {
+        this.wrapped.setError(err);
     }
 
     /**
@@ -117,6 +127,12 @@ class Form<T> {
     constructor(private form: HTMLFormElement) {
 
     }
+
+    public setError(err: ValidationError) {
+        if(this.specialValues){
+            this.specialValues.setError(err);
+        }
+    }
     
     public setData(data: T) {
         formHelper.populate(this.form, data, this.baseLevel);
@@ -157,6 +173,10 @@ class Form<T> {
 class NullForm<T> implements IForm<T> {
     constructor(){
 
+    }
+
+    public setError(err: ValidationError) {
+        
     }
 
     public setData(data): void {

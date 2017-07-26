@@ -10,6 +10,7 @@ import * as toggle from 'hr.toggles';
 import * as event from 'hr.eventdispatcher';
 import * as formHelper from 'hr.formhelper';
 import { JsonProperty, JsonLabel, JsonSchema, resolveRef, RefNode } from 'hr.schema';
+import { ValidationError } from 'hr.error';
 
 interface ProcessedJsonProperty extends JsonProperty {
     buildName: string;
@@ -25,6 +26,12 @@ class FormValues implements formHelper.IFormValues {
 
     public add(value: IFormValue): void {
         this.special.push(value);
+    }
+
+    public setError(err: ValidationError) {
+        for(var i = 0; i < this.special.length; ++i){
+            this.special[i].setError(err);
+        }
     }
 
     public setData(data: any, serializer: formHelper.IFormSerializer): void {
@@ -43,6 +50,8 @@ class FormValues implements formHelper.IFormValues {
 }
 
 interface IFormValue {
+    setError(err: ValidationError);
+
     getName(): string;
 
     getData(serializer: formHelper.IFormSerializer): any;
@@ -127,6 +136,10 @@ class ArrayEditor implements IFormValue {
         this.isSimple = schema.type !== "object";
     }
 
+    public setError(err: ValidationError) {
+        //Does nothing for now
+    }
+
     public add(evt: Event): void {
         evt.preventDefault();
         this.addRow();
@@ -195,9 +208,18 @@ class BasicItemEditor implements IFormValue{
 
     constructor(private name: string, bindings: BindingCollection){
         this.toggle = bindings.getToggle(name + "Error");
-        this.toggle.on();
         this.message = bindings.getView(name + "ErrorMessage");
-        this.message.setData("Hello, this is an error message");
+    }
+
+    public setError(err: ValidationError) {
+        if(err.hasValidationError(this.name)){
+            this.toggle.on();
+            this.message.setData(err.getValidationError(this.name));
+        }
+        else {
+            this.toggle.off();
+            this.message.setData("");
+        }
     }
 
     public getData(serializer: formHelper.IFormSerializer): any {

@@ -134,12 +134,12 @@ define("hr.domquery", ["require", "exports", "hr.typeidentifiers"], function (re
                 results = [];
             }
             if (context !== undefined) {
+                //Be sure to include the main element if it matches the selector.
                 if (matches(context, element)) {
                     results.push(context);
                 }
-                else {
-                    nodesToArray(context.querySelectorAll(element), results);
-                }
+                //This will add all child elements that match the selector.
+                nodesToArray(context.querySelectorAll(element), results);
             }
             else {
                 nodesToArray(document.querySelectorAll(element), results);
@@ -918,6 +918,12 @@ define("hr.schema", ["require", "exports"], function (require, exports) {
     }
     exports.resolveRef = resolveRef;
 });
+///<amd-module name="hr.error"/>
+define("hr.error", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    ;
+});
 ///<amd-module name="hr.formhelper"/>
 define("hr.formhelper", ["require", "exports", "hr.domquery", "hr.typeidentifiers"], function (require, exports, domQuery, typeIds) {
     "use strict";
@@ -1121,6 +1127,9 @@ define("hr.form", ["require", "exports", "hr.formhelper"], function (require, ex
             this.wrapped = wrapped;
             this.loadedSchema = false;
         }
+        NeedsSchemaForm.prototype.setError = function (err) {
+            this.wrapped.setError(err);
+        };
         /**
           * Set the data on the form.
           * @param data The data to set.
@@ -1177,6 +1186,11 @@ define("hr.form", ["require", "exports", "hr.formhelper"], function (require, ex
             this.form = form;
             this.baseLevel = undefined;
         }
+        Form.prototype.setError = function (err) {
+            if (this.specialValues) {
+                this.specialValues.setError(err);
+            }
+        };
         Form.prototype.setData = function (data) {
             formHelper.populate(this.form, data, this.baseLevel);
             if (this.specialValues) {
@@ -1212,6 +1226,8 @@ define("hr.form", ["require", "exports", "hr.formhelper"], function (require, ex
     var NullForm = (function () {
         function NullForm() {
         }
+        NullForm.prototype.setError = function (err) {
+        };
         NullForm.prototype.setData = function (data) {
         };
         NullForm.prototype.clear = function () {
@@ -2460,6 +2476,43 @@ define("hr.controller", ["require", "exports", "hr.bindingcollection", "hr.bindi
 define("form-demo", ["require", "exports", "hr.controller"], function (require, exports, controller) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    var FakeErrors = (function () {
+        function FakeErrors() {
+            this.message = "OMG Something is wrong!";
+            this.errors = {
+                first: "You call that a first name?",
+                middle: "You call that a middle name?",
+                address: "You call that an address?",
+                enumTest: "Not a valid value.",
+                multiChoice: "Not a valid multi choice."
+            };
+        }
+        /**
+         * Get the validation error named name.
+         */
+        FakeErrors.prototype.getValidationError = function (name) {
+            return this.errors[name];
+        };
+        /**
+         * Check to see if a named validation error exists.
+         */
+        FakeErrors.prototype.hasValidationError = function (name) {
+            return this.getValidationError(name) !== undefined;
+        };
+        /**
+         * Get all validation errors.
+         */
+        FakeErrors.prototype.getValidationErrors = function () {
+            return this.errors;
+        };
+        /**
+         * Determine if there are any validation errors.
+         */
+        FakeErrors.prototype.hasValidationErrors = function () {
+            return true;
+        };
+        return FakeErrors;
+    }());
     var FormDemoController = (function () {
         function FormDemoController(bindings) {
             this.form = bindings.getForm("form");
@@ -2485,6 +2538,7 @@ define("form-demo", ["require", "exports", "hr.controller"], function (require, 
             this.form.setData(data);
             data.stringArray = null; // ["first", "second"];
             this.form.setData(data);
+            this.form.setError(new FakeErrors());
         }
         Object.defineProperty(FormDemoController, "InjectorArgs", {
             get: function () {

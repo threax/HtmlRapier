@@ -1,5 +1,7 @@
 ///<amd-module name="hr.error"/>
 
+export interface ErrorMap {[key: string]: string};
+
 /**
  * This interface defines a common way to handle validation errors for a model.
  */
@@ -15,9 +17,9 @@ export interface ValidationError extends Error{
     hasValidationError(name: string): boolean;
 
     /**
-     * Get all validation errors.
+     * Get the raw error object.
      */
-    getValidationErrors() : string[];
+    getValidationErrors() : ErrorMap;
 
     /**
      * Determine if there are any validation errors.

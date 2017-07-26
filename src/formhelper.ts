@@ -3,6 +3,7 @@
 import * as domQuery from 'hr.domquery';
 import * as typeIds from 'hr.typeidentifiers';
 import { JsonSchema } from 'hr.schema';
+import { ValidationError } from 'hr.error';
 
 export function IsFormElement(element: Node): element is HTMLFormElement{
     return element && (element.nodeName === 'FORM' || element.nodeName == 'INPUT' || element.nodeName == 'TEXTAREA');
@@ -198,6 +199,8 @@ export class FormSerializer implements IFormSerializer{
 }
 
 export interface IFormValues{
+    setError(err: ValidationError): void;
+
     setData(data: any, serializer: IFormSerializer): void;
 
     recoverData(data: any, serializer: IFormSerializer): void;
