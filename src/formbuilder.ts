@@ -13,6 +13,7 @@ import { JsonProperty, JsonLabel, JsonSchema, resolveRef, RefNode } from 'hr.sch
 import { ValidationError } from 'hr.error';
 
 interface ProcessedJsonProperty extends JsonProperty {
+    name: string;
     buildName: string;
     buildType: string;
     buildOrder: number;
@@ -28,9 +29,12 @@ class FormValues implements formHelper.IFormValues {
         this.special.push(value);
     }
 
-    public setError(err: ValidationError) {
+    public setError(err: ValidationError, baseName?: string) {
+        if(baseName === undefined){
+            baseName = "";
+        }
         for(var i = 0; i < this.special.length; ++i){
-            this.special[i].setError(err);
+            this.special[i].setError(err, baseName);
         }
     }
 
@@ -50,7 +54,7 @@ class FormValues implements formHelper.IFormValues {
 }
 
 interface IFormValue {
-    setError(err: ValidationError);
+    setError(err: ValidationError, baseName: string);
 
     getName(): string;
 
@@ -83,6 +87,7 @@ class ArrayEditorRow {
     private pooled: PooledBindings;
     private removed = new event.ActionEventDispatcher<ArrayEditorRow>();
     private root: HTMLElement;
+    private formValues: FormValues;
 
     constructor(private bindings: BindingCollection, schema: JsonSchema, private name: string){
         this.root = this.bindings.rootElement;
@@ -90,7 +95,7 @@ class ArrayEditorRow {
         if(itemHandle !== null){
             this.root = itemHandle;
         }
-        buildForm('hr.defaultform', schema, this.root, this.name, true);
+        this.formValues = buildForm('hr.defaultform', schema, this.root, this.name, true);
 
         bindings.setListener(this);
     }
@@ -114,12 +119,26 @@ class ArrayEditorRow {
         }
     }
 
+    public setError(err: ValidationError, baseName: string) {
+        this.formValues.setError(err, baseName);
+    }
+
     public getData(serializer: formHelper.IFormSerializer): any {
-        return serializer.serialize(this.name);
+        var data = serializer.serialize(this.name);
+        this.formValues.recoverData(data, serializer);
+        if(typeof data === 'object'){
+            for(var key in data){ //This will pass if there is a key in data
+                return data;
+            }
+            return null; //Return null if the data returned has no keys in it, which means it is empty.
+        }
+
+        return data; //Not an object, just return the data
     }
 
     public setData(data: any, serializer: formHelper.IFormSerializer) {
         serializer.populate(data, this.name);
+        this.formValues.setData(data, serializer);
     }
 }
 
@@ -130,14 +149,17 @@ class ArrayEditor implements IFormValue {
     private indexGen: InfiniteIndex = new InfiniteIndex();
     private isSimple: boolean;
 
-    constructor(private name: string, bindings: BindingCollection, private schema: JsonSchema){
+    constructor(private name: string, private buildName: string, bindings: BindingCollection, private schema: JsonSchema){
         this.itemsView = bindings.getView<JsonSchema>("items");
         bindings.setListener(this);
         this.isSimple = schema.type !== "object";
     }
 
-    public setError(err: ValidationError) {
-        //Does nothing for now
+    public setError(err: ValidationError, baseName: string) {
+        for(var i = 0; i < this.rows.length; ++i){
+            var rowName = baseName + this.name + '[' + i + ']';
+            this.rows[i].setError(err, rowName);
+        }
     }
 
     public add(evt: Event): void {
@@ -148,7 +170,7 @@ class ArrayEditor implements IFormValue {
     private addRow(): void{
         if(this.pooledRows.length == 0){
             this.itemsView.appendData(this.schema, (bindings, data) => {
-                var row = new ArrayEditorRow(bindings, data, this.name + '-' + this.indexGen.getNext());
+                var row = new ArrayEditorRow(bindings, data, this.buildName + '-' + this.indexGen.getNext());
                 row.onRemoved.add((r) =>{
                     this.rows.splice(this.rows.indexOf(r), 1); //It will always be there
                     this.pooledRows.push(r);
@@ -176,7 +198,7 @@ class ArrayEditor implements IFormValue {
     }
 
     public setData(data: any, serializer: formHelper.IFormSerializer) {
-        var itemData: any[] = data[this.name];
+        var itemData: any[] = data[this.buildName];
         var i = 0;
         if(itemData) {
             for(; i < itemData.length; ++i){
@@ -198,7 +220,7 @@ class ArrayEditor implements IFormValue {
     }
 
     public getName(): string{
-        return this.name;
+        return this.buildName;
     }
 }
 
@@ -206,15 +228,19 @@ class BasicItemEditor implements IFormValue{
     private toggle: toggle.OnOffToggle;
     private message: view.IView<string>;
 
-    constructor(private name: string, bindings: BindingCollection){
-        this.toggle = bindings.getToggle(name + "Error");
-        this.message = bindings.getView(name + "ErrorMessage");
+    constructor(private name: string, private buildName: string, bindings: BindingCollection){
+        this.toggle = bindings.getToggle(buildName + "Error");
+        this.message = bindings.getView(buildName + "ErrorMessage");
     }
 
-    public setError(err: ValidationError) {
-        if(err.hasValidationError(this.name)){
+    public setError(err: ValidationError, baseName: string) {
+        var errorName = this.name;
+        if(baseName !== undefined){
+            errorName = baseName + "." + errorName;
+        }
+        if(err.hasValidationError(errorName)){
             this.toggle.on();
-            this.message.setData(err.getValidationError(this.name));
+            this.message.setData(err.getValidationError(errorName));
         }
         else {
             this.toggle.off();
@@ -231,13 +257,11 @@ class BasicItemEditor implements IFormValue{
     }
 
     public getName(): string{
-        return this.name;
+        return this.buildName;
     }
 }
 
 function buildForm(componentName: string, schema: JsonSchema, parentElement: HTMLElement, baseName?: string, ignoreExisting?: boolean): FormValues {
-    var formValues = new FormValues();
-
     if(ignoreExisting === undefined){
         ignoreExisting = false;
     }
@@ -245,6 +269,8 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
     if(baseName === undefined){
         baseName = "";
     }
+
+    var formValues = new FormValues();
     
     var dynamicInsertElement = domquery.first("[data-hr-form-end]", parentElement);
     if(dynamicInsertElement !== null){
@@ -265,7 +291,7 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
         }
 
         for(var key in props){
-            propArray.push(processProperty(props[key], baseNameWithSep + key, key));
+            propArray.push(processProperty(props[key], key, baseNameWithSep + key));
         }
 
         propArray.sort((a, b) =>{
@@ -309,11 +335,11 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
         if(bindings !== null){
             if(item.buildType === "arrayEditor"){
                 var resolvedItems = resolveRef(<RefNode>item.items, schema);
-                var editor = new ArrayEditor(item.buildName, bindings, resolvedItems);
+                var editor = new ArrayEditor(item.name, item.buildName, bindings, resolvedItems);
                 formValues.add(editor);
             }
             else{
-                formValues.add(new BasicItemEditor(item.buildName, bindings));
+                formValues.add(new BasicItemEditor(item.name, item.buildName, bindings));
             }
         }
 
@@ -364,11 +390,12 @@ function extractLabels(prop: JsonProperty): JsonLabel[]{
     return values;
 }
 
-function processProperty(prop: JsonProperty, name: string, defaultTitle: string): ProcessedJsonProperty{
+function processProperty(prop: JsonProperty, name: string, buildName: string): ProcessedJsonProperty{
     var processed = Object.create(prop);
-    processed.buildName = name;
+    processed.buildName = buildName;
+    processed.name = name;
     if(processed.title === undefined){ //Set title if it is not set
-        processed.title = defaultTitle;
+        processed.title = name;
     }
 
     if(prop["x-ui-order"] !== undefined){

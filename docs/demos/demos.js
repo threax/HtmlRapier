@@ -2484,7 +2484,9 @@ define("form-demo", ["require", "exports", "hr.controller"], function (require, 
                 middle: "You call that a middle name?",
                 address: "You call that an address?",
                 enumTest: "Not a valid value.",
-                multiChoice: "Not a valid multi choice."
+                multiChoice: "Not a valid multi choice.",
+                "complexArray[0].first": "You must include a first name",
+                "complexArray[1].middle": "You must include a middle name"
             };
         }
         /**
@@ -2497,6 +2499,7 @@ define("form-demo", ["require", "exports", "hr.controller"], function (require, 
          * Check to see if a named validation error exists.
          */
         FakeErrors.prototype.hasValidationError = function (name) {
+            //console.log("Checked for " + name);
             return this.getValidationError(name) !== undefined;
         };
         /**

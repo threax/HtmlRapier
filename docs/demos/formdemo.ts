@@ -16,7 +16,8 @@ class FakeErrors implements ValidationError {
         address: "You call that an address?",
         enumTest: "Not a valid value.",
         multiChoice: "Not a valid multi choice.",
-        "complexArray[0].Name": "You must include a name"
+        "complexArray[0].first": "You must include a first name",
+        "complexArray[1].middle": "You must include a middle name"
     }
 
     /**
@@ -30,6 +31,7 @@ class FakeErrors implements ValidationError {
      * Check to see if a named validation error exists.
      */
     hasValidationError(name: string): boolean{
+        //console.log("Checked for " + name);
         return this.getValidationError(name) !== undefined;
     }
 
