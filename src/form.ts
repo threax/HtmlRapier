@@ -12,6 +12,11 @@ export interface IForm<T> {
      */
     setError(err: ValidationError): void;
 
+    /**
+     * Clear any error messages on the form.
+     */
+    clearError(): void;
+
      /**
       * Set the data on the form.
       * @param data The data to set.
@@ -19,7 +24,7 @@ export interface IForm<T> {
     setData(data: T): void;
 
     /**
-     * Remove all data from the form.
+     * Remove all data and error messages from the form.
      */
     clear(): void;
 
@@ -62,6 +67,10 @@ export class NeedsSchemaForm<T> implements IForm<T> {
 
     public setError(err: ValidationError) {
         this.wrapped.setError(err);
+    }
+
+    public clearError(): void{
+        this.wrapped.clearError();
     }
 
     /**
@@ -118,6 +127,42 @@ export class NeedsSchemaForm<T> implements IForm<T> {
     }
 }
 
+class ClearingValidator implements ValidationError{
+    public name;
+    public message = "";
+    public stack?;
+
+    /**
+     * Get the validation error named name.
+     */
+    getValidationError(name: string): string | undefined{
+        return undefined;
+    }
+
+    /**
+     * Check to see if a named validation error exists.
+     */
+    hasValidationError(name: string): boolean{
+        return false;
+    }
+
+    /**
+     * Get all validation errors.
+     */
+    getValidationErrors() {
+        return {};
+    }
+
+    /**
+     * Determine if there are any validation errors.
+     */
+    hasValidationErrors() : boolean{
+        return true;
+    }
+}
+
+var sharedClearingValidator = new ClearingValidator();
+
 class Form<T> {
     private proto: T;
     private baseLevel: string = undefined;
@@ -133,6 +178,12 @@ class Form<T> {
             this.specialValues.setError(err);
         }
     }
+
+    public clearError(){
+        if(this.specialValues){
+            this.specialValues.setError(sharedClearingValidator);
+        }
+    }
     
     public setData(data: T) {
         formHelper.populate(this.form, data, this.baseLevel);
@@ -142,6 +193,7 @@ class Form<T> {
     }
 
     public clear() {
+        this.clearError();
         formHelper.populate(this.form, sharedClearer);
     }
 
@@ -177,6 +229,10 @@ class NullForm<T> implements IForm<T> {
 
     public setError(err: ValidationError) {
         
+    }
+
+    public clearError(): void{
+
     }
 
     public setData(data): void {

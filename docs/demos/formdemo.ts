@@ -86,6 +86,8 @@ class FormDemoController {
         this.form.setData(data);
         
         this.form.setError(new FakeErrors());
+
+        //this.form.clearError();
     }
 
     public submit(evt: Event): void{

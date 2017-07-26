@@ -1130,6 +1130,9 @@ define("hr.form", ["require", "exports", "hr.formhelper"], function (require, ex
         NeedsSchemaForm.prototype.setError = function (err) {
             this.wrapped.setError(err);
         };
+        NeedsSchemaForm.prototype.clearError = function () {
+            this.wrapped.clearError();
+        };
         /**
           * Set the data on the form.
           * @param data The data to set.
@@ -1181,6 +1184,37 @@ define("hr.form", ["require", "exports", "hr.formhelper"], function (require, ex
         return NeedsSchemaForm;
     }());
     exports.NeedsSchemaForm = NeedsSchemaForm;
+    var ClearingValidator = (function () {
+        function ClearingValidator() {
+            this.message = "";
+        }
+        /**
+         * Get the validation error named name.
+         */
+        ClearingValidator.prototype.getValidationError = function (name) {
+            return undefined;
+        };
+        /**
+         * Check to see if a named validation error exists.
+         */
+        ClearingValidator.prototype.hasValidationError = function (name) {
+            return false;
+        };
+        /**
+         * Get all validation errors.
+         */
+        ClearingValidator.prototype.getValidationErrors = function () {
+            return {};
+        };
+        /**
+         * Determine if there are any validation errors.
+         */
+        ClearingValidator.prototype.hasValidationErrors = function () {
+            return true;
+        };
+        return ClearingValidator;
+    }());
+    var sharedClearingValidator = new ClearingValidator();
     var Form = (function () {
         function Form(form) {
             this.form = form;
@@ -1191,6 +1225,11 @@ define("hr.form", ["require", "exports", "hr.formhelper"], function (require, ex
                 this.specialValues.setError(err);
             }
         };
+        Form.prototype.clearError = function () {
+            if (this.specialValues) {
+                this.specialValues.setError(sharedClearingValidator);
+            }
+        };
         Form.prototype.setData = function (data) {
             formHelper.populate(this.form, data, this.baseLevel);
             if (this.specialValues) {
@@ -1198,6 +1237,7 @@ define("hr.form", ["require", "exports", "hr.formhelper"], function (require, ex
             }
         };
         Form.prototype.clear = function () {
+            this.clearError();
             formHelper.populate(this.form, sharedClearer);
         };
         Form.prototype.getData = function () {
@@ -1227,6 +1267,8 @@ define("hr.form", ["require", "exports", "hr.formhelper"], function (require, ex
         function NullForm() {
         }
         NullForm.prototype.setError = function (err) {
+        };
+        NullForm.prototype.clearError = function () {
         };
         NullForm.prototype.setData = function (data) {
         };
@@ -2542,6 +2584,7 @@ define("form-demo", ["require", "exports", "hr.controller"], function (require, 
             data.stringArray = null; // ["first", "second"];
             this.form.setData(data);
             this.form.setError(new FakeErrors());
+            //this.form.clearError();
         }
         Object.defineProperty(FormDemoController, "InjectorArgs", {
             get: function () {
