@@ -31,7 +31,7 @@ class FakeErrors implements ValidationError {
      * Check to see if a named validation error exists.
      */
     hasValidationError(name: string): boolean{
-        //console.log("Checked for " + name);
+        //console.log("Checked for " + name); //Helps with debugging.
         return this.getValidationError(name) !== undefined;
     }
 

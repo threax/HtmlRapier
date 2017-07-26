@@ -235,7 +235,7 @@ class BasicItemEditor implements IFormValue{
 
     public setError(err: ValidationError, baseName: string) {
         var errorName = this.name;
-        if(baseName !== undefined){
+        if(baseName !== ""){
             errorName = baseName + "." + errorName;
         }
         if(err.hasValidationError(errorName)){

@@ -2499,7 +2499,7 @@ define("form-demo", ["require", "exports", "hr.controller"], function (require, 
          * Check to see if a named validation error exists.
          */
         FakeErrors.prototype.hasValidationError = function (name) {
-            //console.log("Checked for " + name);
+            //console.log("Checked for " + name); //Helps with debugging.
             return this.getValidationError(name) !== undefined;
         };
         /**
