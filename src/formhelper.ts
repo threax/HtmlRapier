@@ -2,6 +2,7 @@
 
 import * as domQuery from 'hr.domquery';
 import * as typeIds from 'hr.typeidentifiers';
+import { JsonSchema } from 'hr.schema';
 
 export function IsFormElement(element: Node): element is HTMLFormElement{
     return element && (element.nodeName === 'FORM' || element.nodeName == 'INPUT' || element.nodeName == 'TEXTAREA');
@@ -194,4 +195,22 @@ export class FormSerializer implements IFormSerializer{
     public populate(data: any, level?: string): void {
         populate(this.form, data, level);
     }
+}
+
+export interface IFormValues{
+    setData(data: any, serializer: IFormSerializer): void;
+
+    recoverData(data: any, serializer: IFormSerializer): void;
+}
+
+export type BuildFormFunc = (componentName: string, schema: JsonSchema, parentElement: HTMLElement) => IFormValues;
+
+var buildFormCb: BuildFormFunc;
+
+export function setBuildFormFunc(buildForm: BuildFormFunc){
+    buildFormCb = buildForm;
+}
+
+export function buildForm(componentName: string, schema: JsonSchema, parentElement: HTMLElement): IFormValues{
+    return buildFormCb(componentName, schema, parentElement);
 }

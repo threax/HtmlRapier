@@ -3,7 +3,7 @@
 "use strict";
 
 import * as formHelper from 'hr.formhelper';
-import * as formBuilder from 'hr.formbuilder';
+import { JsonSchema } from 'hr.schema';
 
 export interface IForm<T> {    
      /**
@@ -37,7 +37,7 @@ export interface IForm<T> {
      * property names to the name attribute on the elements. If you had a blank form
      * this would generate the whole thing for you from the schema.
      */
-    setSchema(schema: formBuilder.JsonSchema, componentName?: string): void;
+    setSchema(schema: JsonSchema, componentName?: string): void;
 }
 
 /**
@@ -98,7 +98,7 @@ export class NeedsSchemaForm<T> implements IForm<T> {
      * property names to the name attribute on the elements. If you had a blank form
      * this would generate the whole thing for you from the schema.
      */
-    public setSchema(schema: formBuilder.JsonSchema, componentName?: string): void {
+    public setSchema(schema: JsonSchema, componentName?: string): void {
         this.wrapped.setSchema(schema, componentName);
         if(this.waitingData !== undefined){
             this.wrapped.setData(this.waitingData);
@@ -111,7 +111,7 @@ export class NeedsSchemaForm<T> implements IForm<T> {
 class Form<T> {
     private proto: T;
     private baseLevel: string = undefined;
-    private specialValues: formBuilder.SpecialFormValues;
+    private specialValues: formHelper.IFormValues;
     private formSerializer: formHelper.IFormSerializer;
 
     constructor(private form: HTMLFormElement) {
@@ -144,11 +144,11 @@ class Form<T> {
         this.proto = proto;
     }
 
-    public setSchema(schema: formBuilder.JsonSchema, componentName?: string): void{
+    public setSchema(schema: JsonSchema, componentName?: string): void{
         if(componentName === undefined){
             componentName = "hr.defaultform";
         }
-        this.specialValues = formBuilder.buildForm(componentName, schema, this.form);
+        this.specialValues = formHelper.buildForm(componentName, schema, this.form);
         this.baseLevel = "";
         this.formSerializer = new formHelper.FormSerializer(this.form);
     }
@@ -175,7 +175,7 @@ class NullForm<T> implements IForm<T> {
 
     }
 
-    public setSchema(schema: formBuilder.JsonSchema, componentName?: string): void{
+    public setSchema(schema: JsonSchema, componentName?: string): void{
 
     }
 }

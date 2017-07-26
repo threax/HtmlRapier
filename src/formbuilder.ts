@@ -1,6 +1,6 @@
-"use strict";
-
 ///<amd-module name="hr.formbuilder"/>
+
+"use strict";
 
 import * as component from 'hr.components';
 import * as domquery from 'hr.domquery';
@@ -8,28 +8,9 @@ import { BindingCollection, PooledBindings } from 'hr.bindingcollection';
 import * as view from 'hr.view';
 import * as event from 'hr.eventdispatcher';
 import * as formHelper from 'hr.formhelper';
+import { JsonProperty, JsonLabel, JsonSchema } from 'hr.schema';
 
-export interface JsonSchema {
-    title?: string;
-    type?: string;
-    additionalProperties?: boolean;
-    properties?: JsonPropertyMap;
-}
-
-export interface JsonProperty {
-    title?: string;
-    type?: string | string[];
-    format?: string;
-    items?: JsonSchema;
-    "x-ui-order"?: number;
-    "x-ui-type"?: string;
-    "x-values"?: JsonLabel[]; //The source values if there are multiple
-    enum?: string[];
-    "x-enumNames"?: string[]; //The enum names, will be combined with enum to make values
-    "x-value"?: JsonLabel[]; //If there is a single value for the field, use that, can override default values for things like checkboxes
-}
-
-export interface ProcessedJsonProperty extends JsonProperty {
+interface ProcessedJsonProperty extends JsonProperty {
     buildName: string;
     buildType: string;
     buildOrder: number;
@@ -38,17 +19,10 @@ export interface ProcessedJsonProperty extends JsonProperty {
     buildValue?: string; //The value if there is a single value for this item, e.g. checkboxes
 }
 
-export type JsonPropertyMap = { [key: string]: JsonProperty };
+class FormValues implements formHelper.IFormValues {
+    private special: IFormValue[] = [];
 
-export interface JsonLabel {
-    label: string;
-    value: any;
-}
-
-export class SpecialFormValues{
-    private special: ISpecialFormValue[] = [];
-
-    public add(value: ISpecialFormValue): void {
+    public add(value: IFormValue): void {
         this.special.push(value);
     }
 
@@ -67,7 +41,7 @@ export class SpecialFormValues{
     }
 }
 
-export interface ISpecialFormValue{
+interface IFormValue {
     getName(): string;
 
     getData(serializer: formHelper.IFormSerializer): any;
@@ -139,7 +113,7 @@ class ArrayEditorRow {
     }
 }
 
-class ArrayEditor implements ISpecialFormValue {
+class ArrayEditor implements IFormValue {
     private itemsView: view.IView<JsonSchema>;
     private pooledRows: ArrayEditorRow[] = [];
     private rows: ArrayEditorRow[] = [];
@@ -238,12 +212,12 @@ function resolveRef(node: RefNode, schema: JsonSchema): any{
     return node;
 }
 
-export function buildForm(componentName: string, schema: JsonSchema, parentElement: HTMLElement, baseName?: string, ignoreExisting?: boolean): SpecialFormValues {
+function buildForm(componentName: string, schema: JsonSchema, parentElement: HTMLElement, baseName?: string, ignoreExisting?: boolean): FormValues {
     ////Clear existing elements
     //while (formElement.lastChild) {
     //    formElement.removeChild(formElement.lastChild);
     //}
-    var specialValues = new SpecialFormValues();
+    var specialValues = new FormValues();
 
     if(ignoreExisting === undefined){
         ignoreExisting = false;
@@ -281,49 +255,65 @@ export function buildForm(componentName: string, schema: JsonSchema, parentEleme
     }
 
     for(var i = 0; i < propArray.length; ++i){
-            var item = propArray[i];
-            var existing = domquery.first('[name=' + item.buildName + ']', parentElement);
-            if(ignoreExisting || existing === null){
-                //Create component if it is null
-                var bindings = component.one(componentName, item, parentElement, dynamicInsertElement, undefined, (i) => {
-                    return i.buildType;
-                });
+        var item = propArray[i];
+        var existing = <HTMLElement>domquery.first('[name=' + item.buildName + ']', parentElement);
+        var bindings: BindingCollection = null;
+        if(ignoreExisting || existing === null){
+            //Create component if it is null
+            bindings = component.one(componentName, item, parentElement, dynamicInsertElement, undefined, (i) => {
+                return i.buildType;
+            });
 
-                //Refresh existing, should be found now, when doing this always grab the last match.
-                var elements = domquery.all('[name=' + item.buildName + ']', parentElement);
-                if(elements.length > 0){
-                    existing = elements[elements.length - 1];
+            //Refresh existing, should be found now, when doing this always grab the last match.
+            var elements = domquery.all('[name=' + item.buildName + ']', parentElement);
+            if(elements.length > 0){
+                existing = elements[elements.length - 1];
+            }
+            else{
+                existing = null;
+            }
+        }
+        else{
+            //Existing element, try to create a binding collection for it
+            //Walk up element parents trying to find one with a data-hr-form-start attribute on it.
+            var bindParent = existing;
+            while(bindings === null && bindParent !== null && bindParent !== parentElement){
+                if(bindParent.getAttribute("data-hr-form-start")){
+                    bindings = new BindingCollection(bindParent);
                 }
                 else{
-                    existing = null;
-                }
-
-                if(item.buildType === "arrayEditor"){
-                    var resolvedItems = resolveRef(<RefNode>item.items, schema);
-                    var editor = new ArrayEditor(item.buildName, bindings, resolvedItems);
-                    specialValues.add(editor);
-                }
-            }
-
-            //If this is a child form, mark the element as a child so the form serializer will ignore it
-            if(IsElement(existing)){
-                existing.setAttribute("data-hr-form-level", baseName);
-            }
-
-            //If there are values defined for the element, put them on the page, this works for both
-            //predefined and generated elements, which allows you to have predefined selects that can have dynamic values
-            if(item.buildValues !== undefined){
-                if(IsSelectElement(existing)){
-                    for(var q = 0; q < item.buildValues.length; ++q){
-                        var current = item.buildValues[q];
-                        var option = document.createElement("option");
-                        option.text = current.label;
-                        option.value = current.value;
-                        existing.options.add(option);
-                    }
+                    bindParent = bindParent.parentElement;
                 }
             }
         }
+
+        if(bindings !== null){
+            if(item.buildType === "arrayEditor"){
+                var resolvedItems = resolveRef(<RefNode>item.items, schema);
+                var editor = new ArrayEditor(item.buildName, bindings, resolvedItems);
+                specialValues.add(editor);
+            }
+        }
+
+        //If this is a child form, mark the element as a child so the form serializer will ignore it
+        if(IsElement(existing)){
+            existing.setAttribute("data-hr-form-level", baseName);
+        }
+
+        //If there are values defined for the element, put them on the page, this works for both
+        //predefined and generated elements, which allows you to have predefined selects that can have dynamic values
+        if(item.buildValues !== undefined){
+            if(IsSelectElement(existing)){
+                for(var q = 0; q < item.buildValues.length; ++q){
+                    var current = item.buildValues[q];
+                    var option = document.createElement("option");
+                    option.text = current.label;
+                    option.value = current.value;
+                    existing.options.add(option);
+                }
+            }
+        }
+    }
 
     return specialValues;
 }
@@ -447,3 +437,6 @@ function getPropertyType(prop: JsonProperty) {
     }
     return "null";
 }
+
+//Register form build function
+formHelper.setBuildFormFunc(buildForm);

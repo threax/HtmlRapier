@@ -3,7 +3,8 @@
     "pathBase": "src",
     "outDir": "lib",
     "copy": [
-      "src/polyfill.js"
+      "src/polyfill.js",
+      "src/hr-run.js"
     ]
   },
   {
