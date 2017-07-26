@@ -6,9 +6,10 @@ import * as component from 'hr.components';
 import * as domquery from 'hr.domquery';
 import { BindingCollection, PooledBindings } from 'hr.bindingcollection';
 import * as view from 'hr.view';
+import * as toggle from 'hr.toggles';
 import * as event from 'hr.eventdispatcher';
 import * as formHelper from 'hr.formhelper';
-import { JsonProperty, JsonLabel, JsonSchema } from 'hr.schema';
+import { JsonProperty, JsonLabel, JsonSchema, resolveRef, RefNode } from 'hr.schema';
 
 interface ProcessedJsonProperty extends JsonProperty {
     buildName: string;
@@ -188,36 +189,29 @@ class ArrayEditor implements IFormValue {
     }
 }
 
-interface RefNode{
-    $ref?: string;
-}
+class BasicItemEditor implements IFormValue{
+    private toggle: toggle.OnOffToggle;
 
-/**
- * Find the ref and return it for node if it exists.
- * @param node The node to expand
- */
-function resolveRef(node: RefNode, schema: JsonSchema): any{
-    if(node.$ref !== undefined){
-        var walker = schema;
-        var refs = node.$ref.split('/');
-        for(var i = 1; i < refs.length; ++i){
-            walker = walker[refs[i]];
-            if(walker === undefined){
-                throw new Error("Cannot find ref '" + node.$ref + "' in schema.")
-            }
-        }
-
-        return walker;
+    constructor(private name: string, bindings: BindingCollection){
+        this.toggle = bindings.getToggle(name + "Error");
+        this.toggle.on();
     }
-    return node;
+
+    public getData(serializer: formHelper.IFormSerializer): any {
+        //Does nothing, relies on the normal form serializer function
+    }
+
+    public setData(data: any, serializer: formHelper.IFormSerializer) {
+        //Does nothing, relies on the normal form serializer function
+    }
+
+    public getName(): string{
+        return this.name;
+    }
 }
 
 function buildForm(componentName: string, schema: JsonSchema, parentElement: HTMLElement, baseName?: string, ignoreExisting?: boolean): FormValues {
-    ////Clear existing elements
-    //while (formElement.lastChild) {
-    //    formElement.removeChild(formElement.lastChild);
-    //}
-    var specialValues = new FormValues();
+    var formValues = new FormValues();
 
     if(ignoreExisting === undefined){
         ignoreExisting = false;
@@ -278,7 +272,7 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
             //Walk up element parents trying to find one with a data-hr-form-start attribute on it.
             var bindParent = existing;
             while(bindings === null && bindParent !== null && bindParent !== parentElement){
-                if(bindParent.getAttribute("data-hr-form-start")){
+                if(bindParent.hasAttribute("data-hr-form-start")){
                     bindings = new BindingCollection(bindParent);
                 }
                 else{
@@ -291,7 +285,10 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
             if(item.buildType === "arrayEditor"){
                 var resolvedItems = resolveRef(<RefNode>item.items, schema);
                 var editor = new ArrayEditor(item.buildName, bindings, resolvedItems);
-                specialValues.add(editor);
+                formValues.add(editor);
+            }
+            else{
+                formValues.add(new BasicItemEditor(item.buildName, bindings));
             }
         }
 
@@ -315,7 +312,7 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
         }
     }
 
-    return specialValues;
+    return formValues;
 }
 
 function IsElement(element: Node): element is HTMLElement{

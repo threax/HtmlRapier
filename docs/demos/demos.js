@@ -894,6 +894,352 @@ define("hr.toggles", ["require", "exports", "tslib", "hr.typeidentifiers", "hr.e
     }
     exports.build = build;
 });
+///<amd-module name="hr.schema"/>
+define("hr.schema", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    /**
+     * Find the ref and return it for node if it exists.
+     * @param node The node to expand
+     */
+    function resolveRef(node, schema) {
+        if (node.$ref !== undefined) {
+            var walker = schema;
+            var refs = node.$ref.split('/');
+            for (var i = 1; i < refs.length; ++i) {
+                walker = walker[refs[i]];
+                if (walker === undefined) {
+                    throw new Error("Cannot find ref '" + node.$ref + "' in schema.");
+                }
+            }
+            return walker;
+        }
+        return node;
+    }
+    exports.resolveRef = resolveRef;
+});
+///<amd-module name="hr.formhelper"/>
+define("hr.formhelper", ["require", "exports", "hr.domquery", "hr.typeidentifiers"], function (require, exports, domQuery, typeIds) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function IsFormElement(element) {
+        return element && (element.nodeName === 'FORM' || element.nodeName == 'INPUT' || element.nodeName == 'TEXTAREA');
+    }
+    exports.IsFormElement = IsFormElement;
+    function addValue(q, name, value, level) {
+        name = extractLevelName(level, name);
+        if (q[name] === undefined) {
+            q[name] = value;
+        }
+        else if (!typeIds.isArray(q[name])) {
+            var tmp = q[name];
+            q[name] = [tmp, value];
+        }
+        else {
+            q[name].push(value);
+        }
+    }
+    function allowWrite(element, level) {
+        return level === undefined || element.getAttribute('data-hr-form-level') === level;
+    }
+    /**
+     * Serialze a form to a javascript object
+     * @param form - A selector or form element for the form to serialize.
+     * @returns - The object that represents the form contents as an object.
+     */
+    function serialize(form, proto, level) {
+        //This is from https://code.google.com/archive/p/form-serialize/downloads
+        //Modified to return an object instead of a query string
+        var formElements;
+        if (IsFormElement(form)) {
+            formElements = form.elements;
+        }
+        else {
+            formElements = domQuery.all("[name]", form); //All elements with a name, they will be filtered by what is supported below
+        }
+        var i, j, q = Object.create(proto || null);
+        var elementsLength = formElements.length;
+        for (i = 0; i < elementsLength; ++i) {
+            var element = formElements[i];
+            if (element.name === "" || !allowWrite(element, level)) {
+                continue;
+            }
+            switch (element.nodeName) {
+                case 'INPUT':
+                    switch (element.type) {
+                        case 'file':
+                            addValue(q, element.name, element.files, level);
+                            break;
+                        case 'checkbox':
+                        case 'radio':
+                            if (element.checked) {
+                                addValue(q, element.name, element.value, level);
+                            }
+                            break;
+                        default:
+                            addValue(q, element.name, element.value, level);
+                            break;
+                    }
+                    break;
+                case 'TEXTAREA':
+                    addValue(q, element.name, element.value, level);
+                    break;
+                case 'SELECT':
+                    switch (element.type) {
+                        case 'select-one':
+                            addValue(q, element.name, element.value, level);
+                            break;
+                        case 'select-multiple':
+                            var selected = [];
+                            for (j = element.options.length - 1; j >= 0; j = j - 1) {
+                                if (element.options[j].selected) {
+                                    selected.push(element.options[j].value);
+                                }
+                            }
+                            addValue(q, element.name, selected, level);
+                            break;
+                    }
+                    break;
+                case 'BUTTON':
+                    switch (element.type) {
+                        case 'reset':
+                        case 'submit':
+                        case 'button':
+                            addValue(q, element.name, element.value, level);
+                            break;
+                    }
+                    break;
+            }
+        }
+        return q;
+    }
+    exports.serialize = serialize;
+    var DataType;
+    (function (DataType) {
+        DataType[DataType["Object"] = 0] = "Object";
+        DataType[DataType["Function"] = 1] = "Function";
+    })(DataType || (DataType = {}));
+    function containsCoerced(items, search) {
+        for (var i = 0; i < items.length; ++i) {
+            if (items[i] == search) {
+                return true;
+            }
+        }
+        return false;
+    }
+    function extractLevelName(level, name) {
+        if (level !== undefined && level !== null && level.length > 0) {
+            name = name.substring(level.length + 1); //Account for delimiter, but we don't care what it is
+        }
+        return name;
+    }
+    /**
+     * Populate a form with data.
+     * @param form - The form to populate or a query string for the form.
+     * @param data - The data to bind to the form, form name attributes will be mapped to the keys in the object.
+     */
+    function populate(form, data, level) {
+        var formElement = domQuery.first(form);
+        var nameAttrs = domQuery.all('[name]', formElement);
+        var getData;
+        var dataType;
+        if (typeIds.isObject(data)) {
+            dataType = DataType.Object;
+        }
+        else if (typeIds.isFunction(data)) {
+            dataType = DataType.Function;
+        }
+        for (var i = 0; i < nameAttrs.length; ++i) {
+            var element = nameAttrs[i];
+            if (allowWrite(element, level)) {
+                var itemData;
+                var dataName = extractLevelName(level, element.getAttribute('name'));
+                switch (dataType) {
+                    case DataType.Object:
+                        itemData = data[dataName];
+                        break;
+                    case DataType.Function:
+                        itemData = data(dataName);
+                        break;
+                }
+                if (itemData === undefined) {
+                    itemData = "";
+                }
+                switch (element.type) {
+                    case 'checkbox':
+                        element.checked = itemData;
+                        break;
+                    case 'select-multiple':
+                        var options = element.options;
+                        for (var j = options.length - 1; j >= 0; j = j - 1) {
+                            options[j].selected = containsCoerced(itemData, options[j].value);
+                        }
+                        break;
+                    default:
+                        element.value = itemData;
+                        break;
+                }
+            }
+        }
+    }
+    exports.populate = populate;
+    var FormSerializer = (function () {
+        function FormSerializer(form) {
+            this.form = form;
+        }
+        FormSerializer.prototype.serialize = function (level) {
+            return serialize(this.form, undefined, level);
+        };
+        FormSerializer.prototype.populate = function (data, level) {
+            populate(this.form, data, level);
+        };
+        return FormSerializer;
+    }());
+    exports.FormSerializer = FormSerializer;
+    var buildFormCb;
+    function setBuildFormFunc(buildForm) {
+        buildFormCb = buildForm;
+    }
+    exports.setBuildFormFunc = setBuildFormFunc;
+    function buildForm(componentName, schema, parentElement) {
+        return buildFormCb(componentName, schema, parentElement);
+    }
+    exports.buildForm = buildForm;
+});
+///<amd-module name="hr.form"/>
+define("hr.form", ["require", "exports", "hr.formhelper"], function (require, exports, formHelper) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    /**
+     * This form decorator will ensure that a schema is loaded before any data is added to the
+     * form. You can call setData and setSchema in any order you want, but the data will not
+     * be set until the schema is loaded. Just wrap your real IForm in this decorator to get this
+     * feature.
+     */
+    var NeedsSchemaForm = (function () {
+        function NeedsSchemaForm(wrapped) {
+            this.wrapped = wrapped;
+            this.loadedSchema = false;
+        }
+        /**
+          * Set the data on the form.
+          * @param data The data to set.
+          */
+        NeedsSchemaForm.prototype.setData = function (data) {
+            if (this.loadedSchema) {
+                this.wrapped.setData(data);
+            }
+            else {
+                this.waitingData = data;
+            }
+        };
+        /**
+         * Remove all data from the form.
+         */
+        NeedsSchemaForm.prototype.clear = function () {
+            this.wrapped.clear();
+        };
+        /**
+         * Get the data on the form. If you set a prototype
+         * it will be used as the prototype of the returned
+         * object.
+         */
+        NeedsSchemaForm.prototype.getData = function () {
+            return this.wrapped.getData();
+        };
+        /**
+         * Set the prototype object to use when getting the
+         * form data with getData.
+         * @param proto The prototype object.
+         */
+        NeedsSchemaForm.prototype.setPrototype = function (proto) {
+            this.wrapped.setPrototype(proto);
+        };
+        /**
+         * Set the schema for this form. This will add any properties found in the
+         * schema that you did not already define on the form. It will match the form
+         * property names to the name attribute on the elements. If you had a blank form
+         * this would generate the whole thing for you from the schema.
+         */
+        NeedsSchemaForm.prototype.setSchema = function (schema, componentName) {
+            this.wrapped.setSchema(schema, componentName);
+            if (this.waitingData !== undefined) {
+                this.wrapped.setData(this.waitingData);
+                this.waitingData = undefined;
+            }
+            this.loadedSchema = true;
+        };
+        return NeedsSchemaForm;
+    }());
+    exports.NeedsSchemaForm = NeedsSchemaForm;
+    var Form = (function () {
+        function Form(form) {
+            this.form = form;
+            this.baseLevel = undefined;
+        }
+        Form.prototype.setData = function (data) {
+            formHelper.populate(this.form, data, this.baseLevel);
+            if (this.specialValues) {
+                this.specialValues.setData(data, this.formSerializer);
+            }
+        };
+        Form.prototype.clear = function () {
+            formHelper.populate(this.form, sharedClearer);
+        };
+        Form.prototype.getData = function () {
+            var data = formHelper.serialize(this.form, this.proto, this.baseLevel);
+            if (this.specialValues) {
+                this.specialValues.recoverData(data, this.formSerializer);
+            }
+            for (var key in data) {
+                return data;
+            }
+            return null; //Return null if the data returned has no keys in it, which means it is empty.
+        };
+        Form.prototype.setPrototype = function (proto) {
+            this.proto = proto;
+        };
+        Form.prototype.setSchema = function (schema, componentName) {
+            if (componentName === undefined) {
+                componentName = "hr.defaultform";
+            }
+            this.specialValues = formHelper.buildForm(componentName, schema, this.form);
+            this.baseLevel = "";
+            this.formSerializer = new formHelper.FormSerializer(this.form);
+        };
+        return Form;
+    }());
+    var NullForm = (function () {
+        function NullForm() {
+        }
+        NullForm.prototype.setData = function (data) {
+        };
+        NullForm.prototype.clear = function () {
+        };
+        NullForm.prototype.getData = function () {
+            return null;
+        };
+        NullForm.prototype.setPrototype = function (proto) {
+        };
+        NullForm.prototype.setSchema = function (schema, componentName) {
+        };
+        return NullForm;
+    }());
+    /**
+     * Create a new form element.
+     * @param element
+     */
+    function build(element) {
+        if (formHelper.IsFormElement(element)) {
+            return new Form(element);
+        }
+        return new NullForm();
+    }
+    exports.build = build;
+    function sharedClearer(i) {
+        return "";
+    }
+});
 ///<amd-module name="hr.components"/>
 define("hr.components", ["require", "exports", "hr.typeidentifiers", "hr.domquery"], function (require, exports, typeId, domquery) {
     "use strict";
@@ -908,6 +1254,10 @@ define("hr.components", ["require", "exports", "hr.typeidentifiers", "hr.domquer
         factory[name] = createFunc;
     }
     exports.register = register;
+    function isDefined(name) {
+        return factory[name] !== undefined;
+    }
+    exports.isDefined = isDefined;
     /**
      * Get the default vaule if variant is undefined.
      * @returns variant default value (null)
@@ -1284,569 +1634,6 @@ define("hr.view", ["require", "exports", "hr.textstream", "hr.components", "hr.t
     function sharedClearer(i) {
         return "";
     }
-});
-define("node_modules/HtmlRapier/src/formbuilder", ["require", "exports", "hr.components", "hr.domquery", "hr.eventdispatcher"], function (require, exports, component, domquery, event) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var SpecialFormValues = (function () {
-        function SpecialFormValues() {
-            this.special = [];
-        }
-        SpecialFormValues.prototype.add = function (value) {
-            this.special.push(value);
-        };
-        SpecialFormValues.prototype.setData = function (data, serializer) {
-            for (var i = 0; i < this.special.length; ++i) {
-                this.special[i].setData(data, serializer);
-            }
-        };
-        SpecialFormValues.prototype.recoverData = function (data, serializer) {
-            for (var i = 0; i < this.special.length; ++i) {
-                var item = this.special[i];
-                var subData = item.getData(serializer);
-                data[item.getName()] = subData;
-            }
-        };
-        return SpecialFormValues;
-    }());
-    exports.SpecialFormValues = SpecialFormValues;
-    var indexMax = 2147483647; //Sticking with 32 bit;
-    var InfiniteIndex = (function () {
-        function InfiniteIndex() {
-            this.num = 0;
-            this.base = "";
-        }
-        InfiniteIndex.prototype.getNext = function () {
-            ++this.num;
-            if (this.num === indexMax) {
-                this.base += "b"; //Each time we hit index max we just add a 'b' to the base
-                this.num = 0;
-            }
-            return this.base + this.num;
-        };
-        return InfiniteIndex;
-    }());
-    var ArrayEditorRow = (function () {
-        function ArrayEditorRow(bindings, schema, name) {
-            this.bindings = bindings;
-            this.name = name;
-            this.removed = new event.ActionEventDispatcher();
-            buildForm('hr.defaultform', schema, this.bindings.rootElement, this.name, true);
-            bindings.setListener(this);
-        }
-        Object.defineProperty(ArrayEditorRow.prototype, "onRemoved", {
-            get: function () {
-                return this.removed.modifier;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        ArrayEditorRow.prototype.remove = function (evt) {
-            if (evt) {
-                evt.preventDefault();
-            }
-            this.pooled = this.bindings.pool();
-            this.removed.fire(this);
-        };
-        ArrayEditorRow.prototype.restore = function () {
-            if (this.pooled) {
-                this.pooled.restore(null);
-            }
-        };
-        ArrayEditorRow.prototype.getData = function (serializer) {
-            return serializer.serialize(this.name);
-        };
-        ArrayEditorRow.prototype.setData = function (data, serializer) {
-            serializer.populate(data, this.name);
-        };
-        return ArrayEditorRow;
-    }());
-    var ArrayEditor = (function () {
-        function ArrayEditor(name, bindings, schema) {
-            this.name = name;
-            this.schema = schema;
-            this.pooledRows = [];
-            this.rows = [];
-            this.indexGen = new InfiniteIndex();
-            this.itemsView = bindings.getView("items");
-            bindings.setListener(this);
-            this.isSimple = schema.type !== "object";
-        }
-        ArrayEditor.prototype.add = function (evt) {
-            evt.preventDefault();
-            this.addRow();
-        };
-        ArrayEditor.prototype.addRow = function () {
-            var _this = this;
-            if (this.pooledRows.length == 0) {
-                this.itemsView.appendData(this.schema, function (bindings, data) {
-                    var row = new ArrayEditorRow(bindings, data, _this.name + '-' + _this.indexGen.getNext());
-                    row.onRemoved.add(function (r) {
-                        _this.rows.splice(_this.rows.indexOf(r), 1); //It will always be there
-                        _this.pooledRows.push(r);
-                    });
-                    _this.rows.push(row);
-                });
-            }
-            else {
-                var row = this.pooledRows.pop();
-                row.restore();
-                this.rows.push(row);
-            }
-        };
-        ArrayEditor.prototype.getData = function (serializer) {
-            var items = [];
-            for (var i = 0; i < this.rows.length; ++i) {
-                var data = this.rows[i].getData(serializer);
-                if (this.isSimple) {
-                    data = data[""];
-                }
-                items.push(data);
-            }
-            return items;
-        };
-        ArrayEditor.prototype.setData = function (data, serializer) {
-            var itemData = data[this.name];
-            var i = 0;
-            if (itemData) {
-                for (; i < itemData.length; ++i) {
-                    if (i >= this.rows.length) {
-                        this.addRow();
-                    }
-                    var rowData = itemData[i];
-                    if (this.isSimple) {
-                        rowData = {
-                            "": rowData
-                        };
-                    }
-                    this.rows[i].setData(rowData, serializer);
-                }
-            }
-            for (; i < this.rows.length;) {
-                this.rows[i].remove();
-            }
-        };
-        ArrayEditor.prototype.getName = function () {
-            return this.name;
-        };
-        return ArrayEditor;
-    }());
-    function buildForm(componentName, schema, parentElement, baseName, ignoreExisting) {
-        ////Clear existing elements
-        //while (formElement.lastChild) {
-        //    formElement.removeChild(formElement.lastChild);
-        //}
-        var specialValues = new SpecialFormValues();
-        if (ignoreExisting === undefined) {
-            ignoreExisting = false;
-        }
-        if (baseName === undefined) {
-            baseName = "";
-        }
-        var dynamicInsertElement = domquery.first("[data-hr-form-end]", parentElement);
-        var propArray = [];
-        var props = schema.properties;
-        if (props === undefined) {
-            //No props, add the schema itself as a property
-            propArray.push(processProperty(schema, baseName, baseName));
-        }
-        else {
-            var baseNameWithSep = baseName;
-            if (baseNameWithSep !== "") {
-                baseNameWithSep = baseNameWithSep + '-';
-            }
-            for (var key in props) {
-                propArray.push(processProperty(props[key], baseNameWithSep + key, key));
-            }
-            propArray.sort(function (a, b) {
-                return a.buildOrder - b.buildOrder;
-            });
-        }
-        for (var i = 0; i < propArray.length; ++i) {
-            var item = propArray[i];
-            var existing = domquery.first('[name=' + item.buildName + ']', parentElement);
-            if (ignoreExisting || existing === null) {
-                //Create component if it is null
-                var bindings = component.one(componentName, item, parentElement, dynamicInsertElement, undefined, function (i) {
-                    return i.buildType;
-                });
-                //Refresh existing, should be found now, when doing this always grab the last match.
-                var elements = domquery.all('[name=' + item.buildName + ']', parentElement);
-                if (elements.length > 0) {
-                    existing = elements[elements.length - 1];
-                }
-                else {
-                    existing = null;
-                }
-                if (item.buildType === "arrayEditor") {
-                    var editor = new ArrayEditor(item.buildName, bindings, item.items);
-                    specialValues.add(editor);
-                }
-            }
-            //If this is a child form, mark the element as a child so the form serializer will ignore it
-            if (IsElement(existing)) {
-                existing.setAttribute("data-hr-form-level", baseName);
-            }
-            //If there are values defined for the element, put them on the page, this works for both
-            //predefined and generated elements, which allows you to have predefined selects that can have dynamic values
-            if (item.buildValues !== undefined) {
-                if (IsSelectElement(existing)) {
-                    for (var q = 0; q < item.buildValues.length; ++q) {
-                        var current = item.buildValues[q];
-                        var option = document.createElement("option");
-                        option.text = current.label;
-                        option.value = current.value;
-                        existing.options.add(option);
-                    }
-                }
-            }
-        }
-        return specialValues;
-    }
-    exports.buildForm = buildForm;
-    function IsElement(element) {
-        return element && (element.nodeName !== undefined);
-    }
-    function IsSelectElement(element) {
-        return element && (element.nodeName === 'SELECT');
-    }
-    function extractLabels(prop) {
-        var values = [];
-        var theEnum = prop.enum;
-        var enumNames = theEnum;
-        if (prop["x-enumNames"] !== undefined) {
-            enumNames = prop["x-enumNames"];
-        }
-        for (var i = 0; i < theEnum.length; ++i) {
-            values.push({
-                label: enumNames[i],
-                value: theEnum[i]
-            });
-        }
-        return values;
-    }
-    function processProperty(prop, name, defaultTitle) {
-        var processed = Object.create(prop);
-        processed.buildName = name;
-        if (processed.title === undefined) {
-            processed.title = defaultTitle;
-        }
-        if (prop["x-ui-order"] !== undefined) {
-            processed.buildOrder = prop["x-ui-order"];
-        }
-        else {
-            processed.buildOrder = Number.MAX_VALUE;
-        }
-        //Set this build type to what has been passed in, this will be processed further below
-        processed.buildType = getPropertyType(prop).toLowerCase();
-        if (prop["x-values"] !== undefined) {
-            processed.buildValues = prop["x-values"];
-        }
-        else if (prop.enum !== undefined) {
-            processed.buildValues = extractLabels(prop);
-        }
-        //Look for collections, anything defined as an array or that has x-values defined
-        if (processed.buildType === 'array') {
-            if (processed.buildValues !== undefined) {
-                //Only supports checkbox and multiselect ui types. Checkboxes have to be requested.
-                if (prop["x-ui-type"] === "checkbox") {
-                    //Nothing for checkboxes yet, just be a basic multiselect until they are implemented
-                    processed.buildType = "multiselect";
-                }
-                else {
-                    processed.buildType = "multiselect";
-                    processed.size = processed.buildValues.length;
-                    if (processed.size > 15) {
-                        processed.size = 15;
-                    }
-                }
-            }
-            else {
-                //Array of complex objects, since values are not provided
-                processed.buildType = "arrayEditor";
-            }
-        }
-        else {
-            if (processed.buildValues !== undefined) {
-                if (prop["x-ui-type"] !== undefined) {
-                    processed.buildType = prop["x-ui-type"];
-                }
-                else {
-                    processed.buildType = "select";
-                }
-            }
-            else {
-                //Regular type, no options, derive html type
-                if (prop["x-ui-type"] !== undefined) {
-                    processed.buildType = prop["x-ui-type"];
-                }
-                else {
-                    switch (processed.buildType) {
-                        case 'integer':
-                            processed.buildType = 'number';
-                            break;
-                        case 'boolean':
-                            processed.buildType = 'checkbox';
-                            break;
-                    }
-                }
-            }
-        }
-        return processed;
-    }
-    function getPropertyType(prop) {
-        if (Array.isArray(prop.type)) {
-            for (var j = 0; j < prop.type.length; ++j) {
-                if (prop.type[j] !== "null") {
-                    return prop.type[j];
-                }
-            }
-        }
-        else {
-            return prop.type;
-        }
-        return "null";
-    }
-});
-///<amd-module name="hr.form"/>
-define("hr.form", ["require", "exports", "hr.domquery", "hr.typeidentifiers", "node_modules/HtmlRapier/src/formbuilder"], function (require, exports, domQuery, typeIds, formBuilder) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    var Form = (function () {
-        function Form(form) {
-            this.form = form;
-            this.baseLevel = undefined;
-        }
-        Form.prototype.setData = function (data) {
-            populate(this.form, data, this.baseLevel);
-            if (this.specialValues) {
-                this.specialValues.setData(data, this.formSerializer);
-            }
-        };
-        Form.prototype.clear = function () {
-            populate(this.form, sharedClearer);
-        };
-        Form.prototype.getData = function () {
-            var data = serialize(this.form, this.proto, this.baseLevel);
-            if (this.specialValues) {
-                this.specialValues.recoverData(data, this.formSerializer);
-            }
-            return data;
-        };
-        Form.prototype.setPrototype = function (proto) {
-            this.proto = proto;
-        };
-        Form.prototype.setSchema = function (schema, componentName) {
-            if (componentName === undefined) {
-                componentName = "hr.defaultform";
-            }
-            this.specialValues = formBuilder.buildForm(componentName, schema, this.form);
-            this.baseLevel = "";
-            this.formSerializer = new Serializer(this.form);
-        };
-        return Form;
-    }());
-    var NullForm = (function () {
-        function NullForm() {
-        }
-        NullForm.prototype.setData = function (data) {
-        };
-        NullForm.prototype.clear = function () {
-        };
-        NullForm.prototype.getData = function () {
-            return null;
-        };
-        NullForm.prototype.setPrototype = function (proto) {
-        };
-        NullForm.prototype.setSchema = function (schema, componentName) {
-        };
-        return NullForm;
-    }());
-    /**
-     * Create a new form element.
-     * @param element
-     */
-    function build(element) {
-        if (IsFormElement(element)) {
-            return new Form(element);
-        }
-        return new NullForm();
-    }
-    exports.build = build;
-    function IsFormElement(element) {
-        return element && (element.nodeName === 'FORM' || element.nodeName == 'INPUT' || element.nodeName == 'TEXTAREA');
-    }
-    function addValue(q, name, value, level) {
-        name = extractLevelName(level, name);
-        if (q[name] === undefined) {
-            q[name] = value;
-        }
-        else if (!typeIds.isArray(q[name])) {
-            var tmp = q[name];
-            q[name] = [tmp, value];
-        }
-        else {
-            q[name].push(value);
-        }
-    }
-    function allowWrite(element, level) {
-        return level === undefined || element.getAttribute('data-hr-form-level') === level;
-    }
-    /**
-     * Serialze a form to a javascript object
-     * @param form - A selector or form element for the form to serialize.
-     * @returns - The object that represents the form contents as an object.
-     */
-    function serialize(form, proto, level) {
-        //This is from https://code.google.com/archive/p/form-serialize/downloads
-        //Modified to return an object instead of a query string
-        //form = domQuery.first(form);
-        if (!IsFormElement(form)) {
-            return;
-        }
-        var i, j, q = Object.create(proto || null);
-        var elementsLength = form.elements.length;
-        for (i = 0; i < elementsLength; ++i) {
-            var element = form.elements[i];
-            if (element.name === "" || !allowWrite(element, level)) {
-                continue;
-            }
-            switch (element.nodeName) {
-                case 'INPUT':
-                    switch (element.type) {
-                        case 'text':
-                        case 'hidden':
-                        case 'password':
-                        case 'button':
-                        case 'reset':
-                        case 'date':
-                        case 'submit':
-                            addValue(q, element.name, element.value, level);
-                            break;
-                        case 'file':
-                            addValue(q, element.name, element.files, level);
-                            break;
-                        case 'checkbox':
-                        case 'radio':
-                            if (element.checked) {
-                                addValue(q, element.name, element.value, level);
-                            }
-                            break;
-                    }
-                    break;
-                case 'TEXTAREA':
-                    addValue(q, element.name, element.value, level);
-                    break;
-                case 'SELECT':
-                    switch (element.type) {
-                        case 'select-one':
-                            addValue(q, element.name, element.value, level);
-                            break;
-                        case 'select-multiple':
-                            for (j = element.options.length - 1; j >= 0; j = j - 1) {
-                                if (element.options[j].selected) {
-                                    addValue(q, element.name, element.options[j].value, level);
-                                }
-                            }
-                            break;
-                    }
-                    break;
-                case 'BUTTON':
-                    switch (element.type) {
-                        case 'reset':
-                        case 'submit':
-                        case 'button':
-                            addValue(q, element.name, element.value, level);
-                            break;
-                    }
-                    break;
-            }
-        }
-        return q;
-    }
-    var DataType;
-    (function (DataType) {
-        DataType[DataType["Object"] = 0] = "Object";
-        DataType[DataType["Function"] = 1] = "Function";
-    })(DataType || (DataType = {}));
-    function containsCoerced(items, search) {
-        for (var i = 0; i < items.length; ++i) {
-            if (items[i] == search) {
-                return true;
-            }
-        }
-        return false;
-    }
-    function extractLevelName(level, name) {
-        if (level !== undefined && level !== null && level.length > 0) {
-            name = name.substring(level.length + 1); //Account for delimiter, but we don't care what it is
-        }
-        return name;
-    }
-    /**
-     * Populate a form with data.
-     * @param form - The form to populate or a query string for the form.
-     * @param data - The data to bind to the form, form name attributes will be mapped to the keys in the object.
-     */
-    function populate(form, data, level) {
-        var formElement = domQuery.first(form);
-        var nameAttrs = domQuery.all('[name]', formElement);
-        var getData;
-        var dataType;
-        if (typeIds.isObject(data)) {
-            dataType = DataType.Object;
-        }
-        else if (typeIds.isFunction(data)) {
-            dataType = DataType.Function;
-        }
-        for (var i = 0; i < nameAttrs.length; ++i) {
-            var element = nameAttrs[i];
-            if (allowWrite(element, level)) {
-                var itemData;
-                var dataName = extractLevelName(level, element.getAttribute('name'));
-                switch (dataType) {
-                    case DataType.Object:
-                        itemData = data[dataName];
-                        break;
-                    case DataType.Function:
-                        itemData = data(dataName);
-                        break;
-                }
-                if (itemData === undefined) {
-                    itemData = "";
-                }
-                switch (element.type) {
-                    case 'checkbox':
-                        element.checked = itemData;
-                        break;
-                    case 'select-multiple':
-                        var options = element.options;
-                        for (var j = options.length - 1; j >= 0; j = j - 1) {
-                            options[j].selected = containsCoerced(itemData, options[j].value);
-                        }
-                        break;
-                    default:
-                        element.value = itemData;
-                        break;
-                }
-            }
-        }
-    }
-    function sharedClearer(i) {
-        return "";
-    }
-    var Serializer = (function () {
-        function Serializer(form) {
-            this.form = form;
-        }
-        Serializer.prototype.serialize = function (level) {
-            return serialize(this.form, undefined, level);
-        };
-        Serializer.prototype.populate = function (data, level) {
-            populate(this.form, data, level);
-        };
-        return Serializer;
-    }());
 });
 ///<amd-module name="hr.models"/>
 define("hr.models", ["require", "exports", "hr.form", "hr.view"], function (require, exports, forms, views) {

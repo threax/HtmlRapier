@@ -26,3 +26,27 @@ export interface JsonLabel {
     label: string;
     value: any;
 }
+
+export interface RefNode{
+    $ref?: string;
+}
+
+/**
+ * Find the ref and return it for node if it exists.
+ * @param node The node to expand
+ */
+export function resolveRef(node: RefNode, schema: JsonSchema): any{
+    if(node.$ref !== undefined){
+        var walker = schema;
+        var refs = node.$ref.split('/');
+        for(var i = 1; i < refs.length; ++i){
+            walker = walker[refs[i]];
+            if(walker === undefined){
+                throw new Error("Cannot find ref '" + node.$ref + "' in schema.")
+            }
+        }
+
+        return walker;
+    }
+    return node;
+}
