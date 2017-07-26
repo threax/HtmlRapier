@@ -191,10 +191,13 @@ class ArrayEditor implements IFormValue {
 
 class BasicItemEditor implements IFormValue{
     private toggle: toggle.OnOffToggle;
+    private message: view.IView<string>;
 
     constructor(private name: string, bindings: BindingCollection){
         this.toggle = bindings.getToggle(name + "Error");
         this.toggle.on();
+        this.message = bindings.getView(name + "ErrorMessage");
+        this.message.setData("Hello, this is an error message");
     }
 
     public getData(serializer: formHelper.IFormSerializer): any {

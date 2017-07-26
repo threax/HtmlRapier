@@ -3,23 +3,23 @@
     <form data-hr-form="form" data-hr-on-submit="submit">
         <div class="row">
             <div class="form-group col-sm-4" data-hr-form-start data-hr-toggle="firstError" data-hr-class-on="has-error">
-                <label class="control-label">First Name</label>
+                <label class="control-label">First Name<span data-hr-view="firstErrorMessage" data-hr-toggle="firstError" data-hr-style-on="display:inline" style="display:none"> - {{this}}</span></label>
                 <input class="form-control" name="first" type="text" />
             </div>
 
             <div class="form-group col-sm-4" data-hr-form-start data-hr-toggle="middleError" data-hr-class-on="has-error">
-                <label class="control-label">Middle Name</label>
+                <label class="control-label">Middle Name<span data-hr-view="middleErrorMessage" data-hr-toggle="middleError" data-hr-style-on="display:inline" style="display:none"> - {{this}}</span></label>
                 <input class="form-control" name="middle" type="text" />
             </div>
 
             <div class="form-group col-sm-4" data-hr-form-start data-hr-toggle="lastError" data-hr-class-on="has-error">
-                <label class="control-label">Last Name</label>
+                <label class="control-label">Last Name<span data-hr-view="lastErrorMessage" data-hr-toggle="lastError" data-hr-style-on="display:inline" style="display:none"> - {{this}}</span></label>
                 <input class="form-control" name="last" type="text" />
             </div>
         </div>
 
         <div class="form-group" data-hr-form-start data-hr-toggle="comboTestError" data-hr-class-on="has-error">
-            <label class="control-label">comboTest</label>
+            <label class="control-label">comboTest<span data-hr-view="comboTestErrorMessage" data-hr-toggle="comboTestError" data-hr-style-on="display:inline" style="display:none"> - {{this}}</span></label>
             <select class="form-control" name="comboTest" />
         </div>
 

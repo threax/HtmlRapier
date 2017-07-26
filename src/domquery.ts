@@ -45,12 +45,13 @@ export function all(element: HTMLElement | HTMLElement[] | string, context?: HTM
         }
 
         if (context !== undefined) {
+            //Be sure to include the main element if it matches the selector.
             if (matches(context, element)) {
                 results.push(context);
             }
-            else {
-                nodesToArray(context.querySelectorAll(element), results);
-            }
+            
+            //This will add all child elements that match the selector.
+            nodesToArray(context.querySelectorAll(element), results);
         }
         else {
             nodesToArray(document.querySelectorAll(element), results);
