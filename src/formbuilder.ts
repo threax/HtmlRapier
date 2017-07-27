@@ -10,7 +10,7 @@ import * as toggle from 'hr.toggles';
 import * as event from 'hr.eventdispatcher';
 import * as formHelper from 'hr.formhelper';
 import { JsonProperty, JsonLabel, JsonSchema, resolveRef, RefNode } from 'hr.schema';
-import { ValidationError } from 'hr.error';
+import { FormErrors } from 'hr.error';
 import * as typeIds from 'hr.typeidentifiers';
 
 interface ProcessedJsonProperty extends JsonProperty {
@@ -30,7 +30,7 @@ class FormValues implements formHelper.IFormValues {
         this.special.push(value);
     }
 
-    public setError(err: ValidationError, baseName?: string) {
+    public setError(err: FormErrors, baseName?: string) {
         if(baseName === undefined){
             baseName = "";
         }
@@ -55,7 +55,7 @@ class FormValues implements formHelper.IFormValues {
 }
 
 interface IFormValue {
-    setError(err: ValidationError, baseName: string);
+    setError(err: FormErrors, baseName: string);
 
     getName(): string;
 
@@ -120,7 +120,7 @@ class ArrayEditorRow {
         }
     }
 
-    public setError(err: ValidationError, baseName: string) {
+    public setError(err: FormErrors, baseName: string) {
         this.formValues.setError(err, baseName);
     }
 
@@ -157,9 +157,9 @@ class ArrayEditor implements IFormValue {
         this.isSimple = schema.type !== "object";
     }
 
-    public setError(err: ValidationError, baseName: string) {
+    public setError(err: FormErrors, baseName: string) {
         for(var i = 0; i < this.rows.length; ++i){
-            var rowName = baseName + this.name + '[' + i + ']';
+            var rowName = err.addIndex(baseName, this.name, i);
             this.rows[i].setError(err, rowName);
         }
     }
@@ -249,11 +249,8 @@ class BasicItemEditor implements IFormValue{
         this.message = bindings.getView(buildName + "ErrorMessage");
     }
 
-    public setError(err: ValidationError, baseName: string) {
-        var errorName = this.name;
-        if(baseName !== ""){
-            errorName = baseName + "." + errorName;
-        }
+    public setError(err: FormErrors, baseName: string) {
+        var errorName = err.addKey(baseName, this.name);
         if(err.hasValidationError(errorName)){
             this.toggle.on();
             this.message.setData(err.getValidationError(errorName));

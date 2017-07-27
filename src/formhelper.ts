@@ -3,7 +3,7 @@
 import * as domQuery from 'hr.domquery';
 import * as typeIds from 'hr.typeidentifiers';
 import { JsonSchema } from 'hr.schema';
-import { ValidationError } from 'hr.error';
+import { FormErrors } from 'hr.error';
 
 export function IsFormElement(element: Node): element is HTMLFormElement{
     return element && (element.nodeName === 'FORM' || element.nodeName == 'INPUT' || element.nodeName == 'TEXTAREA');
@@ -199,7 +199,7 @@ export class FormSerializer implements IFormSerializer{
 }
 
 export interface IFormValues{
-    setError(err: ValidationError): void;
+    setError(err: FormErrors): void;
 
     setData(data: any, serializer: IFormSerializer): void;
 
@@ -218,7 +218,7 @@ export function buildForm(componentName: string, schema: JsonSchema, parentEleme
     return buildFormCb(componentName, schema, parentElement);
 }
 
-class ClearingValidator implements ValidationError{
+class ClearingValidator implements FormErrors{
     public name;
     public message = "";
     public stack?;
@@ -250,6 +250,14 @@ class ClearingValidator implements ValidationError{
     hasValidationErrors() : boolean{
         return true;
     }
+
+    addKey(baseName: string, key: string): string{
+        return "";
+    }
+
+    addIndex(baseName: string, key: string, index: string | number): string{
+        return "";
+    }
 }
 
 var sharedClearingValidator = new ClearingValidator();
@@ -257,6 +265,6 @@ var sharedClearingValidator = new ClearingValidator();
 /**
  * Get a shared instance of a validator that will clear all data passed in.
  */
-export function getSharedClearingValidator(): ValidationError {
+export function getSharedClearingValidator(): FormErrors {
     return sharedClearingValidator;
 }

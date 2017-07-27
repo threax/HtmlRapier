@@ -26,3 +26,21 @@ export interface ValidationError extends Error{
      */
     hasValidationErrors() : boolean;
 }
+
+/**
+ * This interface makes the class that contains the errors responsible
+ * for building the strings to lookup the errors from the form values.
+ * This makes it easier to correct mismatches between the naming.
+ */
+export interface FormErrors extends ValidationError {
+
+    /**
+     * Add a key to the error lookup string.
+     */
+    addKey(baseName: string, key: string): string;
+
+    /**
+     * Add an index to the error lookup string.
+     */
+    addIndex(baseName: string, key: string, index: string | number): string;
+}

@@ -1141,6 +1141,12 @@ define("hr.formhelper", ["require", "exports", "hr.domquery", "hr.typeidentifier
         ClearingValidator.prototype.hasValidationErrors = function () {
             return true;
         };
+        ClearingValidator.prototype.addKey = function (baseName, key) {
+            return "";
+        };
+        ClearingValidator.prototype.addIndex = function (baseName, key, index) {
+            return "";
+        };
         return ClearingValidator;
     }());
     var sharedClearingValidator = new ClearingValidator();
@@ -2539,8 +2545,8 @@ define("form-demo", ["require", "exports", "hr.controller"], function (require, 
                 address: "You call that an address?",
                 enumTest: "Not a valid value.",
                 multiChoice: "Not a valid multi choice.",
-                "complexArray[0].first": "You must include a first name",
-                "complexArray[1].middle": "You must include a middle name"
+                "complexArray[0].First": "You must include a first name",
+                "complexArray[1].Middle": "You must include a middle name"
             };
         }
         /**
@@ -2567,6 +2573,17 @@ define("form-demo", ["require", "exports", "hr.controller"], function (require, 
          */
         FakeErrors.prototype.hasValidationErrors = function () {
             return true;
+        };
+        FakeErrors.prototype.addKey = function (baseName, key) {
+            if (baseName !== "") {
+                //Make key 1st letter uppercase to match error from server
+                return baseName + "." + key[0].toUpperCase() + key.substr(1);
+            }
+            return key;
+        };
+        FakeErrors.prototype.addIndex = function (baseName, key, index) {
+            return baseName + key + '[' + index + ']';
+            ;
         };
         return FakeErrors;
     }());

@@ -4,13 +4,13 @@
 
 import * as formHelper from 'hr.formhelper';
 import { JsonSchema } from 'hr.schema';
-import { ValidationError } from 'hr.error';
+import { FormErrors } from 'hr.error';
 
 export interface IForm<T> {
     /**
      * Set the error currently on the form. Will match property names to form values and display the errors.
      */
-    setError(err: ValidationError): void;
+    setError(err: FormErrors): void;
 
     /**
      * Clear any error messages on the form.
@@ -65,7 +65,7 @@ export class NeedsSchemaForm<T> implements IForm<T> {
 
     }
 
-    public setError(err: ValidationError) {
+    public setError(err: FormErrors) {
         this.wrapped.setError(err);
     }
 
@@ -137,7 +137,7 @@ class Form<T> {
 
     }
 
-    public setError(err: ValidationError) {
+    public setError(err: FormErrors) {
         if(this.specialValues){
             this.specialValues.setError(err);
         }
@@ -194,7 +194,7 @@ class NullForm<T> implements IForm<T> {
 
     }
 
-    public setError(err: ValidationError) {
+    public setError(err: FormErrors) {
         
     }
 

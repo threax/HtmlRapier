@@ -16,8 +16,8 @@ class FakeErrors implements ValidationError {
         address: "You call that an address?",
         enumTest: "Not a valid value.",
         multiChoice: "Not a valid multi choice.",
-        "complexArray[0].first": "You must include a first name",
-        "complexArray[1].middle": "You must include a middle name"
+        "complexArray[0].First": "You must include a first name",
+        "complexArray[1].Middle": "You must include a middle name"
     }
 
     /**
@@ -47,6 +47,18 @@ class FakeErrors implements ValidationError {
      */
     hasValidationErrors() : boolean{
         return true;
+    }
+
+    addKey(baseName: string, key: string): string {
+        if(baseName !== ""){
+            //Make key 1st letter uppercase to match error from server
+            return baseName + "." + key[0].toUpperCase() + key.substr(1);
+        }
+        return key;
+    }
+
+    addIndex(baseName: string, key: string, index: string | number): string {
+        return baseName + key + '[' + index + ']';;
     }
 }
 
