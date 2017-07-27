@@ -60,7 +60,43 @@ class FormDemoController {
     public constructor(bindings: controller.BindingCollection) {
         this.form = bindings.getForm("form");
         this.form.setSchema(createTestSchema());
-        var data = {
+    }
+
+    public submit(evt: Event): void{
+        evt.preventDefault();
+        var data = this.form.getData();
+        console.log(JSON.stringify(data));
+    }
+
+    public setData1(evt: Event){
+        evt.preventDefault();
+        this.form.setData(this.createData());
+    }
+    
+    public setData2(evt: Event){
+        evt.preventDefault();
+        var data = this.createData();
+        data.stringArray = null
+        this.form.setData(data);
+    }
+
+    public showErrors(evt: Event){
+        evt.preventDefault();
+        this.form.setError(new FakeErrors());
+    }
+
+    public clearErrors(evt: Event){
+        evt.preventDefault();
+        this.form.clearError();
+    }
+
+    public clear(evt: Event){
+        evt.preventDefault();
+        this.form.clear();
+    }
+
+    private createData(){
+        return {
             first: "Test First",
             middle: "Test Middle",
             last: "Test Last",
@@ -78,22 +114,6 @@ class FormDemoController {
                 last: "last 2"
             }]
         };
-        
-        this.form.setData(data);
-
-        data.stringArray = null;// ["first", "second"];
-
-        this.form.setData(data);
-        
-        this.form.setError(new FakeErrors());
-
-        //this.form.clearError();
-    }
-
-    public submit(evt: Event): void{
-        evt.preventDefault();
-        var data = this.form.getData();
-        console.log(JSON.stringify(data));
     }
 }
 

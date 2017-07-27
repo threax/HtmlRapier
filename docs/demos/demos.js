@@ -2562,7 +2562,43 @@ define("form-demo", ["require", "exports", "hr.controller"], function (require, 
         function FormDemoController(bindings) {
             this.form = bindings.getForm("form");
             this.form.setSchema(createTestSchema());
-            var data = {
+        }
+        Object.defineProperty(FormDemoController, "InjectorArgs", {
+            get: function () {
+                return [controller.BindingCollection];
+            },
+            enumerable: true,
+            configurable: true
+        });
+        FormDemoController.prototype.submit = function (evt) {
+            evt.preventDefault();
+            var data = this.form.getData();
+            console.log(JSON.stringify(data));
+        };
+        FormDemoController.prototype.setData1 = function (evt) {
+            evt.preventDefault();
+            this.form.setData(this.createData());
+        };
+        FormDemoController.prototype.setData2 = function (evt) {
+            evt.preventDefault();
+            var data = this.createData();
+            data.stringArray = null;
+            this.form.setData(data);
+        };
+        FormDemoController.prototype.showErrors = function (evt) {
+            evt.preventDefault();
+            this.form.setError(new FakeErrors());
+        };
+        FormDemoController.prototype.clearErrors = function (evt) {
+            evt.preventDefault();
+            this.form.clearError();
+        };
+        FormDemoController.prototype.clear = function (evt) {
+            evt.preventDefault();
+            this.form.clear();
+        };
+        FormDemoController.prototype.createData = function () {
+            return {
                 first: "Test First",
                 middle: "Test Middle",
                 last: "Test Last",
@@ -2580,23 +2616,6 @@ define("form-demo", ["require", "exports", "hr.controller"], function (require, 
                         last: "last 2"
                     }]
             };
-            this.form.setData(data);
-            data.stringArray = null; // ["first", "second"];
-            this.form.setData(data);
-            this.form.setError(new FakeErrors());
-            //this.form.clearError();
-        }
-        Object.defineProperty(FormDemoController, "InjectorArgs", {
-            get: function () {
-                return [controller.BindingCollection];
-            },
-            enumerable: true,
-            configurable: true
-        });
-        FormDemoController.prototype.submit = function (evt) {
-            evt.preventDefault();
-            var data = this.form.getData();
-            console.log(JSON.stringify(data));
         };
         return FormDemoController;
     }());
