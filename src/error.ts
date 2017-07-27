@@ -27,6 +27,13 @@ export interface ValidationError extends Error{
     hasValidationErrors() : boolean;
 }
 
+export function isValidationError(test: any): test is ValidationError {
+    return (<ValidationError>test).getValidationError !== undefined
+        && (<ValidationError>test).getValidationErrors !== undefined
+        && (<ValidationError>test).hasValidationError !== undefined
+        && (<ValidationError>test).hasValidationErrors !== undefined;
+}
+
 /**
  * This interface makes the class that contains the errors responsible
  * for building the strings to lookup the errors from the form values.
@@ -43,4 +50,10 @@ export interface FormErrors extends ValidationError {
      * Add an index to the error lookup string.
      */
     addIndex(baseName: string, key: string, index: string | number): string;
+}
+
+export function isFormErrors(test: any): test is FormErrors {
+    return isValidationError(test)
+        && (<FormErrors>test).addKey !== undefined
+        && (<FormErrors>test).addIndex !== undefined;
 }
