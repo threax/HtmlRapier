@@ -107,6 +107,37 @@ class FormDemoController {
         this.form.clear();
     }
 
+    public setSchema1(evt: Event){
+        evt.preventDefault();
+        this.form.setSchema(createTestSchema());
+    }
+
+    public setSchema2(evt: Event){
+        evt.preventDefault();
+        var schema = createTestSchema();
+        var props = schema.properties;
+        delete props.middle;
+        delete props.address;
+        delete props.city;
+        delete props.state;
+        delete props.zipcode;
+        this.form.setSchema(schema);
+    }
+
+    public setSchema3(evt: Event){
+        evt.preventDefault();
+        var schema = createTestSchema();
+        var props = schema.properties;
+        delete props.complexArray;
+        delete props.stringArray;
+        delete props.middle;
+        delete props.address;
+        delete props.city;
+        delete props.state;
+        delete props.zipcode;
+        this.form.setSchema(schema);
+    }
+
     private createData(){
         return {
             first: "Test First",

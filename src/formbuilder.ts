@@ -24,35 +24,55 @@ interface ProcessedJsonProperty extends JsonProperty {
 }
 
 class FormValues implements formHelper.IFormValues {
-    private special: IFormValue[] = [];
+    private values: IFormValue[] = [];
 
     public add(value: IFormValue): void {
-        this.special.push(value);
+        this.values.push(value);
     }
 
     public setError(err: FormErrors, baseName?: string) {
         if(baseName === undefined){
             baseName = "";
         }
-        for(var i = 0; i < this.special.length; ++i){
-            this.special[i].setError(err, baseName);
+        for(var i = 0; i < this.values.length; ++i){
+            this.values[i].setError(err, baseName);
         }
     }
 
     public setData(data: any, serializer: formHelper.IFormSerializer): void {
-        for(var i = 0; i < this.special.length; ++i){
-            this.special[i].setData(data, serializer);
+        for(var i = 0; i < this.values.length; ++i){
+            this.values[i].setData(data, serializer);
         }
     }
 
     public recoverData(data: any, serializer: formHelper.IFormSerializer): void {
-        for(var i = 0; i < this.special.length; ++i){
-            var item = this.special[i];
+        for(var i = 0; i < this.values.length; ++i){
+            var item = this.values[i];
             var subData = item.getData(serializer);
             if (subData !== undefined) {
                 data[item.getName()] = subData;
             }
         }
+    }
+
+    public changeSchema(componentName: string, schema: JsonSchema, parentElement: HTMLElement): void{
+        var keep = [];
+        for(var i = 0; i < this.values.length; ++i){
+            if(!this.values[i].delete()){
+                keep.push(this.values[i]);
+            }
+        }
+        this.values = keep; //Replace the values with just what we kept
+        buildForm(componentName, schema, parentElement, undefined, undefined, this); //Rebuild the form
+    }
+
+    public hasFormValue(buildName: string): boolean{
+        for(var i = 0; i < this.values.length; ++i){
+            if(this.values[i].getName() === buildName){
+                return true;
+            }
+        }
+        return false;
     }
 }
 
@@ -64,6 +84,13 @@ interface IFormValue {
     getData(serializer: formHelper.IFormSerializer): any;
 
     setData(data: any, serializer: formHelper.IFormSerializer);
+
+    /**
+     * Delete the form value, this might not actually happen. Return true if the item was deleted
+     * and false if it was kept. If you return false the item will be added to a pool. This is done
+     * for items the user manually put on the form.
+     */
+    delete(): boolean;
 }
 
 const indexMax = 2147483647;//Sticking with 32 bit;
@@ -154,7 +181,7 @@ class ArrayEditor implements IFormValue {
     private indexGen: InfiniteIndex = new InfiniteIndex();
     private isSimple: boolean;
 
-    constructor(private name: string, private buildName: string, bindings: BindingCollection, private schema: JsonSchema){
+    constructor(private name: string, private buildName: string, private bindings: BindingCollection, private schema: JsonSchema, private generated: boolean){
         this.itemsView = bindings.getView<JsonSchema>("items");
         bindings.setListener(this);
         this.isSimple = schema.type !== "object";
@@ -241,13 +268,20 @@ class ArrayEditor implements IFormValue {
     public getName(): string{
         return this.buildName;
     }
+
+    public delete(): boolean{
+        if(this.generated){
+            this.bindings.remove();
+        }
+        return this.generated;
+    }
 }
 
 class BasicItemEditor implements IFormValue{
     private toggle: toggle.OnOffToggle;
     private message: view.IView<string>;
 
-    constructor(private name: string, private buildName: string, bindings: BindingCollection){
+    constructor(private name: string, private buildName: string, private bindings: BindingCollection, private generated: boolean){
         this.toggle = bindings.getToggle(buildName + "Error");
         this.message = bindings.getView(buildName + "ErrorMessage");
     }
@@ -276,9 +310,16 @@ class BasicItemEditor implements IFormValue{
     public getName(): string{
         return this.buildName;
     }
+
+    public delete(): boolean{
+        if(this.generated){
+            this.bindings.remove();
+        }
+        return this.generated;
+    }
 }
 
-function buildForm(componentName: string, schema: JsonSchema, parentElement: HTMLElement, baseName?: string, ignoreExisting?: boolean): FormValues {
+function buildForm(componentName: string, schema: JsonSchema, parentElement: HTMLElement, baseName?: string, ignoreExisting?: boolean, formValues?: FormValues): FormValues {
     if(ignoreExisting === undefined){
         ignoreExisting = false;
     }
@@ -287,7 +328,9 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
         baseName = "";
     }
 
-    var formValues = new FormValues();
+    if(formValues === undefined){
+        formValues = new FormValues();
+    }
     
     var dynamicInsertElement = domquery.first("[data-hr-form-end]", parentElement);
     if(dynamicInsertElement !== null){
@@ -320,6 +363,7 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
         var item = propArray[i];
         var existing = <HTMLElement>domquery.first('[name=' + item.buildName + ']', parentElement);
         var bindings: BindingCollection = null;
+        var generated = false;
         if(ignoreExisting || existing === null){
             //Create component if it is null
             bindings = component.one(componentName, item, parentElement, dynamicInsertElement, undefined, (i) => {
@@ -334,29 +378,36 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
             else{
                 existing = null;
             }
+
+            generated = true;
         }
         else{
-            //Existing element, try to create a binding collection for it
-            //Walk up element parents trying to find one with a data-hr-form-start attribute on it.
-            var bindParent = existing;
-            while(bindings === null && bindParent !== null && bindParent !== parentElement){
-                if(bindParent.hasAttribute("data-hr-form-start")){
-                    bindings = new BindingCollection(bindParent);
+            //If this was an exising element, see if we should reuse what was found before, if the formValues already has an item, do nothing here
+            if(!formValues.hasFormValue(item.buildName)){
+                //Not found, try to create a binding collection for it
+                //Walk up element parents trying to find one with a data-hr-form-start attribute on it.
+                var bindParent = existing;
+                while(bindings === null && bindParent !== null && bindParent !== parentElement){
+                    if(bindParent.hasAttribute("data-hr-form-start")){
+                        bindings = new BindingCollection(bindParent);
+                    }
+                    else{
+                        bindParent = bindParent.parentElement;
+                    }
                 }
-                else{
-                    bindParent = bindParent.parentElement;
-                }
+
+                generated = false;
             }
         }
 
         if(bindings !== null){
             if(item.buildType === "arrayEditor"){
                 var resolvedItems = resolveRef(<RefNode>item.items, schema);
-                var editor = new ArrayEditor(item.name, item.buildName, bindings, resolvedItems);
+                var editor = new ArrayEditor(item.name, item.buildName, bindings, resolvedItems, generated);
                 formValues.add(editor);
             }
             else{
-                formValues.add(new BasicItemEditor(item.name, item.buildName, bindings));
+                formValues.add(new BasicItemEditor(item.name, item.buildName, bindings, generated));
             }
         }
 

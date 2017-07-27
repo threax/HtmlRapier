@@ -204,6 +204,8 @@ export interface IFormValues{
     setData(data: any, serializer: IFormSerializer): void;
 
     recoverData(data: any, serializer: IFormSerializer): void;
+
+    changeSchema(componentName: string, schema: JsonSchema, parentElement: HTMLElement): void;
 }
 
 export type BuildFormFunc = (componentName: string, schema: JsonSchema, parentElement: HTMLElement) => IFormValues;

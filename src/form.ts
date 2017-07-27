@@ -130,7 +130,7 @@ export class NeedsSchemaForm<T> implements IForm<T> {
 class Form<T> {
     private proto: T;
     private baseLevel: string = undefined;
-    private specialValues: formHelper.IFormValues;
+    private formValues: formHelper.IFormValues;
     private formSerializer: formHelper.IFormSerializer;
 
     constructor(private form: HTMLFormElement) {
@@ -138,36 +138,36 @@ class Form<T> {
     }
 
     public setError(err: FormErrors) {
-        if(this.specialValues){
-            this.specialValues.setError(err);
+        if(this.formValues){
+            this.formValues.setError(err);
         }
     }
 
     public clearError(){
-        if(this.specialValues){
-            this.specialValues.setError(formHelper.getSharedClearingValidator());
+        if(this.formValues){
+            this.formValues.setError(formHelper.getSharedClearingValidator());
         }
     }
     
     public setData(data: T) {
         formHelper.populate(this.form, data, this.baseLevel);
-        if(this.specialValues) {
-            this.specialValues.setData(data, this.formSerializer);
+        if(this.formValues) {
+            this.formValues.setData(data, this.formSerializer);
         }
     }
 
     public clear() {
         this.clearError();
         formHelper.populate(this.form, sharedClearer);
-        if(this.specialValues) {
-            this.specialValues.setData(sharedClearer, this.formSerializer);
+        if(this.formValues) {
+            this.formValues.setData(sharedClearer, this.formSerializer);
         }
     }
 
     public getData(): T {
         var data = <T>formHelper.serialize(this.form, this.proto, this.baseLevel);
-        if(this.specialValues) {
-            this.specialValues.recoverData(data, this.formSerializer);
+        if(this.formValues) {
+            this.formValues.recoverData(data, this.formSerializer);
         }
         for(var key in data){ //This will pass if there is a key in data, ok to also check prototype, if user set it they want it.
             return data;
@@ -183,9 +183,17 @@ class Form<T> {
         if(componentName === undefined){
             componentName = "hr.defaultform";
         }
-        this.specialValues = formHelper.buildForm(componentName, schema, this.form);
-        this.baseLevel = "";
-        this.formSerializer = new formHelper.FormSerializer(this.form);
+
+        this.clear();
+
+        if(this.formValues){
+            this.formValues.changeSchema(componentName, schema, this.form);
+        }
+        else{
+            this.formValues = formHelper.buildForm(componentName, schema, this.form);
+            this.baseLevel = "";
+            this.formSerializer = new formHelper.FormSerializer(this.form);
+        }
     }
 }
 

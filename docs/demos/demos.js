@@ -923,6 +923,19 @@ define("hr.error", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     ;
+    function isValidationError(test) {
+        return test.getValidationError !== undefined
+            && test.getValidationErrors !== undefined
+            && test.hasValidationError !== undefined
+            && test.hasValidationErrors !== undefined;
+    }
+    exports.isValidationError = isValidationError;
+    function isFormErrors(test) {
+        return isValidationError(test)
+            && test.addKey !== undefined
+            && test.addIndex !== undefined;
+    }
+    exports.isFormErrors = isFormErrors;
 });
 ///<amd-module name="hr.formhelper"/>
 define("hr.formhelper", ["require", "exports", "hr.domquery", "hr.typeidentifiers"], function (require, exports, domQuery, typeIds) {
@@ -1236,32 +1249,32 @@ define("hr.form", ["require", "exports", "hr.formhelper"], function (require, ex
             this.baseLevel = undefined;
         }
         Form.prototype.setError = function (err) {
-            if (this.specialValues) {
-                this.specialValues.setError(err);
+            if (this.formValues) {
+                this.formValues.setError(err);
             }
         };
         Form.prototype.clearError = function () {
-            if (this.specialValues) {
-                this.specialValues.setError(formHelper.getSharedClearingValidator());
+            if (this.formValues) {
+                this.formValues.setError(formHelper.getSharedClearingValidator());
             }
         };
         Form.prototype.setData = function (data) {
             formHelper.populate(this.form, data, this.baseLevel);
-            if (this.specialValues) {
-                this.specialValues.setData(data, this.formSerializer);
+            if (this.formValues) {
+                this.formValues.setData(data, this.formSerializer);
             }
         };
         Form.prototype.clear = function () {
             this.clearError();
             formHelper.populate(this.form, sharedClearer);
-            if (this.specialValues) {
-                this.specialValues.setData(sharedClearer, this.formSerializer);
+            if (this.formValues) {
+                this.formValues.setData(sharedClearer, this.formSerializer);
             }
         };
         Form.prototype.getData = function () {
             var data = formHelper.serialize(this.form, this.proto, this.baseLevel);
-            if (this.specialValues) {
-                this.specialValues.recoverData(data, this.formSerializer);
+            if (this.formValues) {
+                this.formValues.recoverData(data, this.formSerializer);
             }
             for (var key in data) {
                 return data;
@@ -1275,9 +1288,15 @@ define("hr.form", ["require", "exports", "hr.formhelper"], function (require, ex
             if (componentName === undefined) {
                 componentName = "hr.defaultform";
             }
-            this.specialValues = formHelper.buildForm(componentName, schema, this.form);
-            this.baseLevel = "";
-            this.formSerializer = new formHelper.FormSerializer(this.form);
+            this.clear();
+            if (this.formValues) {
+                this.formValues.changeSchema(componentName, schema, this.form);
+            }
+            else {
+                this.formValues = formHelper.buildForm(componentName, schema, this.form);
+                this.baseLevel = "";
+                this.formSerializer = new formHelper.FormSerializer(this.form);
+            }
         };
         return Form;
     }());
@@ -2625,6 +2644,34 @@ define("form-demo", ["require", "exports", "hr.controller"], function (require, 
         FormDemoController.prototype.clear = function (evt) {
             evt.preventDefault();
             this.form.clear();
+        };
+        FormDemoController.prototype.setSchema1 = function (evt) {
+            evt.preventDefault();
+            this.form.setSchema(createTestSchema());
+        };
+        FormDemoController.prototype.setSchema2 = function (evt) {
+            evt.preventDefault();
+            var schema = createTestSchema();
+            var props = schema.properties;
+            delete props.middle;
+            delete props.address;
+            delete props.city;
+            delete props.state;
+            delete props.zipcode;
+            this.form.setSchema(schema);
+        };
+        FormDemoController.prototype.setSchema3 = function (evt) {
+            evt.preventDefault();
+            var schema = createTestSchema();
+            var props = schema.properties;
+            delete props.complexArray;
+            delete props.stringArray;
+            delete props.middle;
+            delete props.address;
+            delete props.city;
+            delete props.state;
+            delete props.zipcode;
+            this.form.setSchema(schema);
         };
         FormDemoController.prototype.createData = function () {
             return {
