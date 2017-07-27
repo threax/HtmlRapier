@@ -49,7 +49,9 @@ class FormValues implements formHelper.IFormValues {
         for(var i = 0; i < this.special.length; ++i){
             var item = this.special[i];
             var subData = item.getData(serializer);
-            data[item.getName()] = subData;
+            if (subData !== undefined) {
+                data[item.getName()] = subData;
+            }
         }
     }
 }
