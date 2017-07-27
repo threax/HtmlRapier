@@ -1024,7 +1024,7 @@ define("hr.formhelper", ["require", "exports", "hr.domquery", "hr.typeidentifier
     (function (DataType) {
         DataType[DataType["Object"] = 0] = "Object";
         DataType[DataType["Function"] = 1] = "Function";
-    })(DataType || (DataType = {}));
+    })(DataType = exports.DataType || (exports.DataType = {}));
     function containsCoerced(items, search) {
         for (var i = 0; i < items.length; ++i) {
             if (items[i] == search) {
@@ -1039,6 +1039,15 @@ define("hr.formhelper", ["require", "exports", "hr.domquery", "hr.typeidentifier
         }
         return name;
     }
+    function getDataType(data) {
+        if (typeIds.isObject(data)) {
+            return DataType.Object;
+        }
+        else if (typeIds.isFunction(data)) {
+            return DataType.Function;
+        }
+    }
+    exports.getDataType = getDataType;
     /**
      * Populate a form with data.
      * @param form - The form to populate or a query string for the form.
@@ -1047,14 +1056,7 @@ define("hr.formhelper", ["require", "exports", "hr.domquery", "hr.typeidentifier
     function populate(form, data, level) {
         var formElement = domQuery.first(form);
         var nameAttrs = domQuery.all('[name]', formElement);
-        var getData;
-        var dataType;
-        if (typeIds.isObject(data)) {
-            dataType = DataType.Object;
-        }
-        else if (typeIds.isFunction(data)) {
-            dataType = DataType.Function;
-        }
+        var dataType = getDataType(data);
         for (var i = 0; i < nameAttrs.length; ++i) {
             var element = nameAttrs[i];
             if (allowWrite(element, level)) {
@@ -1239,6 +1241,9 @@ define("hr.form", ["require", "exports", "hr.formhelper"], function (require, ex
         Form.prototype.clear = function () {
             this.clearError();
             formHelper.populate(this.form, sharedClearer);
+            if (this.specialValues) {
+                this.specialValues.setData(sharedClearer, this.formSerializer);
+            }
         };
         Form.prototype.getData = function () {
             var data = formHelper.serialize(this.form, this.proto, this.baseLevel);

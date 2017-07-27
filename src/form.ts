@@ -195,6 +195,9 @@ class Form<T> {
     public clear() {
         this.clearError();
         formHelper.populate(this.form, sharedClearer);
+        if(this.specialValues) {
+            this.specialValues.setData(sharedClearer, this.formSerializer);
+        }
     }
 
     public getData(): T {

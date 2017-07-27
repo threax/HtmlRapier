@@ -102,7 +102,7 @@ export function serialize(form: HTMLElement, proto?: any, level?: string): any {
     return q;
 }
 
-enum DataType{
+export enum DataType{
     Object,
     Function
 }
@@ -123,6 +123,15 @@ function extractLevelName(level: string, name: string): string{
     return name;
 }
 
+export function getDataType(data: any): DataType{
+    if (typeIds.isObject(data)) {
+        return DataType.Object;
+    }
+    else if (typeIds.isFunction(data)) {
+        return DataType.Function;
+    }
+}
+
 /**
  * Populate a form with data.
  * @param form - The form to populate or a query string for the form.
@@ -131,16 +140,7 @@ function extractLevelName(level: string, name: string): string{
 export function populate(form: HTMLElement | string, data:any, level?: string): void {
     var formElement = <HTMLElement>domQuery.first(form);
     var nameAttrs = domQuery.all('[name]', formElement);
-
-    var getData: (key: string) => any;
-
-    var dataType: DataType;
-    if (typeIds.isObject(data)) {
-        dataType = DataType.Object;
-    }
-    else if (typeIds.isFunction(data)) {
-        dataType = DataType.Function;
-    }
+    var dataType: DataType = getDataType(data);
 
     for (var i = 0; i < nameAttrs.length; ++i) {
         var element = nameAttrs[i] as HTMLInputElement | HTMLSelectElement;

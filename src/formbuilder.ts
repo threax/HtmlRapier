@@ -11,6 +11,7 @@ import * as event from 'hr.eventdispatcher';
 import * as formHelper from 'hr.formhelper';
 import { JsonProperty, JsonLabel, JsonSchema, resolveRef, RefNode } from 'hr.schema';
 import { ValidationError } from 'hr.error';
+import * as typeIds from 'hr.typeidentifiers';
 
 interface ProcessedJsonProperty extends JsonProperty {
     name: string;
@@ -126,7 +127,7 @@ class ArrayEditorRow {
     public getData(serializer: formHelper.IFormSerializer): any {
         var data = serializer.serialize(this.name);
         this.formValues.recoverData(data, serializer);
-        if(typeof data === 'object'){
+        if(typeIds.isObject(data)){
             for(var key in data){ //This will pass if there is a key in data
                 return data;
             }
@@ -198,9 +199,23 @@ class ArrayEditor implements IFormValue {
     }
 
     public setData(data: any, serializer: formHelper.IFormSerializer) {
-        var itemData: any[] = data[this.buildName];
+        var itemData: any[];
+        switch(formHelper.getDataType(data)){
+            case formHelper.DataType.Object:
+                itemData = data[this.buildName];
+                break;
+            case formHelper.DataType.Function:
+                itemData = data(this.buildName);
+                break;
+        }
+
         var i = 0;
         if(itemData) {
+            //Make sure data is an array
+            if(!typeIds.isArray(itemData)){
+                itemData = [itemData];
+            }
+
             for(; i < itemData.length; ++i){
                 if(i >= this.rows.length){
                     this.addRow();
