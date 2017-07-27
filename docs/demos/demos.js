@@ -1113,6 +1113,44 @@ define("hr.formhelper", ["require", "exports", "hr.domquery", "hr.typeidentifier
         return buildFormCb(componentName, schema, parentElement);
     }
     exports.buildForm = buildForm;
+    var ClearingValidator = (function () {
+        function ClearingValidator() {
+            this.message = "";
+        }
+        /**
+         * Get the validation error named name.
+         */
+        ClearingValidator.prototype.getValidationError = function (name) {
+            return undefined;
+        };
+        /**
+         * Check to see if a named validation error exists.
+         */
+        ClearingValidator.prototype.hasValidationError = function (name) {
+            return false;
+        };
+        /**
+         * Get all validation errors.
+         */
+        ClearingValidator.prototype.getValidationErrors = function () {
+            return {};
+        };
+        /**
+         * Determine if there are any validation errors.
+         */
+        ClearingValidator.prototype.hasValidationErrors = function () {
+            return true;
+        };
+        return ClearingValidator;
+    }());
+    var sharedClearingValidator = new ClearingValidator();
+    /**
+     * Get a shared instance of a validator that will clear all data passed in.
+     */
+    function getSharedClearingValidator() {
+        return sharedClearingValidator;
+    }
+    exports.getSharedClearingValidator = getSharedClearingValidator;
 });
 ///<amd-module name="hr.form"/>
 define("hr.form", ["require", "exports", "hr.formhelper"], function (require, exports, formHelper) {
@@ -1186,37 +1224,6 @@ define("hr.form", ["require", "exports", "hr.formhelper"], function (require, ex
         return NeedsSchemaForm;
     }());
     exports.NeedsSchemaForm = NeedsSchemaForm;
-    var ClearingValidator = (function () {
-        function ClearingValidator() {
-            this.message = "";
-        }
-        /**
-         * Get the validation error named name.
-         */
-        ClearingValidator.prototype.getValidationError = function (name) {
-            return undefined;
-        };
-        /**
-         * Check to see if a named validation error exists.
-         */
-        ClearingValidator.prototype.hasValidationError = function (name) {
-            return false;
-        };
-        /**
-         * Get all validation errors.
-         */
-        ClearingValidator.prototype.getValidationErrors = function () {
-            return {};
-        };
-        /**
-         * Determine if there are any validation errors.
-         */
-        ClearingValidator.prototype.hasValidationErrors = function () {
-            return true;
-        };
-        return ClearingValidator;
-    }());
-    var sharedClearingValidator = new ClearingValidator();
     var Form = (function () {
         function Form(form) {
             this.form = form;
@@ -1229,7 +1236,7 @@ define("hr.form", ["require", "exports", "hr.formhelper"], function (require, ex
         };
         Form.prototype.clearError = function () {
             if (this.specialValues) {
-                this.specialValues.setError(sharedClearingValidator);
+                this.specialValues.setError(formHelper.getSharedClearingValidator());
             }
         };
         Form.prototype.setData = function (data) {

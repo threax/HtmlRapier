@@ -140,6 +140,7 @@ class ArrayEditorRow {
     public setData(data: any, serializer: formHelper.IFormSerializer) {
         serializer.populate(data, this.name);
         this.formValues.setData(data, serializer);
+        this.setError(formHelper.getSharedClearingValidator(), "");
     }
 }
 
@@ -269,6 +270,7 @@ class BasicItemEditor implements IFormValue{
 
     public setData(data: any, serializer: formHelper.IFormSerializer) {
         //Does nothing, relies on the normal form serializer function
+        this.setError(formHelper.getSharedClearingValidator(), "");
     }
 
     public getName(): string{

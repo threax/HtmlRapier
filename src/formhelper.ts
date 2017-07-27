@@ -217,3 +217,46 @@ export function setBuildFormFunc(buildForm: BuildFormFunc){
 export function buildForm(componentName: string, schema: JsonSchema, parentElement: HTMLElement): IFormValues{
     return buildFormCb(componentName, schema, parentElement);
 }
+
+class ClearingValidator implements ValidationError{
+    public name;
+    public message = "";
+    public stack?;
+
+    /**
+     * Get the validation error named name.
+     */
+    getValidationError(name: string): string | undefined{
+        return undefined;
+    }
+
+    /**
+     * Check to see if a named validation error exists.
+     */
+    hasValidationError(name: string): boolean{
+        return false;
+    }
+
+    /**
+     * Get all validation errors.
+     */
+    getValidationErrors() {
+        return {};
+    }
+
+    /**
+     * Determine if there are any validation errors.
+     */
+    hasValidationErrors() : boolean{
+        return true;
+    }
+}
+
+var sharedClearingValidator = new ClearingValidator();
+
+/**
+ * Get a shared instance of a validator that will clear all data passed in.
+ */
+export function getSharedClearingValidator(): ValidationError {
+    return sharedClearingValidator;
+}

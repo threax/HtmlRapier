@@ -127,42 +127,6 @@ export class NeedsSchemaForm<T> implements IForm<T> {
     }
 }
 
-class ClearingValidator implements ValidationError{
-    public name;
-    public message = "";
-    public stack?;
-
-    /**
-     * Get the validation error named name.
-     */
-    getValidationError(name: string): string | undefined{
-        return undefined;
-    }
-
-    /**
-     * Check to see if a named validation error exists.
-     */
-    hasValidationError(name: string): boolean{
-        return false;
-    }
-
-    /**
-     * Get all validation errors.
-     */
-    getValidationErrors() {
-        return {};
-    }
-
-    /**
-     * Determine if there are any validation errors.
-     */
-    hasValidationErrors() : boolean{
-        return true;
-    }
-}
-
-var sharedClearingValidator = new ClearingValidator();
-
 class Form<T> {
     private proto: T;
     private baseLevel: string = undefined;
@@ -181,7 +145,7 @@ class Form<T> {
 
     public clearError(){
         if(this.specialValues){
-            this.specialValues.setError(sharedClearingValidator);
+            this.specialValues.setError(formHelper.getSharedClearingValidator());
         }
     }
     
