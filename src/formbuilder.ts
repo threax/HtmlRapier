@@ -109,6 +109,7 @@ class ArrayEditorRow {
         if(evt){
             evt.preventDefault();
         }
+        this.setError(formHelper.getSharedClearingValidator(), "");
         this.pooled = this.bindings.pool();
         formHelper.populate(this.root, sharedClearer, this.name); //Clear existing data
         this.removed.fire(this);
