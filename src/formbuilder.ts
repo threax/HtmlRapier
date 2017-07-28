@@ -221,12 +221,15 @@ class ArrayEditor implements IFormValue {
         var items = [];
         for(var i = 0; i < this.rows.length; ++i){
             var data = this.rows[i].getData(serializer);
-            if(this.isSimple){
+            if(this.isSimple && data !== null){
                 data = data[""];
             }
             items.push(data);
         }
-        return items;
+        if(items.length > 0){
+            return items;
+        }
+        return undefined;
     }
 
     public setData(data: any, serializer: formHelper.IFormSerializer) {

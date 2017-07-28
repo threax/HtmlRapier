@@ -10,6 +10,10 @@ export function IsFormElement(element: Node): element is HTMLFormElement{
 }
 
 function addValue(q: {}, name: string, value: any, level: string) {
+    if(value === undefined || value === ""){
+        return; //Prevents empty strings and undefined from being added to the output object
+    }
+
     name = extractLevelName(level, name);
 
     if (q[name] === undefined) {
@@ -84,7 +88,9 @@ export function serialize(form: HTMLElement, proto?: any, level?: string): any {
                                 selected.push(element.options[j].value);
                             }
                         }
-                        addValue(q, element.name, selected, level);
+                        if(selected.length > 0) {
+                            addValue(q, element.name, selected, level);
+                        }
                         break;
                 }
                 break;
