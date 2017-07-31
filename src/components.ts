@@ -65,7 +65,7 @@ export function one<T>(name: string, data: T, parentComponent: Node | string, in
  * If it is a function return the data and then return null to stop iteration.
  * @param {exports.createComponent~callback} createdCallback
  */
-export function many<T>(name: string, data: T, parentComponent: HTMLElement, insertBeforeSibling: Node, createdCallback: CreatedCallback<T>, variantFinder?: VariantFinderCallback<T>) {
+export function many<T>(name: string, data: T | T[] | typeId.ForEachable<T>, parentComponent: HTMLElement, insertBeforeSibling: Node, createdCallback: CreatedCallback<T>, variantFinder?: VariantFinderCallback<T>) {
     if (variantFinder === undefined) {
         variantFinder = getDefaultVariant;
     }
@@ -87,12 +87,12 @@ export function many<T>(name: string, data: T, parentComponent: HTMLElement, ins
             doCreateComponent(name, arrData[i], fragmentParent, null, variant, createdCallback);
         }
     }
-    else if (typeId.isForEachable(data)) {
+    else if (typeId.isForEachable<T>(data)) {
         //Data supports a 'foreach' method, use this to iterate it
         (<any>data).forEach(function (item) {
             variant = variantFinder(item);
             doCreateComponent(name, item, fragmentParent, null, variant, createdCallback);
-        })
+        });
     }
 
     parentComponent.insertBefore(fragmentParent, insertBefore);

@@ -36,6 +36,10 @@ export function isObject(test) {
     return typeof test === 'object';
 }
 
-export function isForEachable(test) {
+export interface ForEachable<T>{ 
+    forEach(callback: (value: T) => void): void 
+};
+
+export function isForEachable<T>(test): test is ForEachable<T> {
     return test && isFunction(test['forEach']);
 }

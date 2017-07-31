@@ -5,6 +5,7 @@ import * as components from 'hr.components';
 import * as typeId from 'hr.typeidentifiers';
 import * as domQuery from 'hr.domquery';
 import * as iter from 'hr.iterable';
+import * as schema from 'hr.schema';
 
 /**
  * The basic interface for view instances.
@@ -33,9 +34,57 @@ export interface IView<T>{
      * Clear all data from the model.
      */
     clear(): void;
+
+    /**
+     * Set the formater to use when reading values out of the data.
+     */
+    setFormatter(formatter: IViewDataFormatter<T>): void;
+}
+
+export interface IViewDataFormatter<T> {
+    convert(data: T): Extractor<T>;
+}
+
+export interface Extractor<T> {
+    (name: string): any;
+    original: T;
+};
+
+export class SchemaViewDataFormatter<T> {
+     constructor(private schema: schema.JsonSchema) {
+
+    }
+
+    public convert(data:T): Extractor<T> {
+        var extractor: any = (name: string) => {
+            return this.extract(name, data);
+        };
+
+        extractor.original = data;
+
+        return extractor;
+    }
+
+    private extract(name: string, data: any) {
+        var prop = this.schema.properties[name];
+        var rawData = data[name];
+        if (prop) {
+            var values = prop['x-values'];
+            if (values !== undefined && Array.isArray(values)) {
+                for (var i = 0; i < values.length; ++i) {
+                    if (values[i].value == rawData) {
+                        return values[i].label;
+                    }
+                }
+            }
+        }
+        return rawData;
+    }
 }
 
 class ComponentView<T> implements IView<T> {
+    private formatter: IViewDataFormatter<T>;
+
     constructor(private element: HTMLElement, private component: string){
 
     }
@@ -50,20 +99,50 @@ class ComponentView<T> implements IView<T> {
     }
 
     public insertData(data: T | T[] | iter.IterableInterface<T>, insertBeforeSibling: Node, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): void {
-        if (typeId.isArray(data) || typeId.isForEachable(data)) {
-            components.many(this.component, data, this.element, insertBeforeSibling, createdCallback, variantFinderCallback);
+        if (Array.isArray(data) || typeId.isForEachable(data)) {
+            if(this.formatter !== undefined){
+                var dataExtractors = new iter.Iterable(<T[]>data).select<Extractor<T>>(i => {
+                    return this.formatter.convert(i);
+                });
+                components.many<Extractor<T>>(this.component, dataExtractors, this.element, insertBeforeSibling,
+                    createdCallback === undefined ? undefined : (b, e) => {
+                        return createdCallback(b, e.original);
+                    }, 
+                    variantFinderCallback === undefined ? undefined : (i) => {
+                        return variantFinderCallback(i.original);
+                    });
+            }
+            else{
+                components.many<T>(this.component, data, this.element, insertBeforeSibling, createdCallback, variantFinderCallback);
+            }
         }
         else if (data !== undefined && data !== null) {
-            components.one(this.component, data, this.element, insertBeforeSibling, createdCallback, variantFinderCallback);
+            if(this.formatter !== undefined){
+                components.one(this.component, this.formatter.convert(<T>data), this.element, insertBeforeSibling, 
+                    createdCallback === undefined ? undefined : (b, e) => {
+                        return createdCallback(b, e.original);
+                    }, 
+                    variantFinderCallback === undefined ? undefined : (i) => {
+                        return variantFinderCallback(i.original);
+                    });
+            }
+            else{
+                components.one(this.component, data, this.element, insertBeforeSibling, createdCallback, variantFinderCallback);
+            }
         }
     }
 
     public clear(): void {
         components.empty(this.element);
     }
+
+    public setFormatter(formatter: IViewDataFormatter<T>): void {
+        this.formatter = formatter;
+    }
 }
 
 class TextNodeView<T> implements IView<T> {
+    private formatter: IViewDataFormatter<T>;
     private dataTextElements = undefined;
 
     constructor(private element: HTMLElement){
@@ -71,19 +150,29 @@ class TextNodeView<T> implements IView<T> {
     }
 
     public setData(data: T): void {
-        this.dataTextElements = bindData(data, this.element, this.dataTextElements);
+        this.insertData(data);
     }
 
     public appendData(data: T): void {
-        this.dataTextElements = bindData(data, this.element, this.dataTextElements);
+        this.insertData(data);
     }
 
-    insertData(data: T | T[] | iter.IterableInterface<T>): void{
-        this.dataTextElements = bindData(data, this.element, this.dataTextElements);
+    public insertData(data: T | T[] | iter.IterableInterface<T>): void{
+        if(this.formatter !== undefined){
+            var extractor = this.formatter.convert(<T>data);
+            this.dataTextElements = bindData(extractor, this.element, this.dataTextElements);
+        }
+        else{
+            this.dataTextElements = bindData(data, this.element, this.dataTextElements);
+        }
     }
 
     public clear(): void {
         this.dataTextElements = bindData(sharedClearer, this.element, this.dataTextElements);
+    }
+
+    public setFormatter(formatter: IViewDataFormatter<T>): void {
+        this.formatter = formatter;
     }
 }
 
@@ -106,6 +195,10 @@ class NullView<T> implements IView<T> {
 
     public clear(): void {
 
+    }
+
+    public setFormatter(formatter: IViewDataFormatter<T>): void {
+        
     }
 }
 
