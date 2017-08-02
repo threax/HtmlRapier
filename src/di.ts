@@ -6,7 +6,15 @@ export type ResolverFunction<T> = (scope: Scope) => T;
 //Intellisense seems to correctly detect T using this method.
 export type DiFunction<T> = Function & { prototype: T };
 
-export type InjectableConstructor<T> = { InjectorArgs: DiFunction<any>[] };
+export interface DiFunctionId<T, TId>{
+    id: TId;
+    arg: DiFunction<any>;
+}
+function IsDiFuncitonId<T, TId>(test: any): test is DiFunctionId<T, TId>{
+    return test && test.id !== undefined && test.arg !== undefined;
+}
+
+export type InjectableConstructor<T> = { InjectorArgs: (DiFunction<any> | DiFunctionId<any, any>)[] };
 function IsInjectableConstructor<T>(test: any): test is InjectableConstructor<T> {
     return test["InjectorArgs"] !== undefined;
 }
@@ -14,7 +22,7 @@ function IsInjectableConstructor<T>(test: any): test is InjectableConstructor<T>
 const DiIdProperty = "__diId";
 
 enum Scopes {
-    Singleton,
+    Shared,
     Transient
 }
 
@@ -120,10 +128,10 @@ export class ServiceCollection {
      */
     public addSharedId<T, TId>(id: TId, typeHandle: DiFunction<T>, resolver: ResolverFunction<T> | InjectableConstructor<T>): ServiceCollection {
         if (IsInjectableConstructor(resolver)) {
-            return this.add(id, typeHandle, Scopes.Singleton, this.createConstructorResolver(resolver));
+            return this.add(id, typeHandle, Scopes.Shared, this.createConstructorResolver(resolver));
         }
         else {
-            return this.add(id, typeHandle, Scopes.Singleton, resolver);
+            return this.add(id, typeHandle, Scopes.Shared, resolver);
         }
     }
 
@@ -232,7 +240,7 @@ export class ServiceCollection {
      * @returns
      */
     public addSharedInstanceId<T, TId>(id: TId, typeHandle: DiFunction<T>, instance: T): ServiceCollection {
-        return this.add(undefined, typeHandle, Scopes.Singleton, s => instance);
+        return this.add(undefined, typeHandle, Scopes.Shared, s => instance);
     }
 
     /**
@@ -278,6 +286,7 @@ export class ServiceCollection {
         var injector = this.resolvers[typeHandle.prototype[DiIdProperty]];
         if(!injector){
             injector = new InjectedProperties();
+            this.resolvers[typeHandle.prototype[DiIdProperty]] = injector;
         }
 
         injector.addResolver({
@@ -316,7 +325,13 @@ export class ServiceCollection {
             var argTypes = constructor.InjectorArgs;
             var args = [];
             for (var i = 0; i < argTypes.length; ++i) {
-                args[i] = s.getRequiredService(argTypes[i]);
+                var injectType = argTypes[i];
+                if(IsDiFuncitonId(injectType)){
+                    args[i] = s.getRequiredServiceId(injectType.id, injectType.arg);
+                }
+                else { //Has to be DiFunction<any> at this point
+                    args[i] = s.getRequiredService(<DiFunction<any>>injectType);
+                }
             }
             var controllerObj = Object.create((<any>constructor).prototype);
             (<any>constructor).apply(controllerObj, args);
@@ -357,6 +372,38 @@ export class ServiceCollection {
     }
 }
 
+class InstanceHandler{
+    private instances: InstanceHolder[] = [];
+
+    constructor(){
+
+    }
+
+    public addInstance(instance: InstanceHolder){
+        this.instances.push(instance);
+    }
+
+    /**
+     * Get an instance by id if it exists, otherwise return undefined.
+     */
+    public getInstance(id: any){
+        for(var i = this.instances.length - 1; i >= 0; --i){
+            var instance = this.instances[i];
+            if(instance.id === id){
+                return instance.instance;
+            }
+        }
+        return undefined;
+    }
+}
+
+type InstanceHandlerMap = {[key: string]: InstanceHandler};
+
+class InstanceHolder{
+    id: any;
+    instance: any;
+}
+
 /**
  * A scope for dependency injection.
  * @param {ServiceCollection} services
@@ -365,7 +412,7 @@ export class ServiceCollection {
  */
 export class Scope {
     private services: ServiceCollection;
-    private singletons: any = {};
+    private singletons: InstanceHandlerMap = {};
     private parentScope: Scope;
 
     constructor(services: ServiceCollection, parentScope?: Scope) {
@@ -379,8 +426,17 @@ export class Scope {
      * @returns
      */
     public getService<T>(typeHandle: DiFunction<T>): T {
+        return this.getServiceId(undefined, typeHandle);
+    }
+
+    /**
+     * Get a service defined by the given constructor function and id.
+     * @param {function} typeHandle
+     * @returns
+     */
+    public getServiceId<T, TId>(id: TId, typeHandle: DiFunction<T>): T {
         var typeId = typeHandle.prototype[DiIdProperty];
-        var instance = this.findInstance(typeHandle);
+        var instance = this.bubbleFindSingletonInstance(id, typeHandle);
 
         //If the service is not found, resolve from our service collection
         if (instance === undefined) {
@@ -400,7 +456,16 @@ export class Scope {
      * @returns
      */
     public getRequiredService<T>(typeHandle: DiFunction<T>): T {
-        var instance = this.getService(typeHandle);
+        return this.getRequiredServiceId(undefined, typeHandle);
+    }
+
+     /**
+     * Get a service defined by the given constructor function and id. If the service does not exist an error is thrown.
+     * @param {function} typeHandle
+     * @returns
+     */
+    public getRequiredServiceId<T, TId>(id: TId, typeHandle: DiFunction<T>): T {
+        var instance = this.getServiceId(id, typeHandle);
         if (instance === undefined) {
             var funcNameRegex = /^function\s+([\w\$]+)\s*\(/;
             var typeResult = funcNameRegex.exec(typeHandle.prototype.constructor.toString());
@@ -422,29 +487,19 @@ export class Scope {
     }
 
     /**
-     * Helper funciton to find existing instances, will look for shared instances at the current level
-     * and then walk up the tree looking for shared instances if there is no match. If nothing is found
-     * a new instance is created.
-     * @param {DiFunction<T>} typeHandle
-     * @returns
-     */
-    private findInstance<T>(typeHandle: DiFunction<T>) {
-        var typeId = typeHandle.prototype[DiIdProperty];
-        var instance = this.bubbleFindSingletonInstance(typeHandle);
-
-        return instance;
-    }
-
-    /**
      * Walk up the tree looking for singletons, if one is found return it otherwise undefined is returned.
      * @param {DiFunction<T>} typeHandle
      * @returns
      */
-    private bubbleFindSingletonInstance<T>(typeHandle: DiFunction<T>) {
+    private bubbleFindSingletonInstance<T, TId>(id: TId, typeHandle: DiFunction<T>) {
         var typeId = typeHandle.prototype[DiIdProperty];
-        var instance = this.singletons[typeId];
+        var handler = this.singletons[typeId];
+        var instance: T;
+        if(handler !== undefined){
+            instance = handler.getInstance(id);
+        }
         if (instance === undefined && this.parentScope !== undefined) {
-            instance = this.parentScope.bubbleFindSingletonInstance(typeHandle);
+            instance = this.parentScope.bubbleFindSingletonInstance(id, typeHandle);
         }
 
         return instance;
@@ -463,11 +518,19 @@ export class Scope {
                 result = this.parentScope.resolveService(id, typeHandle, scope);
             }
         }
-        else if (result.scope === Scopes.Singleton) {
+        else if (result.scope === Scopes.Shared) {
             //If we found an instance and its a singleton, add it to this scope's list of singletons.
             //Do it here so its stored on the level that resolved it.
             var typeId = typeHandle.prototype[DiIdProperty];
-            this.singletons[typeId] = result.instance;
+            var handler = this.singletons[typeId];
+            if(handler === undefined){
+                handler = new InstanceHandler();
+                this.singletons[typeId] = handler;
+            }
+            handler.addInstance({
+               instance: result.instance,
+               id: id 
+            });
         }
         return result;
     }
