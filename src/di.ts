@@ -108,11 +108,22 @@ export class ServiceCollection {
      * @returns
      */
     public addShared<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T> | InjectableConstructor<T>): ServiceCollection {
+        return this.addSharedId(undefined, typeHandle, resolver);
+    }
+
+    /**
+     * Add a shared service to the collection, shared services are created the first time they are requested 
+     * and persist across child scopes. This version will additionally require an id object to get the service back.
+     * @param {function} typeHandle The constructor function for the type that represents this injected object.
+     * @param {ResolverFunction<T>} resolver The resolver function for the object, can return promises.
+     * @returns
+     */
+    public addSharedId<T, TId>(id: TId, typeHandle: DiFunction<T>, resolver: ResolverFunction<T> | InjectableConstructor<T>): ServiceCollection {
         if (IsInjectableConstructor(resolver)) {
-            return this.add(undefined, typeHandle, Scopes.Singleton, this.createConstructorResolver(resolver));
+            return this.add(id, typeHandle, Scopes.Singleton, this.createConstructorResolver(resolver));
         }
         else {
-            return this.add(undefined, typeHandle, Scopes.Singleton, resolver);
+            return this.add(id, typeHandle, Scopes.Singleton, resolver);
         }
     }
 
@@ -126,8 +137,22 @@ export class ServiceCollection {
      * @returns
      */
     public tryAddShared<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T> | InjectableConstructor<T>): ServiceCollection {
-        if (!this.hasTypeHandle(undefined, typeHandle)) {
-            this.addShared(typeHandle, resolver);
+        return this.tryAddSharedId(undefined, typeHandle, resolver);
+    }
+
+    /**
+     * Add a shared service to the collection if it does not exist in the collection already. Note that the ServiceCollections do not
+     * have parents or any concept of parents, so services added this way to a ServiceCollection that is a child of another service
+     * collection will override the service in the child collection as if you added it with add, since it has no way to check parents
+     * for the existance of a service. This version will additionally require an id object to get the service back. You can add multiple
+     * objects of the same type as long as they have different ids, but a match of id and object type will be blocked.
+     * @param {DiFunction<T>} typeHandle
+     * @param {InjectableConstructor<T> | T} resolver
+     * @returns
+     */
+    public tryAddSharedId<T, TId>(id: TId, typeHandle: DiFunction<T>, resolver: ResolverFunction<T> | InjectableConstructor<T>): ServiceCollection {
+        if (!this.hasTypeHandle(id, typeHandle)) {
+            this.addSharedId(id, typeHandle, resolver);
         }
         return this;
     }
@@ -139,11 +164,22 @@ export class ServiceCollection {
      * @returns
      */
     public addTransient<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T> | InjectableConstructor<T>): ServiceCollection {
+        return this.addTransientId(undefined, typeHandle, resolver);
+    }
+
+    /**
+     * Add a transient service to the collection, transient services are created each time they are asked for.
+     * This version will additionally require an id object to get the service back.
+     * @param {function} typeHandle The constructor function for the type that represents this injected object.
+     * @param {ResolverFunction<T>} resolver The resolver function for the object, can return promises.
+     * @returns
+     */
+    public addTransientId<T, TId>(id: TId, typeHandle: DiFunction<T>, resolver: ResolverFunction<T> | InjectableConstructor<T>): ServiceCollection {
         if (IsInjectableConstructor(resolver)) {
-            return this.add(undefined, typeHandle, Scopes.Transient, this.createConstructorResolver(resolver));
+            return this.add(id, typeHandle, Scopes.Transient, this.createConstructorResolver(resolver));
         }
         else {
-            return this.add(undefined, typeHandle, Scopes.Transient, resolver);
+            return this.add(id, typeHandle, Scopes.Transient, resolver);
         }
     }
 
@@ -157,8 +193,22 @@ export class ServiceCollection {
      * @returns
      */
     public tryAddTransient<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T> | InjectableConstructor<T>): ServiceCollection {
-        if (!this.hasTypeHandle(undefined, typeHandle)) {
-            this.addTransient(typeHandle, resolver);
+        return this.tryAddTransientId(undefined, typeHandle, resolver);
+    }
+
+    /**
+     * Add a transient service to the collection if it does not exist in the collection already. Note that the ServiceCollections do not
+     * have parents or any concept of parents, so services added this way to a ServiceCollection that is a child of another service
+     * collection will override the service in the child collection as if you added it with add, since it has no way to check parents
+     * for the existance of a service. This version will additionally require an id object to get the service back. You can add multiple
+     * objects of the same type as long as they have different ids, but a match of id and object type will be blocked.
+     * @param {DiFunction<T>} typeHandle
+     * @param {InjectableConstructor<T> | T} resolver
+     * @returns
+     */
+    public tryAddTransientId<T, TId>(id: TId, typeHandle: DiFunction<T>, resolver: ResolverFunction<T> | InjectableConstructor<T>): ServiceCollection {
+        if (!this.hasTypeHandle(id, typeHandle)) {
+            this.addTransientId(id, typeHandle, resolver);
         }
         return this;
     }
@@ -171,6 +221,17 @@ export class ServiceCollection {
      * @returns
      */
     public addSharedInstance<T>(typeHandle: DiFunction<T>, instance: T): ServiceCollection {
+        return this.addSharedInstanceId(undefined, typeHandle, instance);
+    }
+
+    /**
+     * Add an existing object instance as a singleton to this injector. Existing instances can only be added
+     * as singletons. This version will additionally require an id object to get the service back.
+     * @param {function} typeHandle The constructor function for the type that represents this injected object.
+     * @param {ResolverFunction<T>} resolver The resolver function for the object, can return promises.
+     * @returns
+     */
+    public addSharedInstanceId<T, TId>(id: TId, typeHandle: DiFunction<T>, instance: T): ServiceCollection {
         return this.add(undefined, typeHandle, Scopes.Singleton, s => instance);
     }
 
@@ -184,8 +245,22 @@ export class ServiceCollection {
      * @returns
      */
     public tryAddSharedInstance<T>(typeHandle: DiFunction<T>, instance: T): ServiceCollection {
-        if (!this.hasTypeHandle(undefined, typeHandle)) {
-            this.addSharedInstance(typeHandle, instance);
+        return this.tryAddSharedInstanceId(undefined, typeHandle, instance);
+    }
+
+    /**
+     * Add a singleton service to the collection if it does not exist in the collection already. Note that the ServiceCollections do not
+     * have parents or any concept of parents, so services added this way to a ServiceCollection that is a child of another service
+     * collection will override the service in the child collection as if you added it with add, since it has no way to check parents
+     * for the existance of a service. This version will additionally require an id object to get the service back. You can add multiple
+     * objects of the same type as long as they have different ids, but a match of id and object type will be blocked.
+     * @param {DiFunction<T>} typeHandle
+     * @param {InjectableConstructor<T> | T} resolver
+     * @returns
+     */
+    public tryAddSharedInstanceId<T, TId>(id: TId, typeHandle: DiFunction<T>, instance: T): ServiceCollection {
+        if (!this.hasTypeHandle(id, typeHandle)) {
+            this.addSharedInstanceId(id, typeHandle, instance);
         }
         return this;
     }
