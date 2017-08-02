@@ -10,7 +10,7 @@ import * as domQuery from 'hr.domquery';
 import * as ignoredNodes from 'hr.ignored';
 import { ActionEventDispatcher } from 'hr.eventdispatcher';
 import * as di from 'hr.di';
-export { DiFunction, ServiceCollection } from 'hr.di';
+export { DiFunction, ServiceCollection, InjectableArgs } from 'hr.di';
 export { IForm } from 'hr.form';
 export { IView } from 'hr.view';
 

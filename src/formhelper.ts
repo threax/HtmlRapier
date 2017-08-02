@@ -173,8 +173,10 @@ export function populate(form: HTMLElement | string, data:any, level?: string): 
                     break;
                 case 'select-multiple':
                     var options = (<HTMLSelectElement>element).options;
-                    for (var j = options.length - 1; j >= 0; j = j - 1) {
-                        options[j].selected = containsCoerced((<any[]>itemData), options[j].value);
+                    if(Array.isArray(itemData)){
+                        for (var j = options.length - 1; j >= 0; j = j - 1) {
+                            options[j].selected = containsCoerced(itemData, options[j].value);
+                        }
                     }
                     break;
                 default:

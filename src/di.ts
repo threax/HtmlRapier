@@ -6,6 +6,9 @@ export type ResolverFunction<T> = (scope: Scope) => T;
 //Intellisense seems to correctly detect T using this method.
 export type DiFunction<T> = Function & { prototype: T };
 
+export type InjectableArg = DiFunction<any> | DiFunctionId<any, any>;
+export type InjectableArgs = InjectableArg[];
+
 export interface DiFunctionId<T, TId>{
     id: TId;
     arg: DiFunction<any>;
@@ -14,7 +17,7 @@ function IsDiFuncitonId<T, TId>(test: any): test is DiFunctionId<T, TId>{
     return test && test.id !== undefined && test.arg !== undefined;
 }
 
-export type InjectableConstructor<T> = { InjectorArgs: (DiFunction<any> | DiFunctionId<any, any>)[] };
+export type InjectableConstructor<T> = { InjectorArgs: InjectableArgs };
 function IsInjectableConstructor<T>(test: any): test is InjectableConstructor<T> {
     return test["InjectorArgs"] !== undefined;
 }
@@ -35,7 +38,7 @@ interface Resolver {
 }
 
 class InjectedProperties {
-    private resolvers: Resolver[];
+    private resolvers: Resolver[] = [];
 
     constructor(){
 
@@ -240,7 +243,7 @@ export class ServiceCollection {
      * @returns
      */
     public addSharedInstanceId<T, TId>(id: TId, typeHandle: DiFunction<T>, instance: T): ServiceCollection {
-        return this.add(undefined, typeHandle, Scopes.Shared, s => instance);
+        return this.add(id, typeHandle, Scopes.Shared, s => instance);
     }
 
     /**
@@ -440,7 +443,7 @@ export class Scope {
 
         //If the service is not found, resolve from our service collection
         if (instance === undefined) {
-            var result = this.resolveService(undefined, typeHandle, this);
+            var result = this.resolveService(id, typeHandle, this);
             //Add scoped results to the scope instances if one was returned
             if (result !== undefined) {
                 instance = result.instance;
@@ -470,7 +473,12 @@ export class Scope {
             var funcNameRegex = /^function\s+([\w\$]+)\s*\(/;
             var typeResult = funcNameRegex.exec(typeHandle.prototype.constructor.toString());
             var typeName = typeResult ? typeResult[1] : "anonymous";
-            throw new Error("Cannot find required service for function " + typeName + ". Did you forget to inject it?");
+            var withId = "";
+            if(id !== undefined){
+                withId = " with id " + id + " ";
+            }
+            
+            throw new Error("Cannot find required service for function " + typeName + withId + ". Did you forget to inject it?");
         }
         return instance;
     }
