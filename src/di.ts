@@ -18,9 +18,39 @@ enum Scopes {
     Transient
 }
 
-interface InjectedProperties {
+type ResolverFunc = (scope: Scope) => any;
+
+interface Resolver {
+    id: any;
+    resolver: ResolverFunc;
     scope: Scopes;
-    resolver: (scope: Scope) => any;
+}
+
+class InjectedProperties {
+    private resolvers: Resolver[];
+
+    constructor(){
+
+    }
+
+    public addResolver(resolver: Resolver){
+        this.resolvers.push(resolver);
+    }
+
+    /**
+     * Resolve a service for a given id, which can be undefined. If no service is found, undefined is returned.
+     */
+    public resolve<T>(id: any, scope: Scope): ResolveResult<T> | undefined{
+        for(var i = this.resolvers.length - 1; i >= 0; --i){
+            var resolver = this.resolvers[i];
+            if(resolver.id === id){
+                return {
+                    instance: resolver.resolver(scope),
+                    scope: resolver.scope
+                };
+            }
+        }
+    }
 }
 
 interface InjectedPropertiesMap {
@@ -61,10 +91,10 @@ export class ServiceCollection {
      */
     public addShared<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T> | InjectableConstructor<T>): ServiceCollection {
         if (IsInjectableConstructor(resolver)) {
-            return this.add(typeHandle, Scopes.Singleton, this.createConstructorResolver(resolver));
+            return this.add(undefined, typeHandle, Scopes.Singleton, this.createConstructorResolver(resolver));
         }
         else {
-            return this.add(typeHandle, Scopes.Singleton, resolver);
+            return this.add(undefined, typeHandle, Scopes.Singleton, resolver);
         }
     }
 
@@ -92,10 +122,10 @@ export class ServiceCollection {
      */
     public addTransient<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T> | InjectableConstructor<T>): ServiceCollection {
         if (IsInjectableConstructor(resolver)) {
-            return this.add(typeHandle, Scopes.Transient, this.createConstructorResolver(resolver));
+            return this.add(undefined, typeHandle, Scopes.Transient, this.createConstructorResolver(resolver));
         }
         else {
-            return this.add(typeHandle, Scopes.Transient, resolver);
+            return this.add(undefined, typeHandle, Scopes.Transient, resolver);
         }
     }
 
@@ -123,7 +153,7 @@ export class ServiceCollection {
      * @returns
      */
     public addSharedInstance<T>(typeHandle: DiFunction<T>, instance: T): ServiceCollection {
-        return this.add(typeHandle, Scopes.Singleton, s => instance);
+        return this.add(undefined, typeHandle, Scopes.Singleton, s => instance);
     }
 
     /**
@@ -147,15 +177,21 @@ export class ServiceCollection {
      * @param {function} typeHandle The constructor function for the type that represents this injected object.
      * @param {ResolverFunction<T>} resolver The resolver function for the object, can return promises.
      */
-    private add<T>(typeHandle: DiFunction<T>, scope: Scopes, resolver: ResolverFunction<T>): ServiceCollection {
+    private add<T, TId>(id: TId, typeHandle: DiFunction<T>, scope: Scopes, resolver: ResolverFunction<T>): ServiceCollection {
         if (!typeHandle.prototype.hasOwnProperty(DiIdProperty)) {
             typeHandle.prototype[DiIdProperty] = ServiceCollection.idIndex++;
         }
 
-        this.resolvers[typeHandle.prototype[DiIdProperty]] = {
+        var injector = this.resolvers[typeHandle.prototype[DiIdProperty]];
+        if(!injector){
+            injector = new InjectedProperties();
+        }
+
+        injector.addResolver({
             resolver: resolver,
-            scope: scope
-        };
+            scope: scope,
+            id: id
+        });
 
         return this;
     }
@@ -201,18 +237,16 @@ export class ServiceCollection {
      * @internal
      * @returns
      */
-    public __resolveService<T>(typeHandle: DiFunction<T>, scope: Scope): ResolveResult<T> {
-        var id = typeHandle.prototype[DiIdProperty];
+    public __resolveService<T, TId>(id: TId, typeHandle: DiFunction<T>, scope: Scope): ResolveResult<T> {
+        var diId = typeHandle.prototype[DiIdProperty];
 
-        if (this.resolvers[id] !== undefined) {
+        if (this.resolvers[diId] !== undefined) {
             //Instantiate service, have scope handle instances
-            var info = this.resolvers[id];
-            var instance = info.resolver(scope);
-
-            return {
-                instance: instance,
-                scope: info.scope
-            };
+            var info = this.resolvers[diId];
+            var result = info.resolve<T>(id, scope);
+            if(result !== undefined){
+                return result;
+            }
         }
 
         return undefined;
@@ -254,7 +288,7 @@ export class Scope {
 
         //If the service is not found, resolve from our service collection
         if (instance === undefined) {
-            var result = this.resolveService<T>(typeHandle, this);
+            var result = this.resolveService(undefined, typeHandle, this);
             //Add scoped results to the scope instances if one was returned
             if (result !== undefined) {
                 instance = result.instance;
@@ -325,12 +359,12 @@ export class Scope {
      * @param {DiFunction<T>} typeHandle
      * @returns
      */
-    private resolveService<T>(typeHandle: DiFunction<T>, scope: Scope): ResolveResult<T> {
-        var result = this.services.__resolveService(typeHandle, scope);
+    private resolveService<T, TId>(id: TId, typeHandle: DiFunction<T>, scope: Scope): ResolveResult<T> {
+        var result = this.services.__resolveService(id, typeHandle, scope);
         if (result === undefined) {
             //Cannot find service at this level, search parent services.
             if (this.parentScope) {
-                result = this.parentScope.resolveService<T>(typeHandle, scope);
+                result = this.parentScope.resolveService(id, typeHandle, scope);
             }
         }
         else if (result.scope === Scopes.Singleton) {
