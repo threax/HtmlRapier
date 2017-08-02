@@ -33,6 +33,10 @@ class InjectedProperties {
 
     }
 
+    /**
+     * Add a resolver.
+     * @param resolver The resolver to add
+     */
     public addResolver(resolver: Resolver){
         this.resolvers.push(resolver);
     }
@@ -50,6 +54,20 @@ class InjectedProperties {
                 };
             }
         }
+    }
+
+    /**
+     * Determine if there is a resolver for a given id.
+     * @param id The id to lookup
+     */
+    public hasResolverForId<TId>(id: TId){
+        for(var i = this.resolvers.length - 1; i >= 0; --i){
+            var resolver = this.resolvers[i];
+            if(resolver.id === id){
+                return true;
+            }
+        }
+        return false;
     }
 }
 
@@ -108,7 +126,7 @@ export class ServiceCollection {
      * @returns
      */
     public tryAddShared<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T> | InjectableConstructor<T>): ServiceCollection {
-        if (!this.hasTypeHandle(typeHandle)) {
+        if (!this.hasTypeHandle(undefined, typeHandle)) {
             this.addShared(typeHandle, resolver);
         }
         return this;
@@ -139,7 +157,7 @@ export class ServiceCollection {
      * @returns
      */
     public tryAddTransient<T>(typeHandle: DiFunction<T>, resolver: ResolverFunction<T> | InjectableConstructor<T>): ServiceCollection {
-        if (!this.hasTypeHandle(typeHandle)) {
+        if (!this.hasTypeHandle(undefined, typeHandle)) {
             this.addTransient(typeHandle, resolver);
         }
         return this;
@@ -166,7 +184,7 @@ export class ServiceCollection {
      * @returns
      */
     public tryAddSharedInstance<T>(typeHandle: DiFunction<T>, instance: T): ServiceCollection {
-        if (!this.hasTypeHandle(typeHandle)) {
+        if (!this.hasTypeHandle(undefined, typeHandle)) {
             this.addSharedInstance(typeHandle, instance);
         }
         return this;
@@ -201,10 +219,13 @@ export class ServiceCollection {
      * @param {DiFunction<T>} typeHandle The type handle to lookup
      * @returns True if there is a resolver, and false if there is not.
      */
-    private hasTypeHandle<T>(typeHandle: DiFunction<T>) {
+    private hasTypeHandle<T, TId>(id: TId, typeHandle: DiFunction<T>) {
         if (typeHandle.prototype.hasOwnProperty(DiIdProperty)) {
             var typeId = typeHandle.prototype[DiIdProperty];
-            return this.resolvers[typeId] !== undefined;
+            var resolver = this.resolvers[typeId];
+            if(resolver !== undefined){
+                return resolver.hasResolverForId(id);
+            }
         }
         return false;
     }
