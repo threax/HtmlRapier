@@ -125,7 +125,7 @@ class ArrayEditorRow {
         if(itemHandle !== null){
             this.root = itemHandle;
         }
-        this.formValues = buildForm('hr.defaultform', schema, this.root, this.name, true);
+        this.formValues = buildForm('hr.forms.default', schema, this.root, this.name, true);
 
         bindings.setListener(this);
     }

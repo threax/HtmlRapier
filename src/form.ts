@@ -180,8 +180,11 @@ class Form<T> {
     }
 
     public setSchema(schema: JsonSchema, componentName?: string): void{
-        if(componentName === undefined){
-            componentName = "hr.defaultform";
+        if (componentName === undefined) {
+            componentName = this.form.getAttribute("data-hr-form-component");
+            if (componentName === null) {
+                componentName = "hr.forms.default";
+            }
         }
 
         this.clear();
