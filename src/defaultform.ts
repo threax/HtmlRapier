@@ -8,6 +8,9 @@ if(!component.isDefined("hr.defaultform")){
     var builder = new ComponentBuilder(
         '<div class="form-group" data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error"><label class="control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label><input class="form-control" name="{{buildName}}" type="{{buildType}}" /></div>'
     );
+    builder.addVariant("textarea", new VariantBuilder(
+        '<div class="form-group" data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error"><label class="control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label><textarea class="form-control" name="{{buildName}}" rows="{{size}}" /></div>'
+    ));
     builder.addVariant("checkbox", new VariantBuilder(
         '<div class="checkbox"><label><input type="checkbox" name="{{buildName}}" value="{{buildValue}}" />&nbsp;{{title}}</label></div>'
     ));

@@ -462,7 +462,7 @@ function extractLabels(prop: JsonProperty): JsonLabel[]{
 }
 
 function processProperty(prop: JsonProperty, name: string, buildName: string): ProcessedJsonProperty{
-    var processed = Object.create(prop);
+    var processed : ProcessedJsonProperty = Object.create(prop);
     processed.buildName = buildName;
     processed.name = name;
     if(processed.title === undefined){ //Set title if it is not set
@@ -536,6 +536,11 @@ function processProperty(prop: JsonProperty, name: string, buildName: string): P
                 processed.buildValue = "true";
                 if(prop["x-value"] !== undefined){
                     processed.buildValue = prop["x-value"];
+                }
+                break;
+            case 'textarea':
+                if (processed.size === undefined) {
+                    processed.size = 5;
                 }
                 break;
         }
