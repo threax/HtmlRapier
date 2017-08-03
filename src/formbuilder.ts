@@ -335,10 +335,11 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
         formValues = new FormValues();
     }
     
+    var insertParent = parentElement;
     var dynamicInsertElement = domquery.first("[data-hr-form-end]", parentElement);
     if(dynamicInsertElement !== null){
         //Adjust parent to end element if one was found
-        parentElement = dynamicInsertElement.parentElement;
+        insertParent = dynamicInsertElement.parentElement;
     }
     var propArray: ProcessedJsonProperty[] = [];
     var props = schema.properties;
@@ -369,7 +370,7 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
         var generated = false;
         if(ignoreExisting || existing === null){
             //Create component if it is null
-            bindings = component.one(componentName, item, parentElement, dynamicInsertElement, undefined, (i) => {
+            bindings = component.one(componentName, item, insertParent, dynamicInsertElement, undefined, (i) => {
                 return i.buildType;
             });
 
