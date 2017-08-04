@@ -526,6 +526,15 @@ function processProperty(prop: JsonProperty, name: string, buildName: string): P
                     case 'boolean':
                         processed.buildType = 'checkbox';
                         break;
+                    case 'string':
+                        switch (processed.format) {
+                            case 'date-time':
+                                processed.buildType = 'datetime-local';
+                                break;
+                            default:
+                                processed.buildType = 'text';
+                                break;
+                        }
                 }
             }
         }
