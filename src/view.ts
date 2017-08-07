@@ -77,6 +77,21 @@ export class SchemaViewDataFormatter<T> {
                     }
                 }
             }
+
+            var format = prop['x-ui-type'];
+            if (format === undefined) { //If no x-ui-type also consider the format the json schema gives us
+                format = prop.format;
+            }
+
+            //Check for dates, come in a couple ways
+            switch (format) {
+                case 'date':
+                    var date = new Date(rawData);
+                    return date.toLocaleDateString();
+                case 'date-time':
+                    var date = new Date(rawData);
+                    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+            }
         }
         return rawData;
     }
