@@ -115,7 +115,7 @@ function extractTemplate(elementPair: ElementPair, currentBuilder: ComponentBuil
 
         var builder = new ComponentBuilder(componentString);
         extractedBuilders[componentName] = builder;
-        components.register(componentName, builder.getFactory());
+        components.register(componentName, builder);
         return builder;
     }
     else {

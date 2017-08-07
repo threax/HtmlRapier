@@ -47,13 +47,7 @@ export class ComponentBuilder{
         return createItem(data, this.tokenizedString, parentComponent, insertBeforeSibling);
     }
 
-    public getFactory() {
-        return (data, parentComponent, insertBeforeSibling, variant) =>{
-            return this.create(data, parentComponent, insertBeforeSibling, variant);
-        };
-    }
-
-    private create(data, parentComponent, insertBeforeSibling, variant) {
+    public create(data, parentComponent, insertBeforeSibling, variant) {
         if (variant !== null && this.variants.hasOwnProperty(variant)) {
             return this.variants[variant].create(data, parentComponent, insertBeforeSibling);
         }

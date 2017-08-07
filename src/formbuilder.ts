@@ -76,7 +76,7 @@ class FormValues implements formHelper.IFormValues {
     }
 }
 
-interface IFormValue {
+export interface IFormValue {
     setError(err: FormErrors, baseName: string);
 
     getName(): string;
@@ -280,7 +280,7 @@ class ArrayEditor implements IFormValue {
     }
 }
 
-class BasicItemEditor implements IFormValue{
+export class BasicItemEditor implements IFormValue{
     private toggle: toggle.OnOffToggle;
     private message: view.IView<string>;
 
@@ -320,6 +320,18 @@ class BasicItemEditor implements IFormValue{
         }
         return this.generated;
     }
+}
+
+export class IFormValueBuilderArgs {
+    item: ProcessedJsonProperty;
+    bindings: BindingCollection;
+    generated: boolean;
+    schema: JsonSchema;
+    inputElement: HTMLElement;
+}
+
+export interface IFormValueBuilder {
+    create(args: IFormValueBuilderArgs) : IFormValue | null;
 }
 
 function buildForm(componentName: string, schema: JsonSchema, parentElement: HTMLElement, baseName?: string, ignoreExisting?: boolean, formValues?: FormValues): FormValues {
@@ -404,15 +416,14 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
             }
         }
 
-        if(bindings !== null){
-            if(item.buildType === "arrayEditor"){
-                var resolvedItems = resolveRef(<RefNode>item.items, schema);
-                var editor = new ArrayEditor(item.name, item.buildName, bindings, resolvedItems, generated);
-                formValues.add(editor);
-            }
-            else{
-                formValues.add(new BasicItemEditor(item.name, item.buildName, bindings, generated));
-            }
+        if (bindings !== null) {
+            formValues.add(createBindings({
+                bindings: bindings,
+                generated: generated,
+                item: item,
+                schema: schema,
+                inputElement: existing
+            }));
         }
 
         //If this is a child form, mark the element as a child so the form serializer will ignore it
@@ -436,6 +447,24 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
     }
 
     return formValues;
+}
+
+function createBindings(args: IFormValueBuilderArgs) : IFormValue {
+    //See if there is a custom handler first
+    for(var i = 0; i < formValueBuilders.length; ++i){
+        var created = formValueBuilders[i].create(args);
+        if(created !== null){
+            return created;
+        }
+    }
+
+    if (args.item.buildType === "arrayEditor") {
+        var resolvedItems = resolveRef(<RefNode>args.item.items, args.schema);
+        return new ArrayEditor(args.item.name, args.item.buildName, args.bindings, resolvedItems, args.generated);
+    }
+    else {
+        return new BasicItemEditor(args.item.name, args.item.buildName, args.bindings, args.generated);
+    }
 }
 
 function IsElement(element: Node): element is HTMLElement{
@@ -519,7 +548,7 @@ function processProperty(prop: JsonProperty, name: string, buildName: string): P
             }
             else {
                 //Regular type, no options, derive html type
-                switch(processed.buildType){
+                switch(processed.buildType) {
                     case 'integer':
                         processed.buildType = 'number';
                         break;
@@ -529,7 +558,7 @@ function processProperty(prop: JsonProperty, name: string, buildName: string): P
                     case 'string':
                         switch (processed.format) {
                             case 'date-time':
-                                processed.buildType = 'datetime-local';
+                                processed.buildType = 'date-time';
                                 break;
                             default:
                                 processed.buildType = 'text';
@@ -571,6 +600,12 @@ function getPropertyType(prop: JsonProperty) {
         return prop.type;
     }
     return "null";
+}
+
+var formValueBuilders: IFormValueBuilder[] = [];
+
+export function registerFormValueBuilder(builder: IFormValueBuilder) {
+    formValueBuilders.push(builder);
 }
 
 //Register form build function

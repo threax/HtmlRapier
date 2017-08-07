@@ -5,26 +5,29 @@
 import * as typeId from 'hr.typeidentifiers';
 import * as domquery from 'hr.domquery';
 import { BindingCollection } from 'hr.bindingcollection';
+import {ComponentBuilder, VariantBuilder} from 'hr.componentbuilder';
 
 interface ComponentFactory {
-    [s: string]: ComponentCreateFunc
+    [s: string]: ComponentBuilder
 }
 
 var factory: ComponentFactory = {};
-
-type ComponentCreateFunc = (data: any, parentComponent: Node, insertBeforeSibling: Node, variant: string) => BindingCollection;
 
 /**
  * Register a function with the component system.
  * @param name - The name of the component
  * @param createFunc - The function that creates the new component.
  */
-export function register(name: string, createFunc: ComponentCreateFunc) {
-    factory[name] = createFunc;
+export function register(name: string, builder: ComponentBuilder): void {
+    factory[name] = builder;
 }
 
-export function isDefined(name: string){
+export function isDefined(name: string): boolean{
     return factory[name] !== undefined;
+}
+
+export function getComponent(name: string): ComponentBuilder{
+    return factory[name];
 }
 
 export interface VariantFinderCallback<T> {
@@ -120,7 +123,7 @@ export function empty(parentComponent: Node | string) {
 function doCreateComponent<T>(name: string, data: T, parentComponent: Node | string, insertBeforeSibling: Node, variant: string, createdCallback: CreatedCallback<T>) {
     parentComponent = domquery.first(parentComponent);
     if (factory.hasOwnProperty(name)) {
-        var created = factory[name](data, parentComponent, insertBeforeSibling, variant);
+        var created = factory[name].create(data, parentComponent, insertBeforeSibling, variant);
         if (createdCallback !== undefined && createdCallback !== null) {
             createdCallback(created, data);
         }
