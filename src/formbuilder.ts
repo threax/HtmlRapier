@@ -283,10 +283,25 @@ class ArrayEditor implements IFormValue {
 export class BasicItemEditor implements IFormValue{
     private toggle: toggle.OnOffToggle;
     private message: view.IView<string>;
+    protected name: string;
+    protected buildName: string;
+    protected bindings: BindingCollection;
+    protected generated: boolean;
+    protected element: HTMLElement;
 
-    constructor(private name: string, private buildName: string, private bindings: BindingCollection, private generated: boolean){
-        this.toggle = bindings.getToggle(buildName + "Error");
-        this.message = bindings.getView(buildName + "ErrorMessage");
+    constructor(args: IFormValueBuilderArgs){
+        this.name = args.item.name;
+        this.buildName = args.item.buildName;
+        this.bindings = args.bindings;
+        this.generated = args.generated;
+        this.element = args.inputElement;
+
+        if(args.item["x-ui-disabled"] === true){
+            this.element.setAttribute("disabled", "");
+        }
+
+        this.toggle = this.bindings.getToggle(this.buildName + "Error");
+        this.message = this.bindings.getView(this.buildName + "ErrorMessage");
     }
 
     public setError(err: FormErrors, baseName: string) {
@@ -463,7 +478,7 @@ function createBindings(args: IFormValueBuilderArgs) : IFormValue {
         return new ArrayEditor(args.item.name, args.item.buildName, args.bindings, resolvedItems, args.generated);
     }
     else {
-        return new BasicItemEditor(args.item.name, args.item.buildName, args.bindings, args.generated);
+        return new BasicItemEditor(args);
     }
 }
 
