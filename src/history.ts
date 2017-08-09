@@ -81,5 +81,8 @@ export class HistoryManager {
 }
 
 export function addServices(services: di.ServiceCollection): void {
-    services.tryAddShared(IHistoryManager, HistoryManager);
+    services.tryAddShared(IHistoryManager, s => {
+        var url = new Uri();
+        return new HistoryManager(url.path);
+    });
 }
