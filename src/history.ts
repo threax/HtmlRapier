@@ -2,12 +2,8 @@ import { Uri } from 'hr.uri';
 import * as di from 'hr.di';
 
 export class HistoryArgs<T> {
-    constructor(private _data: T, private _uri: Uri, private basePath: string){
+    constructor(private _uri: Uri, private basePath: string){
 
-    }
-
-    public get data(){
-        return this._data;
     }
 
     public get query(){
@@ -26,16 +22,15 @@ export interface IHistoryHandler<T> {
 export abstract class IHistoryManager {
     public abstract registerHandler<T>(name: string, handler: IHistoryHandler<T>);
 
-    public abstract pushQueryState<T extends {}>(handler: string, query: any): void;
+    public abstract pushState<T extends {}>(handler: string, inPagePath: string | null, query: {} | null): void;
 
-    public abstract replaceQueryState<T extends {}>(handler: string, query: any): void;
+    public abstract replaceState<T extends {}>(handler: string, inPagePath: string | null, query: {} | null): void;
 
     public abstract getCurrentState<T>(): HistoryArgs<T> | null;
 }
 
 interface IHistoryEntry<T> {
     handler: string;
-    data: T;
 }
 
 export class HistoryManager implements IHistoryManager {
@@ -54,7 +49,7 @@ export class HistoryManager implements IHistoryManager {
         if (state) {
             var handler = this.handlers[state.handler];
             if (handler !== undefined) {
-                handler.onPopState(new HistoryArgs(state.data, new Uri(), this.pageBaseUrl));
+                handler.onPopState(new HistoryArgs(new Uri(), this.pageBaseUrl));
             }
         }
     }
@@ -66,30 +61,37 @@ export class HistoryManager implements IHistoryManager {
         this.handlers[name] = handler;
     }
 
-    public pushQueryState<T extends {}>(handler: string, query: T): void {
+    public pushState<T extends {}>(handler: string, inPagePath: string | null, query: {} | null, title?: string): void {
         var uri = new Uri();
-        uri.path = this.pageBaseUrl;
-        uri.setQueryFromObject(query);
-        var historyObj: IHistoryEntry<T> = {
-            handler: handler,
-            data: query
-        };
-        history.pushState(historyObj, document.title, uri.build());
+        var state = this.createState(handler, inPagePath, query, uri);
+        if(title === undefined){
+            title = document.title;
+        }
+        history.pushState(state, title, uri.build());
     }
 
-    public replaceQueryState<T extends {}>(handler: string, query: T): void {
+    public replaceState<T extends {}>(handler: string, inPagePath: string | null, query: {} | null, title?: string): void {
         var uri = new Uri();
+        var state = this.createState(handler, inPagePath, query, uri);
+        if(title === undefined){
+            title = document.title;
+        }
+        history.replaceState(state, title, uri.build());
+    }
+
+    private createState<T extends {}>(handler: string, inPagePath: string | null, query: {} | null, uri: Uri): IHistoryEntry<T> {
         uri.path = this.pageBaseUrl;
+        if(inPagePath){
+            uri.path += inPagePath;
+        }
         uri.setQueryFromObject(query);
-        var historyObj: IHistoryEntry<T> = {
-            handler: handler,
-            data: query
+        return {
+            handler: handler
         };
-        history.replaceState(historyObj, document.title, uri.build());
     }
 
     public getCurrentState<T>(): HistoryArgs<T> | null {
-        return new HistoryArgs(history.state, new Uri(), this.pageBaseUrl);
+        return new HistoryArgs(new Uri(), this.pageBaseUrl);
     }
 }
 
@@ -102,11 +104,11 @@ export class NullHistoryManager implements IHistoryManager {
         
     }
 
-    public pushQueryState<T extends {}>(handler: string, query: T): void {
+    public pushState<T extends {}>(handler: string, inPagePath: string | null, query: {} | null): void {
         
     }
 
-    public replaceQueryState<T extends {}>(handler: string, query: T): void {
+    public replaceState<T extends {}>(handler: string, inPagePath: string | null, query: {} | null): void {
         
     }
 
