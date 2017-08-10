@@ -21,13 +21,39 @@ export interface IDeepLinkHandler {
     onPopState(args: DeepLinkArgs);
 }
 
+/**
+ * This interface provides a way to handle deep links on a page. This makes it easy to setup
+ * history for queries and paths that are under the current page. It has an event that will fire
+ * when the user clicks forward or back. It also makes it easy to get the data out if the page was just loaded.
+ */
 export abstract class IDeepLinkManager {
+    /**
+     * Register a new handler to get fired when onpopstate fires. The handler will only fire for states that are registered with it.
+     * @param name The name of the handler, must be unique.
+     * @param handler The handler to call when firing the event.
+     */
     public abstract registerHandler<T>(name: string, handler: IDeepLinkHandler);
 
+    /**
+     * Push a new state using history.pushstate.
+     * @param handler The handler that will recieve the onpopstate event.
+     * @param inPagePath The path on the page, will be under the base path set, can be null to have only the base path.
+     * @param query An object to set as the query, can be null to clear the query.
+     */
     public abstract pushState<T extends {}>(handler: string, inPagePath: string | null, query: {} | null): void;
 
+    /**
+     * Replace a new state using history.pushstate.
+     * @param handler The handler that will recieve the onpopstate event.
+     * @param inPagePath The path on the page, will be under the base path set, can be null to have only the base path.
+     * @param query An object to set as the query, can be null to clear the query.
+     */
     public abstract replaceState<T extends {}>(handler: string, inPagePath: string | null, query: {} | null): void;
 
+    /**
+     * Get the current link state as a DeepLinkArgs. This will be the same as if a history event had fired, but for the current page url.
+     * Can also be null if there is no valid state to get.
+     */
     public abstract getCurrentState<T>(): DeepLinkArgs | null;
 }
 
