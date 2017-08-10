@@ -1,8 +1,18 @@
 import { Uri } from 'hr.uri';
 import * as di from 'hr.di';
 
+export class HistoryArgs<T> {
+    constructor(private _data: T){
+
+    }
+
+    public get data(){
+        return this._data;
+    }
+}
+
 export interface IHistoryHandler<T> {
-    onPopState(data: T);
+    onPopState(args: HistoryArgs<T>);
 }
 
 export abstract class IHistoryManager {
@@ -20,11 +30,7 @@ interface IHistoryEntry<T> {
     data: T;
 }
 
-export class HistoryManager {
-    public static get InjectorArgs(): di.DiFunction<any>[] {
-        return [];
-    }
-
+export class HistoryManager implements IHistoryManager {
     private pageBaseUrl: string;
     private handlers: { [key: string]: IHistoryHandler<any> } = {};
 
@@ -40,7 +46,7 @@ export class HistoryManager {
         if (state) {
             var handler = this.handlers[state.handler];
             if (handler !== undefined) {
-                handler.onPopState(state.data);
+                handler.onPopState(new HistoryArgs(state.data));
             }
         }
     }
@@ -80,9 +86,24 @@ export class HistoryManager {
     }
 }
 
-export function addServices(services: di.ServiceCollection): void {
-    services.tryAddShared(IHistoryManager, s => {
-        var url = new Uri();
-        return new HistoryManager(url.path);
-    });
+export class NullHistoryManager implements IHistoryManager {
+    constructor() {
+        
+    }
+
+    public registerHandler<T>(name: string, handler: IHistoryHandler<T>) {
+        
+    }
+
+    public pushQueryState<T extends {}>(handler: string, query: T): void {
+        
+    }
+
+    public replaceQueryState<T extends {}>(handler: string, query: T): void {
+        
+    }
+
+    public getCurrentQuery(): {} {
+        return null;
+    }
 }
