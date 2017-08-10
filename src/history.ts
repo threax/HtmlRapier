@@ -2,12 +2,20 @@ import { Uri } from 'hr.uri';
 import * as di from 'hr.di';
 
 export class HistoryArgs<T> {
-    constructor(private _data: T){
+    constructor(private _data: T, private _uri: Uri, private basePath: string){
 
     }
 
     public get data(){
         return this._data;
+    }
+
+    public get query(){
+        return this._uri.getQueryObject();
+    }
+
+    public get inPagePath(){
+        return this._uri.path.substring(this.basePath.length);
     }
 }
 
@@ -22,7 +30,7 @@ export abstract class IHistoryManager {
 
     public abstract replaceQueryState<T extends {}>(handler: string, query: any): void;
 
-    public abstract getCurrentQuery(): {};
+    public abstract getCurrentState<T>(): HistoryArgs<T> | null;
 }
 
 interface IHistoryEntry<T> {
@@ -46,7 +54,7 @@ export class HistoryManager implements IHistoryManager {
         if (state) {
             var handler = this.handlers[state.handler];
             if (handler !== undefined) {
-                handler.onPopState(new HistoryArgs(state.data));
+                handler.onPopState(new HistoryArgs(state.data, new Uri(), this.pageBaseUrl));
             }
         }
     }
@@ -80,9 +88,8 @@ export class HistoryManager implements IHistoryManager {
         history.replaceState(historyObj, document.title, uri.build());
     }
 
-    public getCurrentQuery(): {} {
-        var uri = new Uri();
-        return uri.getQueryObject();
+    public getCurrentState<T>(): HistoryArgs<T> | null {
+        return new HistoryArgs(history.state, new Uri(), this.pageBaseUrl);
     }
 }
 
@@ -103,7 +110,7 @@ export class NullHistoryManager implements IHistoryManager {
         
     }
 
-    public getCurrentQuery(): {} {
+     public getCurrentState<T>(): HistoryArgs<T> | null {
         return null;
     }
 }
