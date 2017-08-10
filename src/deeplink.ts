@@ -25,6 +25,7 @@ export interface IDeepLinkHandler {
  * This interface provides a way to handle deep links on a page. This makes it easy to setup
  * history for queries and paths that are under the current page. It has an event that will fire
  * when the user clicks forward or back. It also makes it easy to get the data out if the page was just loaded.
+ * Any paths added will be normalized to only contain forward slashes / and to not end with a slash.
  */
 export abstract class IDeepLinkManager {
     /**
@@ -66,7 +67,7 @@ export class DeepLinkManager implements IDeepLinkManager {
     private handlers: { [key: string]: IDeepLinkHandler } = {};
 
     constructor(pageBaseUrl: string) {
-        this.pageBaseUrl = pageBaseUrl;
+        this.pageBaseUrl = this.normalizePath(pageBaseUrl);
         window.addEventListener("popstate", (evt: PopStateEvent) => this.handlePopState(evt));
     }
 
@@ -107,10 +108,14 @@ export class DeepLinkManager implements IDeepLinkManager {
         history.replaceState(state, title, uri.build());
     }
 
+    public getCurrentState<T>(): DeepLinkArgs | null {
+        return new DeepLinkArgs(new Uri(), this.pageBaseUrl);
+    }
+
     private createState<T extends {}>(handler: string, inPagePath: string | null, query: {} | null, uri: Uri): IDeepLinkEntry {
-        uri.path = this.pageBaseUrl;
+        uri.directory = this.pageBaseUrl;
         if(inPagePath){
-            uri.path += inPagePath;
+            uri.directory += this.normalizePath(inPagePath);
         }
         uri.setQueryFromObject(query);
         return {
@@ -118,8 +123,17 @@ export class DeepLinkManager implements IDeepLinkManager {
         };
     }
 
-    public getCurrentState<T>(): DeepLinkArgs | null {
-        return new DeepLinkArgs(new Uri(), this.pageBaseUrl);
+    private normalizePath(url: string): string{
+        if(url){ //Yes, we also want to skip empty string here
+            url = url.replace('\\', '/');
+            if(url[0] !== '/'){ //Make sure there is a leading /
+                url = '/' + url;
+            }
+            if(url[url.length - 1] === '/'){ //Remove any trailing /
+                url = url.substring(0, url.length - 1);
+            }
+        }
+        return url;
     }
 }
 
