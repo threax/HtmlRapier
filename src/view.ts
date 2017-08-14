@@ -96,17 +96,17 @@ export class SchemaViewDataFormatter<T> {
 
         //Handle undefined and null the same way
         if (rawData === undefined || rawData === null) {
-            return prop['x-null-value'] || "";
+            return (prop !== undefined && prop['x-null-value']) || "";
         }
 
         //Handle true values
         if (rawData === true) {
-            return prop['x-value'] || "Yes";
+            return (prop !== undefined && prop['x-value']) || "Yes";
         }
 
         //Handle false values
         if (rawData === false) {
-            return prop['x-false-value'] || "No";
+            return (prop !== undefined && prop['x-false-value']) || "No";
         }
 
         return rawData;
