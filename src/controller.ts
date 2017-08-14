@@ -95,6 +95,16 @@ export class InjectedControllerBuilder {
      * @param parentBindings The parent bindings to restrict the controller search.
      */
     public create<T>(name: string, controllerConstructor: di.DiFunction<T>, parentBindings?: BindingCollection): T[] {
+        return this.createId(undefined, name, controllerConstructor, parentBindings)
+    }
+
+    /**
+     * Create a new controller instance on the named nodes in the document using an id based service.
+     * @param name The name of the data-hr-controller nodes to lookup.
+     * @param controllerConstructor The controller to create when a node is found.
+     * @param parentBindings The parent bindings to restrict the controller search.
+     */
+    public createId<T, TId>(id: TId, name: string, controllerConstructor: di.DiFunction<T>, parentBindings?: BindingCollection): T[] {
         var createdControllers: T[] = [];
 
         var foundElement = (element) => {
@@ -104,7 +114,7 @@ export class InjectedControllerBuilder {
                 var bindings =  new BindingCollection(element);
                 services.addTransient(BindingCollection, s => bindings);
                 element.removeAttribute('data-hr-controller');
-                var controller = this.createController(controllerConstructor, services, scope, bindings);
+                var controller = this.createController(id, controllerConstructor, services, scope, bindings);
                 createdControllers.push(controller);
             }
         }
@@ -126,10 +136,21 @@ export class InjectedControllerBuilder {
      * you want to use from the service scope for this controller.
      */
     public createUnbound<T>(constructorFunc: di.DiFunction<T>): T {
+        return this.createUnboundId(undefined, constructorFunc);
+    }
+
+    /**
+     * This will create a single instance of the service that resolves to constructorFunc 
+     * without looking for html elements, it will not have a binding collection.
+     * This can be used to create any kind of object, not just controllers. Do this for anything
+     * you want to use from the service scope for this controller. This verison works by creating
+     * the version of a service with the given id.
+     */
+    public createUnboundId<T, TId>(id: TId, constructorFunc: di.DiFunction<T>): T {
         var services = new di.ServiceCollection();
         var scope = this.baseScope.createChildScope(services);
         services.addTransient(InjectedControllerBuilder, s => new InjectedControllerBuilder(scope));
-        var controller = scope.getRequiredService(constructorFunc);
+        var controller = scope.getRequiredServiceId(id, constructorFunc);
         if ((<any>controller).postBind !== undefined) {
             (<any>controller).postBind();
         }
@@ -142,6 +163,15 @@ export class InjectedControllerBuilder {
      * @returns
      */
     public createOnCallback(controllerConstructor: di.DiFunction<any>): CreateCallback {
+        return this.createOnCallbackId(undefined, controllerConstructor);
+    }
+
+    /**
+     * This will create a callback function that will create a new controller when it is called.
+     * This version will use the service identified by id.
+     * @returns
+     */
+    public createOnCallbackId<T, TId>(id: TId, controllerConstructor: di.DiFunction<T>): CreateCallback {
         return (bindings: BindingCollection, data: any) => {
             var services = new di.ServiceCollection();
             var scope = this.baseScope.createChildScope(services);
@@ -153,13 +183,13 @@ export class InjectedControllerBuilder {
                 services.addTransient(InjectControllerData, s => data);
             }
 
-            return this.createController(controllerConstructor, services, scope, bindings);
+            return this.createController(id, controllerConstructor, services, scope, bindings);
         }
     }
 
-    private createController(controllerConstructor: di.DiFunction<any>, services: di.ServiceCollection, scope: di.Scope, bindings: BindingCollection) {
+    private createController(id: any, controllerConstructor: di.DiFunction<any>, services: di.ServiceCollection, scope: di.Scope, bindings: BindingCollection) {
         services.addTransient(InjectedControllerBuilder, s => new InjectedControllerBuilder(scope));
-        var controller = scope.getRequiredService(controllerConstructor);
+        var controller = scope.getRequiredServiceId(id, controllerConstructor);
         bindings.setListener(controller);
         if (controller.postBind !== undefined) {
             controller.postBind();
