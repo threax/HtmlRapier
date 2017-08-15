@@ -32,6 +32,9 @@ export function escape(text) {
             case '\'':
                 outputEncoded(i, text, status, '&#39;');
                 break;
+            case '`':
+                outputEncoded(i, text, status, '&#96;');
+                break;
             default:
                 break;
         }
