@@ -60,7 +60,11 @@ export function serialize(form: HTMLElement, proto?: any, level?: string): any {
             case 'INPUT':
                 switch (element.type) {
                     case 'file':
-                        addValue(q, element.name, element.files, level);
+                        var file = element.files;
+                        if(!element.hasAttribute("multiple") && file.length > 0){
+                            file = file[0];
+                        }
+                        addValue(q, element.name, file, level);
                         break;
                     case 'checkbox':
                     case 'radio':
