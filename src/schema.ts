@@ -16,6 +16,7 @@ export interface JsonProperty {
     items?: JsonSchema;
     "x-ui-order"?: number;
     "x-ui-disabled"?: boolean;
+    readOnly?: boolean;
     "x-ui-type"?: string;
     "x-values"?: JsonLabel[]; //The source values if there are multiple
     enum?: string[];

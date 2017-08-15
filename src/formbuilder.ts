@@ -296,7 +296,7 @@ export class BasicItemEditor implements IFormValue{
         this.generated = args.generated;
         this.element = args.inputElement;
 
-        if(args.item["x-ui-disabled"] === true){
+        if(args.item["x-ui-disabled"] === true || args.item.readOnly === true) {
             this.element.setAttribute("disabled", "");
         }
 
