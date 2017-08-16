@@ -30,25 +30,39 @@ class VariableNode implements IStreamNode {
     }
 
     writeObject(data: any) {
-        return escape(data[this.variable]);
+        return data[this.variable];
     }
 
     writeFunction(data: (variable: string) => any){
-        return escape(data(this.variable));
+        return data(this.variable);
     }
 }
 
-class ThisVariableNode {
+class ThisVariableNode implements IStreamNode {
     constructor(){
 
     }
 
     writeObject(data: any) {
-        return escape(data);
+        return data;
     }
 
     writeFunction(data: (variable: string) => any){
-        return escape(data('this'));
+        return data('this');
+    }
+}
+
+class EscapeVariableNode implements IStreamNode {
+    constructor(private wrapped: IStreamNode){
+
+    }
+
+    writeObject(data: any) {
+        return escape(this.wrapped.writeObject(data));
+    }
+
+    writeFunction(data: (variable: string) => any){
+        return escape(this.wrapped.writeFunction(data));
     }
 }
 
@@ -73,6 +87,12 @@ function format(data: any, streamNodes: IStreamNode[]) {
     return text;
 }
 
+export interface ITextStreamOptions{
+    open?: string;
+    close?: string;
+    escape?: boolean;
+}
+
 /**
  * Create a text stream that when called with data will output
  * the original string with new data filled out. If the text contains
@@ -84,7 +104,20 @@ export class TextStream {
     private streamNodes: IStreamNode[] = [];
     private variablesFound = false;
 
-    constructor(text: string, open?: string, close?: string){
+    constructor(text: string, options?: ITextStreamOptions){
+        if(options === undefined){
+            options = {};
+        }
+
+        var open = options.open;
+        var close = options.close;
+        var escape = options.escape;
+
+        //Escape by default.
+        if(escape === undefined){
+            escape = true;
+        }
+
         if(open === undefined){
             open = '{';
         }
@@ -137,12 +170,18 @@ export class TextStream {
                             this.streamNodes.push(new TextNode(skippedTextBuffer + leadingText));
                             skippedTextBuffer = ""; //This is reset every time we actually output something
                             variable = bracketVariable.substring(2, bracketVariable.length - 2);
+                            var variableNode;
                             if (variable === "this") {
-                                this.streamNodes.push(new ThisVariableNode());
+                                variableNode = new ThisVariableNode();
                             }
                             else {
-                                this.streamNodes.push(new VariableNode(variable));
+                                variableNode = new VariableNode(variable);
                             }
+                            if(escape){ //If we are escaping decorate the variable node we created with the escape version.
+                                variableNode = new EscapeVariableNode(variableNode);
+                            }
+                            this.streamNodes.push(variableNode);
+
                             break;
                         default:
                             //Multiple brackets, escape by removing one and add to buffer
