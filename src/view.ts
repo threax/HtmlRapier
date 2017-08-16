@@ -269,7 +269,7 @@ function bindData(data: any, element: HTMLElement, dataTextElements: DataTextEle
     if (dataTextElements === undefined) {
         dataTextElements = [];
         domQuery.iterateNodes(element, NodeFilter.SHOW_TEXT, function (node) {
-            var textStream = new TextStream(node.textContent);
+            var textStream = new TextStream(node.textContent, { escape: false }); //Since we are using textContent, there is no need to escape the input
             if (textStream.foundVariable()) {
                 node.textContent = textStream.format(data);
                 dataTextElements.push({
