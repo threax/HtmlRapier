@@ -5,8 +5,38 @@
 import * as formHelper from 'hr.formhelper';
 import { JsonSchema } from 'hr.schema';
 import { FormErrors } from 'hr.error';
+import * as events from 'hr.eventdispatcher';
+
+export interface IFormArgs<T> {
+    source: IForm<T>;
+    data: T;
+}
+
+export interface IFormGetArgs<T> {
+    source: IForm<T>;
+}
 
 export interface IForm<T> {
+    /**
+     * Called before data is set. Will also be called on clear.
+     */
+    onBeforeSetData: events.EventModifier<events.ActionEventListener<IFormArgs<T>>>;
+
+    /**
+     * Called after data is set. Will also be called on clear.
+     */
+    onAfterSetData: events.EventModifier<events.ActionEventListener<IFormArgs<T>>>;
+
+    /**
+     * Called before data is recovered from the form.
+     */
+    onBeforeGetData: events.EventModifier<events.ActionEventListener<IFormGetArgs<T>>>;
+
+    /**
+     * Called after data is recovered from the form.
+     */
+    onAfterGetData: events.EventModifier<events.ActionEventListener<IFormArgs<T>>>;
+
     /**
      * Set the error currently on the form. Will match property names to form values and display the errors.
      */
@@ -125,6 +155,22 @@ export class NeedsSchemaForm<T> implements IForm<T> {
         }
         this.loadedSchema = true;
     }
+
+    public get onBeforeSetData(): events.EventModifier<events.ActionEventListener<IFormArgs<T>>> {
+        return this.wrapped.onBeforeSetData;
+    }
+
+    public get onAfterSetData(): events.EventModifier<events.ActionEventListener<IFormArgs<T>>> {
+        return this.wrapped.onAfterSetData;
+    }
+
+    public get onBeforeGetData(): events.EventModifier<events.ActionEventListener<IFormGetArgs<T>>> {
+        return this.wrapped.onBeforeGetData;
+    }
+
+    public get onAfterGetData(): events.EventModifier<events.ActionEventListener<IFormArgs<T>>> {
+        return this.wrapped.onAfterGetData;
+    }
 }
 
 class Form<T> {
@@ -132,6 +178,10 @@ class Form<T> {
     private baseLevel: string = undefined;
     private formValues: formHelper.IFormValues;
     private formSerializer: formHelper.IFormSerializer;
+    private beforeSetDataEvent = new events.ActionEventDispatcher<IFormArgs<T>>();
+    private afterSetDataEvent = new events.ActionEventDispatcher<IFormArgs<T>>();
+    private beforeGetDataEvent = new events.ActionEventDispatcher<IFormGetArgs<T>>();
+    private afterGetDataEvent = new events.ActionEventDispatcher<IFormArgs<T>>();
 
     constructor(private form: HTMLFormElement) {
 
@@ -150,10 +200,18 @@ class Form<T> {
     }
     
     public setData(data: T) {
+        this.beforeSetDataEvent.fire({
+            data: data,
+            source: this
+        });
         formHelper.populate(this.form, data, this.baseLevel);
         if(this.formValues) {
             this.formValues.setData(data, this.formSerializer);
         }
+        this.afterSetDataEvent.fire({
+            data: data,
+            source: this
+        });
     }
 
     public clear() {
@@ -165,10 +223,19 @@ class Form<T> {
     }
 
     public getData(): T {
+        this.beforeGetDataEvent.fire({
+            source: this
+        });
         var data = <T>formHelper.serialize(this.form, this.proto, this.baseLevel);
         if(this.formValues) {
             this.formValues.recoverData(data, this.formSerializer);
         }
+
+        this.afterGetDataEvent.fire({
+            data: data,
+            source: this
+        });
+
         for(var key in data){ //This will pass if there is a key in data, ok to also check prototype, if user set it they want it.
             return data;
         }
@@ -198,9 +265,30 @@ class Form<T> {
             this.formSerializer = new formHelper.FormSerializer(this.form);
         }
     }
+
+    public get onBeforeSetData(): events.EventModifier<events.ActionEventListener<IFormArgs<T>>> {
+        return this.beforeSetDataEvent.modifier;
+    }
+
+    public get onAfterSetData(): events.EventModifier<events.ActionEventListener<IFormArgs<T>>> {
+        return this.afterSetDataEvent.modifier;
+    }
+
+    public get onBeforeGetData(): events.EventModifier<events.ActionEventListener<IFormGetArgs<T>>> {
+        return this.beforeGetDataEvent.modifier;
+    }
+
+    public get onAfterGetData(): events.EventModifier<events.ActionEventListener<IFormArgs<T>>> {
+        return this.afterGetDataEvent.modifier;
+    }
 }
 
 class NullForm<T> implements IForm<T> {
+    private beforeSetDataEvent = new events.ActionEventDispatcher<IFormArgs<T>>();
+    private afterSetDataEvent = new events.ActionEventDispatcher<IFormArgs<T>>();
+    private beforeGetDataEvent = new events.ActionEventDispatcher<IFormGetArgs<T>>();
+    private afterGetDataEvent = new events.ActionEventDispatcher<IFormArgs<T>>();
+
     constructor(){
 
     }
@@ -214,11 +302,11 @@ class NullForm<T> implements IForm<T> {
     }
 
     public setData(data): void {
-
+        
     }
 
     public clear(): void {
-
+        
     }
 
     public getData() {
@@ -231,6 +319,22 @@ class NullForm<T> implements IForm<T> {
 
     public setSchema(schema: JsonSchema, componentName?: string): void{
 
+    }
+
+    public get onBeforeSetData(): events.EventModifier<events.ActionEventListener<IFormArgs<T>>> {
+        return this.beforeSetDataEvent.modifier;
+    }
+
+    public get onAfterSetData(): events.EventModifier<events.ActionEventListener<IFormArgs<T>>> {
+        return this.afterSetDataEvent.modifier;
+    }
+
+    public get onBeforeGetData(): events.EventModifier<events.ActionEventListener<IFormGetArgs<T>>> {
+        return this.beforeGetDataEvent.modifier;
+    }
+
+    public get onAfterGetData(): events.EventModifier<events.ActionEventListener<IFormArgs<T>>> {
+        return this.afterGetDataEvent.modifier;
     }
 }
 
