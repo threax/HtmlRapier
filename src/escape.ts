@@ -44,7 +44,7 @@ export function escape(text) {
                 outputEncoded(i, text, status, '&#96;');
                 break;
             case ' ':
-                outputEncoded(i, text, status, '&nbsp;');
+                outputEncoded(i, text, status, '&#32;');
                 break;
             case '!':
                 outputEncoded(i, text, status, '&#33;');
