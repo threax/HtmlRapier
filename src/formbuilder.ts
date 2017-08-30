@@ -181,16 +181,16 @@ class ArrayEditor implements IFormValue {
     private indexGen: InfiniteIndex = new InfiniteIndex();
     private isSimple: boolean;
 
-    private toggle: toggle.OnOffToggle;
-    private message: view.IView<string>;
+    private errorToggle: toggle.OnOffToggle;
+    private errorMessage: view.IView<string>;
 
     constructor(private name: string, private buildName: string, private bindings: BindingCollection, private schema: JsonSchema, private generated: boolean){
         this.itemsView = bindings.getView<JsonSchema>("items");
         bindings.setListener(this);
         this.isSimple = schema.type !== "object";
 
-        this.toggle = this.bindings.getToggle(this.buildName + "Error");
-        this.message = this.bindings.getView(this.buildName + "ErrorMessage");
+        this.errorToggle = this.bindings.getToggle(this.buildName + "Error");
+        this.errorMessage = this.bindings.getView(this.buildName + "ErrorMessage");
     }
 
     public setError(err: FormErrors, baseName: string) {
@@ -201,12 +201,12 @@ class ArrayEditor implements IFormValue {
 
         var errorName = err.addKey(baseName, this.name);
         if(err.hasValidationError(errorName)){
-            this.toggle.on();
-            this.message.setData(err.getValidationError(errorName));
+            this.errorToggle.on();
+            this.errorMessage.setData(err.getValidationError(errorName));
         }
         else {
-            this.toggle.off();
-            this.message.setData("");
+            this.errorToggle.off();
+            this.errorMessage.setData("");
         }
     }
 
@@ -297,8 +297,8 @@ class ArrayEditor implements IFormValue {
 }
 
 export class BasicItemEditor implements IFormValue{
-    private toggle: toggle.OnOffToggle;
-    private message: view.IView<string>;
+    private errorToggle: toggle.OnOffToggle;
+    private errorMessage: view.IView<string>;
     protected name: string;
     protected buildName: string;
     protected bindings: BindingCollection;
@@ -316,19 +316,19 @@ export class BasicItemEditor implements IFormValue{
             this.element.setAttribute("disabled", "");
         }
 
-        this.toggle = this.bindings.getToggle(this.buildName + "Error");
-        this.message = this.bindings.getView(this.buildName + "ErrorMessage");
+        this.errorToggle = this.bindings.getToggle(this.buildName + "Error");
+        this.errorMessage = this.bindings.getView(this.buildName + "ErrorMessage");
     }
 
     public setError(err: FormErrors, baseName: string) {
         var errorName = err.addKey(baseName, this.name);
         if(err.hasValidationError(errorName)){
-            this.toggle.on();
-            this.message.setData(err.getValidationError(errorName));
+            this.errorToggle.on();
+            this.errorMessage.setData(err.getValidationError(errorName));
         }
         else {
-            this.toggle.off();
-            this.message.setData("");
+            this.errorToggle.off();
+            this.errorMessage.setData("");
         }
     }
 
