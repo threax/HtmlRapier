@@ -184,10 +184,20 @@ class ArrayEditor implements IFormValue {
     private errorToggle: toggle.OnOffToggle;
     private errorMessage: view.IView<string>;
 
-    constructor(private name: string, private buildName: string, private bindings: BindingCollection, private schema: JsonSchema, private generated: boolean){
+    constructor(private name: string, private buildName: string, baseTitle: string, private bindings: BindingCollection, private schema: JsonSchema, private generated: boolean){
         this.itemsView = bindings.getView<JsonSchema>("items");
         bindings.setListener(this);
         this.isSimple = schema.type !== "object";
+
+        if(this.schema.title === undefined) {
+            this.schema = Object.create(this.schema);
+            if(baseTitle !== undefined) {
+                this.schema.title = baseTitle + " Item";
+            }
+            else{
+                this.schema.title = "Item";
+            }
+        }
 
         this.errorToggle = this.bindings.getToggle(this.buildName + "Error");
         this.errorMessage = this.bindings.getView(this.buildName + "ErrorMessage");
@@ -493,7 +503,7 @@ function createBindings(args: IFormValueBuilderArgs) : IFormValue {
 
     if (args.item.buildType === "arrayEditor") {
         var resolvedItems = resolveRef(<RefNode>args.item.items, args.schema);
-        return new ArrayEditor(args.item.name, args.item.buildName, args.bindings, resolvedItems, args.generated);
+        return new ArrayEditor(args.item.name, args.item.buildName, args.item.title, args.bindings, resolvedItems, args.generated);
     }
     else {
         return new BasicItemEditor(args);
