@@ -181,16 +181,32 @@ class ArrayEditor implements IFormValue {
     private indexGen: InfiniteIndex = new InfiniteIndex();
     private isSimple: boolean;
 
+    private toggle: toggle.OnOffToggle;
+    private message: view.IView<string>;
+
     constructor(private name: string, private buildName: string, private bindings: BindingCollection, private schema: JsonSchema, private generated: boolean){
         this.itemsView = bindings.getView<JsonSchema>("items");
         bindings.setListener(this);
         this.isSimple = schema.type !== "object";
+
+        this.toggle = this.bindings.getToggle(this.buildName + "Error");
+        this.message = this.bindings.getView(this.buildName + "ErrorMessage");
     }
 
     public setError(err: FormErrors, baseName: string) {
         for(var i = 0; i < this.rows.length; ++i){
             var rowName = err.addIndex(baseName, this.name, i);
             this.rows[i].setError(err, rowName);
+        }
+
+        var errorName = err.addKey(baseName, this.name);
+        if(err.hasValidationError(errorName)){
+            this.toggle.on();
+            this.message.setData(err.getValidationError(errorName));
+        }
+        else {
+            this.toggle.off();
+            this.message.setData("");
         }
     }
 
