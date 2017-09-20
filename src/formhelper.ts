@@ -183,6 +183,14 @@ export function populate(form: HTMLElement | string, data:any, level?: string): 
                         }
                     }
                     break;
+                case 'select-one':
+                    if (itemData === null || itemData === undefined) {
+                        element.value = "";
+                    }
+                    else {
+                        element.value = itemData;
+                    }
+                    break;
                 default:
                     element.value = itemData;
                     break;

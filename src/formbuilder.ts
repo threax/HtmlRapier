@@ -479,10 +479,13 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
                 for(var q = 0; q < item.buildValues.length; ++q){
                     var current = item.buildValues[q];
                     var option = document.createElement("option");
+                    option.text = current.label;
                     if(current.value !== null && current.value !== undefined){
                         option.value = current.value;
                     }
-                    option.text = current.label;
+                    else {
+                        option.value = ""; //Make sure this stays as empty string, which will be null for these forms
+                    }
                     existing.options.add(option);
                 }
             }
