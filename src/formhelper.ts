@@ -88,7 +88,8 @@ export function serialize(form: HTMLElement, proto?: any, level?: string): any {
                     case 'select-multiple':
                         var selected: string[] = [];
                         for (j = element.options.length - 1; j >= 0; j = j - 1) {
-                            if (element.options[j].selected) {
+                            var option = element.options[j];
+                            if (option.selected && option.value !== "") {
                                 selected.push(element.options[j].value);
                             }
                         }
