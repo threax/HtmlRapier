@@ -202,12 +202,21 @@ export function populate(form: HTMLElement | string, data:any, level?: string): 
                     }
                     break;
                 case 'select-one':
-                    if (itemData === null || itemData === undefined) {
-                        element.value = "";
+                    var options = (<HTMLSelectElement>element).options;
+                    var valueToSet = "";
+                    if (options.length > 0) { //Default to setting the first value
+                        valueToSet = options[0].value;
                     }
-                    else {
-                        element.value = itemData;
+                    if (itemData !== null && itemData !== undefined) {
+                        var itemDataString = String(itemData);
+                        //Scan options to find the value that is attempting to be set, if it does not exist, this will default back to the first value
+                        for (var j = options.length - 1; j >= 0; j = j - 1) {
+                            if (options[j].value === itemDataString) {
+                                valueToSet = itemDataString;
+                            }
+                        }
                     }
+                    element.value = valueToSet;
                     break;
                 default:
                     element.value = itemData;
