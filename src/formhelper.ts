@@ -4,6 +4,7 @@ import * as domQuery from 'hr.domquery';
 import * as typeIds from 'hr.typeidentifiers';
 import { JsonSchema } from 'hr.schema';
 import { FormErrors } from 'hr.error';
+import * as event from 'hr.eventdispatcher';
 
 export function IsFormElement(element: Node): element is HTMLFormElement{
     return element && (element.nodeName === 'FORM' || element.nodeName == 'INPUT' || element.nodeName == 'TEXTAREA');
@@ -241,6 +242,14 @@ export interface IFormValues{
     recoverData(proto: {} | null): any;
 
     changeSchema(componentName: string, schema: JsonSchema, parentElement: HTMLElement): void;
+
+    onChanged: event.EventModifier<event.ActionEventListener<IFormValues>>;
+
+    /**
+     * If the data is changed externally to the form values call this function to fire off the
+     * changed event.
+     */
+    fireDataChanged(): void;
 }
 
 export type BuildFormFunc = (componentName: string, schema: JsonSchema, parentElement: HTMLElement) => IFormValues;

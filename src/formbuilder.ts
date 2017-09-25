@@ -43,6 +43,7 @@ class FormValues implements formHelper.IFormValues {
     private values: IFormValue[] = [];
     private valueSource: FormValuesSource;
     private fireChangesToValues: boolean = false;
+    private changedEventHandler: event.ActionEventDispatcher<formHelper.IFormValues> = new event.ActionEventDispatcher<formHelper.IFormValues>();
 
     constructor() {
         this.valueSource = new FormValuesSource(this);
@@ -51,7 +52,7 @@ class FormValues implements formHelper.IFormValues {
     public add(value: IFormValue): void {
         this.values.push(value);
         if (value.isChangeTrigger) {
-            value.onChanged.add(a => this.handleChange(a.getBuildName()));
+            value.onChanged.add(a => this.fireDataChanged());
         }
         if (value.respondsToChanges) {
             this.fireChangesToValues = true;
@@ -116,12 +117,17 @@ class FormValues implements formHelper.IFormValues {
         return undefined;
     }
 
-    private handleChange(source: string | null) {
+    public get onChanged() {
+        return this.changedEventHandler.modifier;
+    }
+
+    public fireDataChanged() {
         if (this.fireChangesToValues) {
             for (var i = 0; i < this.values.length; ++i) {
-                this.values[i].handleChange(source, this.valueSource);
+                this.values[i].handleChange(this.valueSource);
             }
         }
+        this.changedEventHandler.fire(this);
     }
 }
 
@@ -149,7 +155,7 @@ export interface IFormValue {
 
     respondsToChanges: boolean;
 
-    handleChange(changedBuildName: string, values: expression.IValueSource): void;
+    handleChange(values: expression.IValueSource): void;
 }
 
 const indexMax = 2147483647;//Sticking with 32 bit;
@@ -379,7 +385,7 @@ class ArrayEditor implements IFormValue {
         return false;
     }
 
-    public handleChange(changedBuildName: string, values: expression.IValueSource): void {
+    public handleChange(values: expression.IValueSource): void {
 
     }
 }
@@ -470,7 +476,7 @@ export class BasicItemEditor implements IFormValue {
         return this.displayExpression !== undefined;
     }
 
-    public handleChange(changedBuildName: string, values: expression.IValueSource): void {
+    public handleChange(values: expression.IValueSource): void {
         if (this.displayExpression) {
             if (this.displayExpression.isTrue(values)) {
                 this.hideToggle.off();

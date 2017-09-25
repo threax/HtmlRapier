@@ -16,6 +16,10 @@ export interface IFormGetArgs<T> {
     source: IForm<T>;
 }
 
+export interface IFormChangedArgs<T> {
+    source: IForm<T>;
+}
+
 export interface IForm<T> {
     /**
      * Called before data is set. Will also be called on clear.
@@ -36,6 +40,12 @@ export interface IForm<T> {
      * Called after data is recovered from the form.
      */
     onAfterGetData: events.EventModifier<events.ActionEventListener<IFormArgs<T>>>;
+
+    /**
+     * Called when form data changes, either from an individual item changing or the entire
+     * form having its data set or cleared.
+     */
+    onChanged: events.EventModifier<events.ActionEventListener<IFormChangedArgs<T>>>;
 
     /**
      * Set the error currently on the form. Will match property names to form values and display the errors.
@@ -171,6 +181,10 @@ export class NeedsSchemaForm<T> implements IForm<T> {
     public get onAfterGetData(): events.EventModifier<events.ActionEventListener<IFormArgs<T>>> {
         return this.wrapped.onAfterGetData;
     }
+
+    public get onChanged(): events.EventModifier<events.ActionEventListener<IFormChangedArgs<T>>> {
+        return this.wrapped.onChanged;
+    }
 }
 
 class Form<T> {
@@ -182,6 +196,7 @@ class Form<T> {
     private afterSetDataEvent = new events.ActionEventDispatcher<IFormArgs<T>>();
     private beforeGetDataEvent = new events.ActionEventDispatcher<IFormGetArgs<T>>();
     private afterGetDataEvent = new events.ActionEventDispatcher<IFormArgs<T>>();
+    private onChangedEvent = new events.ActionEventDispatcher<IFormChangedArgs<T>>();
 
     constructor(private form: HTMLFormElement) {
 
@@ -207,6 +222,7 @@ class Form<T> {
         formHelper.populate(this.form, data, this.baseLevel);
         if(this.formValues) {
             this.formValues.setData(data, this.formSerializer);
+            this.formValues.fireDataChanged();
         }
         this.afterSetDataEvent.fire({
             data: data,
@@ -219,6 +235,7 @@ class Form<T> {
         formHelper.populate(this.form, sharedClearer);
         if(this.formValues) {
             this.formValues.setData(sharedClearer, this.formSerializer);
+            this.formValues.fireDataChanged();
         }
     }
 
@@ -266,7 +283,11 @@ class Form<T> {
             this.formValues = formHelper.buildForm(componentName, schema, this.form);
             this.baseLevel = "";
             this.formSerializer = new formHelper.FormSerializer(this.form);
+            this.formValues.onChanged.add(a =>
+                this.onChangedEvent.fire({ source: this }));
         }
+
+        this.formValues.fireDataChanged();
     }
 
     public get onBeforeSetData(): events.EventModifier<events.ActionEventListener<IFormArgs<T>>> {
@@ -284,6 +305,10 @@ class Form<T> {
     public get onAfterGetData(): events.EventModifier<events.ActionEventListener<IFormArgs<T>>> {
         return this.afterGetDataEvent.modifier;
     }
+
+    public get onChanged(): events.EventModifier<events.ActionEventListener<IFormArgs<T>>> {
+        return this.onChangedEvent.modifier;
+    }
 }
 
 class NullForm<T> implements IForm<T> {
@@ -291,6 +316,7 @@ class NullForm<T> implements IForm<T> {
     private afterSetDataEvent = new events.ActionEventDispatcher<IFormArgs<T>>();
     private beforeGetDataEvent = new events.ActionEventDispatcher<IFormGetArgs<T>>();
     private afterGetDataEvent = new events.ActionEventDispatcher<IFormArgs<T>>();
+    private onChangedEvent = new events.ActionEventDispatcher<IFormChangedArgs<T>>();
 
     constructor(){
 
@@ -338,6 +364,10 @@ class NullForm<T> implements IForm<T> {
 
     public get onAfterGetData(): events.EventModifier<events.ActionEventListener<IFormArgs<T>>> {
         return this.afterGetDataEvent.modifier;
+    }
+
+    public get onChanged(): events.EventModifier<events.ActionEventListener<IFormArgs<T>>> {
+        return this.onChangedEvent.modifier;
     }
 }
 
