@@ -2,14 +2,15 @@
 
 export enum OperationType
 {
-    And,
-    Or,
-    Equal,
-    NotEqual,
-    GreaterThan,
-    LessThan,
-    GreaterThanOrEqual,
-    LessThanOrEqual
+    And = <any>"And",
+    Or = <any>"Or",
+    Not = <any>"Not",
+    Equal = <any>"Equal",
+    NotEqual = <any>"NotEqual",
+    GreaterThan = <any>"GreaterThan",
+    LessThan = <any>"LessThan",
+    GreaterThanOrEqual = <any>"GreaterThanOrEqual",
+    LessThanOrEqual = <any>"LessThanOrEqual"
 }
 
 export interface ExpressionNode {
@@ -39,6 +40,39 @@ export class ExpressionTree {
     }
 
     public isTrue(test: IValueSource): boolean{
+        return this.evaluate(this.root, test);
+    }
+
+    private evaluate(node: ExpressionNode, test: IValueSource): boolean {
+        switch (node.operation) {
+            case OperationType.And:
+                return this.evaluate(node.left, test) && this.evaluate(node.right, test);
+            case OperationType.Or:
+                return this.evaluate(node.left, test) || this.evaluate(node.right, test);
+            case OperationType.Equal:
+                var testKey = Object.keys(node.test)[0];
+                return this.equals(test.getValue(testKey), node.test[testKey]);
+            case OperationType.NotEqual:
+                var testKey = Object.keys(node.test)[0];
+                return !this.equals(test.getValue(testKey), node.test[testKey]);
+            case OperationType.Not:
+                return !this.evaluate(node.left, test);
+        }
+
         return false;
+    }
+
+    private equals(current: any, test: any): boolean{
+        switch (typeof (test)) {
+            case "boolean":
+                return Boolean(current) === test;
+            case "number":
+                return Number(current) === test;
+            case "object":
+                if (current === undefined || current === null || current === "") {
+                    return test === null; //Current is undefined, null or empty string and test is null, consider equivalent
+                }
+        }
+        return false; //No match, or type could not be determined
     }
 }
