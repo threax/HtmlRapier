@@ -226,9 +226,12 @@ class Form<T> {
         this.beforeGetDataEvent.fire({
             source: this
         });
-        var data = <T>formHelper.serialize(this.form, this.proto, this.baseLevel);
-        if(this.formValues) {
-            this.formValues.recoverData(data, this.formSerializer);
+        var data: T;
+        if (this.formValues) { //If there are form values there was a schema, use that to read the data.
+            data = <T>this.formValues.recoverData(this.proto);
+        }
+        else { //Otherwise read the form raw
+            data = <T>formHelper.serialize(this.form, this.proto, this.baseLevel);
         }
 
         this.afterGetDataEvent.fire({

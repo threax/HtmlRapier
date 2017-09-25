@@ -45,14 +45,18 @@ class FormValues implements formHelper.IFormValues {
         }
     }
 
-    public recoverData(data: any, serializer: formHelper.IFormSerializer): void {
+    public recoverData(proto: {} | null): any {
+        var data = Object.create(proto || null);
+
         for(var i = 0; i < this.values.length; ++i){
             var item = this.values[i];
-            var subData = item.getData(serializer);
+            var subData = item.getData();
             if (subData !== undefined) {
                 data[item.getName()] = subData;
             }
         }
+
+        return data;
     }
 
     public changeSchema(componentName: string, schema: JsonSchema, parentElement: HTMLElement): void{
@@ -81,7 +85,7 @@ export interface IFormValue {
 
     getName(): string;
 
-    getData(serializer: formHelper.IFormSerializer): any;
+    getData(): any;
 
     setData(data: any, serializer: formHelper.IFormSerializer);
 
@@ -154,9 +158,8 @@ class ArrayEditorRow {
         this.formValues.setError(err, baseName);
     }
 
-    public getData(serializer: formHelper.IFormSerializer): any {
-        var data = serializer.serialize(this.name);
-        this.formValues.recoverData(data, serializer);
+    public getData(): any {
+        var data = this.formValues.recoverData(null);
         if(typeIds.isObject(data)){
             for(var key in data){ //This will pass if there is a key in data
                 return data;
@@ -243,10 +246,10 @@ class ArrayEditor implements IFormValue {
         }
     }
 
-    public getData(serializer: formHelper.IFormSerializer): any {
+    public getData(): any {
         var items = [];
         for(var i = 0; i < this.rows.length; ++i){
-            var data = this.rows[i].getData(serializer);
+            var data = this.rows[i].getData();
             if(this.isSimple && data !== null){
                 data = data[""];
             }
@@ -342,8 +345,8 @@ export class BasicItemEditor implements IFormValue{
         }
     }
 
-    public getData(serializer: formHelper.IFormSerializer): any {
-        //Does nothing, relies on the normal form serializer function
+    public getData(): any {
+        return formHelper.readValue(this.element);
     }
 
     public setData(data: any, serializer: formHelper.IFormSerializer) {

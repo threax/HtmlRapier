@@ -56,61 +56,64 @@ export function serialize(form: HTMLElement, proto?: any, level?: string): any {
         if (element.name === "" || !allowWrite(element, level)) {
             continue;
         }
-        switch (element.nodeName) {
-            case 'INPUT':
-                switch (element.type) {
-                    case 'file':
-                        var file = element.files;
-                        if(!element.hasAttribute("multiple") && file.length > 0){
-                            file = file[0];
-                        }
-                        addValue(q, element.name, file, level);
-                        break;
-                    case 'checkbox':
-                    case 'radio':
-                        if (element.checked) {
-                            addValue(q, element.name, element.value, level);
-                        }
-                        break;
-                    default:
-                        addValue(q, element.name, element.value, level);
-                        break;
-                }
-                break;
-            case 'TEXTAREA':
-                addValue(q, element.name, element.value, level);
-                break;
-            case 'SELECT':
-                switch (element.type) {
-                    case 'select-one':
-                        addValue(q, element.name, element.value, level);
-                        break;
-                    case 'select-multiple':
-                        var selected: string[] = [];
-                        for (j = element.options.length - 1; j >= 0; j = j - 1) {
-                            var option = element.options[j];
-                            if (option.selected && option.value !== "") {
-                                selected.push(element.options[j].value);
-                            }
-                        }
-                        if(selected.length > 0) {
-                            addValue(q, element.name, selected, level);
-                        }
-                        break;
-                }
-                break;
-            case 'BUTTON':
-                switch (element.type) {
-                    case 'reset':
-                    case 'submit':
-                    case 'button':
-                        addValue(q, element.name, element.value, level);
-                        break;
-                }
-                break;
+        var value = readValue(element);
+        if(value !== undefined){
+            addValue(q, element.name, value, level);
         }
     }
     return q;
+}
+
+export function readValue(element: any): any{
+    switch (element.nodeName) {
+        case 'INPUT':
+            switch (element.type) {
+                case 'file':
+                    var file = element.files;
+                    if(!element.hasAttribute("multiple") && file.length > 0){
+                        file = file[0];
+                    }
+                    return file;
+                case 'checkbox':
+                case 'radio':
+                    if (element.checked) {
+                        return element.value;
+                    }
+                    break;
+                default:
+                    return element.value;
+            }
+            break;
+        case 'TEXTAREA':
+            return element.value;
+        case 'SELECT':
+            switch (element.type) {
+                case 'select-one':
+                    return element.value;
+                case 'select-multiple':
+                    var selected: string[] = [];
+                    for (var j = element.options.length - 1; j >= 0; j = j - 1) {
+                        var option = element.options[j];
+                        if (option.selected && option.value !== "") {
+                            selected.push(element.options[j].value);
+                        }
+                    }
+                    if(selected.length > 0) {
+                        return selected;
+                    }
+                    break;
+            }
+            break;
+        case 'BUTTON':
+            switch (element.type) {
+                case 'reset':
+                case 'submit':
+                case 'button':
+                    return element.value;
+            }
+            break;
+    }
+    return undefined;
 }
 
 export enum DataType{
@@ -224,7 +227,7 @@ export interface IFormValues{
 
     setData(data: any, serializer: IFormSerializer): void;
 
-    recoverData(data: any, serializer: IFormSerializer): void;
+    recoverData(proto: {} | null): any;
 
     changeSchema(componentName: string, schema: JsonSchema, parentElement: HTMLElement): void;
 }
