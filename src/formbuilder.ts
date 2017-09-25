@@ -50,9 +50,9 @@ class FormValues implements formHelper.IFormValues {
 
         for(var i = 0; i < this.values.length; ++i){
             var item = this.values[i];
-            var subData = item.getData();
-            if (subData !== undefined && subData !== "") { //Do not record undefined or empty values
-                data[item.getDataName()] = subData;
+            var value = item.getData();
+            if (formHelper.shouldAddValue(value)) { //Do not record undefined, null or empty values
+                data[item.getDataName()] = value;
             }
         }
 

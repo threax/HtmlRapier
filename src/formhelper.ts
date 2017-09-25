@@ -9,9 +9,17 @@ export function IsFormElement(element: Node): element is HTMLFormElement{
     return element && (element.nodeName === 'FORM' || element.nodeName == 'INPUT' || element.nodeName == 'TEXTAREA');
 }
 
+/**
+ * This function will return true if the value should be added to an output object, and false if it should not.
+ * @param value
+ */
+export function shouldAddValue(value: any): boolean {
+    return value !== undefined && value !== ""; //Prevents empty strings and undefined from being added to the output object
+}
+
 function addValue(q: {}, name: string, value: any, level: string) {
-    if(value === undefined || value === ""){
-        return; //Prevents empty strings and undefined from being added to the output object
+    if(!shouldAddValue(value)){
+        return;
     }
 
     name = extractLevelName(level, name);
@@ -64,6 +72,10 @@ export function serialize(form: HTMLElement, proto?: any, level?: string): any {
     return q;
 }
 
+/**
+ * Read the value out of an HTMLFormElement. Will return undefined if there is no value.
+ * @param element The HTMLFormElement to read.
+ */
 export function readValue(element: any): any{
     switch (element.nodeName) {
         case 'INPUT':
