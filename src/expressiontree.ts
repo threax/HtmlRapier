@@ -57,6 +57,12 @@ export class ExpressionTree {
                 return !this.equals(test.getValue(testKey), node.test[testKey]);
             case OperationType.Not:
                 return !this.evaluate(node.left, test);
+            case OperationType.GreaterThan:
+            case OperationType.GreaterThanOrEqual:
+            case OperationType.LessThan:
+            case OperationType.LessThanOrEqual:
+                var testKey = Object.keys(node.test)[0];
+                return this.compare(test.getValue(testKey), node.test[testKey], node.operation);
         }
 
         return false;
@@ -74,5 +80,26 @@ export class ExpressionTree {
                 }
         }
         return false; //No match, or type could not be determined
+    }
+
+    private compare(current: any, test: any, operation: OperationType): boolean {
+        switch (typeof (test)) {
+            case "number":
+                var currentAsNum = Number(current);
+                console.log(currentAsNum);
+                if (!isNaN(currentAsNum)) {
+                    switch (operation) {
+                        case OperationType.GreaterThan:
+                            return currentAsNum > test;
+                        case OperationType.GreaterThanOrEqual:
+                            return currentAsNum >= test;
+                        case OperationType.LessThan:
+                            return currentAsNum < test;
+                        case OperationType.LessThanOrEqual:
+                            return currentAsNum <= test;
+                    }
+                }
+        }
+        return false;
     }
 }
