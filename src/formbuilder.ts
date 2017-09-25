@@ -376,6 +376,7 @@ class ArrayEditor implements IFormValue {
 export class BasicItemEditor implements IFormValue {
     private errorToggle: toggle.OnOffToggle;
     private errorMessage: view.IView<string>;
+    private hideToggle: toggle.OnOffToggle;
     private changedEventHandler: event.ActionEventDispatcher<IFormValue> = null;
     protected name: string;
     protected buildName: string;
@@ -408,6 +409,7 @@ export class BasicItemEditor implements IFormValue {
 
         this.errorToggle = this.bindings.getToggle(this.buildName + "Error");
         this.errorMessage = this.bindings.getView(this.buildName + "ErrorMessage");
+        this.hideToggle = this.bindings.getToggle(this.buildName + "Hide");
     }
 
     public setError(err: FormErrors, baseName: string) {
@@ -460,10 +462,10 @@ export class BasicItemEditor implements IFormValue {
     public handleChange(changedBuildName: string, values: expression.IValueSource): void {
         if (this.displayExpression) {
             if (this.displayExpression.isTrue(values)) {
-                console.log("Display " + this.buildName);
+                this.hideToggle.off();
             }
             else {
-                console.log("Hide " + this.buildName);
+                this.hideToggle.on();
             }
         }
     }
