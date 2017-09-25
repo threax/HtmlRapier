@@ -76,6 +76,13 @@ export interface IForm<T> {
     getData(): T;
 
     /**
+     * Get a single value from the form, useful in change events
+     * to avoid serializing the entire form to a new piece of data
+     * just to lookup 1 value.
+     */
+    getValue(name: string);
+
+    /**
      * Set the prototype object to use when getting the
      * form data with getData.
      * @param proto The prototype object.
@@ -140,6 +147,10 @@ export class NeedsSchemaForm<T> implements IForm<T> {
      */
     public getData(): T {
         return this.wrapped.getData();
+    }
+
+    public getValue(name: string) {
+        return this.wrapped.getValue(name);
     }
 
     /**
@@ -262,6 +273,22 @@ class Form<T> {
         return null; //Return null if the data returned has no keys in it, which means it is empty.
     }
 
+    public getValue(name: string) {
+        if (this.formValues) {
+            var formValue = this.formValues.getFormValue(name);
+            if (formValue) {
+                return formValue.getData();
+            }
+        }
+        else {
+            //Since there is no formvalues, we must serialize the entire form and return the result.
+            var data = <T>formHelper.serialize(this.form, this.proto, this.baseLevel);
+            return data[name];
+        }
+
+        return undefined;
+    }
+
     public setPrototype(proto: T): void { 
         this.proto = proto;
     }
@@ -332,6 +359,10 @@ class NullForm<T> implements IForm<T> {
 
     public setData(data): void {
         
+    }
+
+    public getValue(name: string) {
+        return undefined;
     }
 
     public clear(): void {

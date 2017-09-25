@@ -40,7 +40,7 @@ class FormValuesSource implements expression.IValueSource {
 }
 
 class FormValues implements formHelper.IFormValues {
-    private values: IFormValue[] = [];
+    private values: formHelper.IFormValue[] = [];
     private valueSource: FormValuesSource;
     private fireChangesToValues: boolean = false;
     private changedEventHandler: event.ActionEventDispatcher<formHelper.IFormValues> = new event.ActionEventDispatcher<formHelper.IFormValues>();
@@ -49,7 +49,7 @@ class FormValues implements formHelper.IFormValues {
         this.valueSource = new FormValuesSource(this);
     }
 
-    public add(value: IFormValue): void {
+    public add(value: formHelper.IFormValue): void {
         this.values.push(value);
         if (value.isChangeTrigger) {
             value.onChanged.add(a => this.fireDataChanged());
@@ -108,7 +108,7 @@ class FormValues implements formHelper.IFormValues {
         return false;
     }
 
-    public getFormValue(buildName: string): IFormValue {
+    public getFormValue(buildName: string): formHelper.IFormValue {
         for (var i = 0; i < this.values.length; ++i) {
             if (this.values[i].getBuildName() === buildName) {
                 return this.values[i];
@@ -129,33 +129,6 @@ class FormValues implements formHelper.IFormValues {
         }
         this.changedEventHandler.fire(this);
     }
-}
-
-export interface IFormValue {
-    setError(err: FormErrors, baseName: string);
-
-    getBuildName(): string;
-
-    getDataName(): string;
-
-    getData(): any;
-
-    setData(data: any, serializer: formHelper.IFormSerializer);
-
-    /**
-     * Delete the form value, this might not actually happen. Return true if the item was deleted
-     * and false if it was kept. If you return false the item will be added to a pool. This is done
-     * for items the user manually put on the form.
-     */
-    delete(): boolean;
-
-    isChangeTrigger: boolean;
-
-    onChanged: event.EventModifier<event.ActionEventListener<IFormValue>>;
-
-    respondsToChanges: boolean;
-
-    handleChange(values: expression.IValueSource): void;
 }
 
 const indexMax = 2147483647;//Sticking with 32 bit;
@@ -238,7 +211,7 @@ class ArrayEditorRow {
     }
 }
 
-class ArrayEditor implements IFormValue {
+class ArrayEditor implements formHelper.IFormValue {
     private itemsView: view.IView<JsonSchema>;
     private pooledRows: ArrayEditorRow[] = [];
     private rows: ArrayEditorRow[] = [];
@@ -390,11 +363,11 @@ class ArrayEditor implements IFormValue {
     }
 }
 
-export class BasicItemEditor implements IFormValue {
+export class BasicItemEditor implements formHelper.IFormValue {
     private errorToggle: toggle.OnOffToggle;
     private errorMessage: view.IView<string>;
     private hideToggle: toggle.OnOffToggle;
-    private changedEventHandler: event.ActionEventDispatcher<IFormValue> = null;
+    private changedEventHandler: event.ActionEventDispatcher<formHelper.IFormValue> = null;
     protected name: string;
     protected buildName: string;
     protected bindings: BindingCollection;
@@ -415,7 +388,7 @@ export class BasicItemEditor implements IFormValue {
         }
 
         var self = this;
-        this.changedEventHandler = new event.ActionEventDispatcher<IFormValue>();
+        this.changedEventHandler = new event.ActionEventDispatcher<formHelper.IFormValue>();
         this.element.addEventListener("change", e => {
             self.changedEventHandler.fire(self);
         });
@@ -497,7 +470,7 @@ export class IFormValueBuilderArgs {
 }
 
 export interface IFormValueBuilder {
-    create(args: IFormValueBuilderArgs): IFormValue | null;
+    create(args: IFormValueBuilderArgs): formHelper.IFormValue | null;
 }
 
 function buildForm(componentName: string, schema: JsonSchema, parentElement: HTMLElement, baseName?: string, ignoreExisting?: boolean, formValues?: FormValues): FormValues {
@@ -620,7 +593,7 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
     return formValues;
 }
 
-function createBindings(args: IFormValueBuilderArgs): IFormValue {
+function createBindings(args: IFormValueBuilderArgs): formHelper.IFormValue {
     //See if there is a custom handler first
     for (var i = 0; i < formValueBuilders.length; ++i) {
         var created = formValueBuilders[i].create(args);

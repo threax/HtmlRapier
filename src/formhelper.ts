@@ -5,6 +5,7 @@ import * as typeIds from 'hr.typeidentifiers';
 import { JsonSchema } from 'hr.schema';
 import { FormErrors } from 'hr.error';
 import * as event from 'hr.eventdispatcher';
+import * as expression from 'hr.expressiontree';
 
 export function IsFormElement(element: Node): element is HTMLFormElement{
     return element && (element.nodeName === 'FORM' || element.nodeName == 'INPUT' || element.nodeName == 'TEXTAREA');
@@ -241,6 +242,8 @@ export interface IFormValues{
 
     recoverData(proto: {} | null): any;
 
+    getFormValue(buildName: string): IFormValue;
+
     changeSchema(componentName: string, schema: JsonSchema, parentElement: HTMLElement): void;
 
     onChanged: event.EventModifier<event.ActionEventListener<IFormValues>>;
@@ -250,6 +253,33 @@ export interface IFormValues{
      * changed event.
      */
     fireDataChanged(): void;
+}
+
+export interface IFormValue {
+    setError(err: FormErrors, baseName: string);
+
+    getBuildName(): string;
+
+    getDataName(): string;
+
+    getData(): any;
+
+    setData(data: any, serializer: IFormSerializer);
+
+    /**
+     * Delete the form value, this might not actually happen. Return true if the item was deleted
+     * and false if it was kept. If you return false the item will be added to a pool. This is done
+     * for items the user manually put on the form.
+     */
+    delete(): boolean;
+
+    isChangeTrigger: boolean;
+
+    onChanged: event.EventModifier<event.ActionEventListener<IFormValue>>;
+
+    respondsToChanges: boolean;
+
+    handleChange(values: expression.IValueSource): void;
 }
 
 export type BuildFormFunc = (componentName: string, schema: JsonSchema, parentElement: HTMLElement) => IFormValues;
