@@ -51,8 +51,8 @@ class FormValues implements formHelper.IFormValues {
         for(var i = 0; i < this.values.length; ++i){
             var item = this.values[i];
             var subData = item.getData();
-            if (subData !== undefined) {
-                data[item.getName()] = subData;
+            if (subData !== undefined && subData !== "") { //Do not record undefined or empty values
+                data[item.getDataName()] = subData;
             }
         }
 
@@ -71,8 +71,8 @@ class FormValues implements formHelper.IFormValues {
     }
 
     public hasFormValue(buildName: string): boolean{
-        for(var i = 0; i < this.values.length; ++i){
-            if(this.values[i].getName() === buildName){
+        for (var i = 0; i < this.values.length; ++i){
+            if (this.values[i].getBuildName() === buildName) {
                 return true;
             }
         }
@@ -83,7 +83,9 @@ class FormValues implements formHelper.IFormValues {
 export interface IFormValue {
     setError(err: FormErrors, baseName: string);
 
-    getName(): string;
+    getBuildName(): string;
+
+    getDataName(): string;
 
     getData(): any;
 
@@ -297,8 +299,12 @@ class ArrayEditor implements IFormValue {
         }
     }
 
-    public getName(): string{
+    public getBuildName(): string{
         return this.buildName;
+    }
+
+    public getDataName(): string {
+        return this.name;
     }
 
     public delete(): boolean{
@@ -354,8 +360,12 @@ export class BasicItemEditor implements IFormValue{
         this.setError(formHelper.getSharedClearingValidator(), "");
     }
 
-    public getName(): string{
+    public getBuildName(): string {
         return this.buildName;
+    }
+
+    public getDataName(): string {
+        return this.name;
     }
 
     public delete(): boolean{

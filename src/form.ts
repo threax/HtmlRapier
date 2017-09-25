@@ -227,7 +227,7 @@ class Form<T> {
             source: this
         });
         var data: T;
-        if (this.formValues) { //If there are form values there was a schema, use that to read the data.
+        if (this.formValues) { //If there are form values, use them to read the data.
             data = <T>this.formValues.recoverData(this.proto);
         }
         else { //Otherwise read the form raw

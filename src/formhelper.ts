@@ -204,7 +204,6 @@ export function populate(form: HTMLElement | string, data:any, level?: string): 
 }
 
 export interface IFormSerializer {
-    serialize: (level?: string) => any;
     populate: (data: any, level?: string) => void;
 }
 
