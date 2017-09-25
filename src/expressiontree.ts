@@ -78,6 +78,8 @@ export class ExpressionTree {
                 if (current === undefined || current === null || current === "") {
                     return test === null; //Current is undefined, null or empty string and test is null, consider equivalent
                 }
+            case "string":
+                return String(current) === test;
         }
         return false; //No match, or type could not be determined
     }
