@@ -12,6 +12,7 @@ import * as formHelper from 'hr.formhelper';
 import { JsonProperty, JsonLabel, JsonSchema, resolveRef, RefNode } from 'hr.schema';
 import { FormErrors } from 'hr.error';
 import * as typeIds from 'hr.typeidentifiers';
+import * as expression from 'hr.expressiontree';
 
 interface ProcessedJsonProperty extends JsonProperty {
     name: string;
@@ -21,26 +22,49 @@ interface ProcessedJsonProperty extends JsonProperty {
     buildValues?: JsonLabel[]; //The values if there are multiple value choices, e.g. combo boxes
     size?: number;
     buildValue?: string; //The value if there is a single value for this item, e.g. checkboxes
+    displayExpression?: expression.ExpressionTree;
+}
+
+class FormValuesSource implements expression.IValueSource {
+    constructor(private formValues: FormValues) {
+
+    }
+
+    getValue(name: string): any {
+        var value = this.formValues.getFormValue(name);
+        if (value !== undefined) {
+            return value.getData();
+        }
+        return undefined;
+    }
 }
 
 class FormValues implements formHelper.IFormValues {
     private values: IFormValue[] = [];
+    private valueSource: FormValuesSource;
+
+    constructor() {
+        this.valueSource = new FormValuesSource(this);
+    }
 
     public add(value: IFormValue): void {
         this.values.push(value);
+        if (value.isChangeTrigger) {
+            value.onChanged.add(a => this.handleChange(a));
+        }
     }
 
     public setError(err: FormErrors, baseName?: string) {
-        if(baseName === undefined){
+        if (baseName === undefined) {
             baseName = "";
         }
-        for(var i = 0; i < this.values.length; ++i){
+        for (var i = 0; i < this.values.length; ++i) {
             this.values[i].setError(err, baseName);
         }
     }
 
     public setData(data: any, serializer: formHelper.IFormSerializer): void {
-        for(var i = 0; i < this.values.length; ++i){
+        for (var i = 0; i < this.values.length; ++i) {
             this.values[i].setData(data, serializer);
         }
     }
@@ -48,7 +72,7 @@ class FormValues implements formHelper.IFormValues {
     public recoverData(proto: {} | null): any {
         var data = Object.create(proto || null);
 
-        for(var i = 0; i < this.values.length; ++i){
+        for (var i = 0; i < this.values.length; ++i) {
             var item = this.values[i];
             var value = item.getData();
             if (formHelper.shouldAddValue(value)) { //Do not record undefined, null or empty values
@@ -59,10 +83,10 @@ class FormValues implements formHelper.IFormValues {
         return data;
     }
 
-    public changeSchema(componentName: string, schema: JsonSchema, parentElement: HTMLElement): void{
+    public changeSchema(componentName: string, schema: JsonSchema, parentElement: HTMLElement): void {
         var keep = [];
-        for(var i = 0; i < this.values.length; ++i){
-            if(!this.values[i].delete()){
+        for (var i = 0; i < this.values.length; ++i) {
+            if (!this.values[i].delete()) {
                 keep.push(this.values[i]);
             }
         }
@@ -70,13 +94,29 @@ class FormValues implements formHelper.IFormValues {
         buildForm(componentName, schema, parentElement, undefined, undefined, this); //Rebuild the form
     }
 
-    public hasFormValue(buildName: string): boolean{
-        for (var i = 0; i < this.values.length; ++i){
+    public hasFormValue(buildName: string): boolean {
+        for (var i = 0; i < this.values.length; ++i) {
             if (this.values[i].getBuildName() === buildName) {
                 return true;
             }
         }
         return false;
+    }
+
+    public getFormValue(buildName: string): IFormValue {
+        for (var i = 0; i < this.values.length; ++i) {
+            if (this.values[i].getBuildName() === buildName) {
+                return this.values[i];
+            }
+        }
+        return undefined;
+    }
+
+    private handleChange(item: IFormValue) {
+        var itemName = item.getBuildName();
+        for (var i = 0; i < this.values.length; ++i) {
+            this.values[i].handleChange(itemName, this.valueSource);
+        }
     }
 }
 
@@ -97,17 +137,23 @@ export interface IFormValue {
      * for items the user manually put on the form.
      */
     delete(): boolean;
+
+    isChangeTrigger: boolean;
+
+    onChanged: event.EventModifier<event.ActionEventListener<IFormValue>>;
+
+    handleChange(changedBuildName: string, values: expression.IValueSource): void;
 }
 
 const indexMax = 2147483647;//Sticking with 32 bit;
 
-class InfiniteIndex{
+class InfiniteIndex {
     private num: number = 0;
     private base: string = "";
 
     public getNext(): string {
         ++this.num;
-        if(this.num === indexMax){
+        if (this.num === indexMax) {
             this.base += "b"; //Each time we hit index max we just add a 'b' to the base
             this.num = 0;
         }
@@ -125,10 +171,10 @@ class ArrayEditorRow {
     private root: HTMLElement;
     private formValues: FormValues;
 
-    constructor(private bindings: BindingCollection, schema: JsonSchema, private name: string){
+    constructor(private bindings: BindingCollection, schema: JsonSchema, private name: string) {
         this.root = this.bindings.rootElement;
         var itemHandle = this.bindings.getHandle("item"); //Also supports adding to a handle named item, otherwise uses the root
-        if(itemHandle !== null){
+        if (itemHandle !== null) {
             this.root = itemHandle;
         }
         this.formValues = buildForm('hr.forms.default', schema, this.root, this.name, true);
@@ -136,12 +182,12 @@ class ArrayEditorRow {
         bindings.setListener(this);
     }
 
-    public get onRemoved(): event.EventModifier<event.ActionEventListener<ArrayEditorRow>>{
+    public get onRemoved(): event.EventModifier<event.ActionEventListener<ArrayEditorRow>> {
         return this.removed.modifier;
     }
 
-    public remove(evt?: Event): void{
-        if(evt){
+    public remove(evt?: Event): void {
+        if (evt) {
             evt.preventDefault();
         }
         this.setError(formHelper.getSharedClearingValidator(), "");
@@ -150,8 +196,8 @@ class ArrayEditorRow {
         this.removed.fire(this);
     }
 
-    public restore(){
-        if(this.pooled) {
+    public restore() {
+        if (this.pooled) {
             this.pooled.restore(null);
         }
     }
@@ -162,8 +208,8 @@ class ArrayEditorRow {
 
     public getData(): any {
         var data = this.formValues.recoverData(null);
-        if(typeIds.isObject(data)){
-            for(var key in data){ //This will pass if there is a key in data
+        if (typeIds.isObject(data)) {
+            for (var key in data) { //This will pass if there is a key in data
                 return data;
             }
             return null; //Return null if the data returned has no keys in it, which means it is empty.
@@ -189,17 +235,17 @@ class ArrayEditor implements IFormValue {
     private errorToggle: toggle.OnOffToggle;
     private errorMessage: view.IView<string>;
 
-    constructor(private name: string, private buildName: string, baseTitle: string, private bindings: BindingCollection, private schema: JsonSchema, private generated: boolean){
+    constructor(private name: string, private buildName: string, baseTitle: string, private bindings: BindingCollection, private schema: JsonSchema, private generated: boolean) {
         this.itemsView = bindings.getView<JsonSchema>("items");
         bindings.setListener(this);
         this.isSimple = schema.type !== "object";
 
-        if(this.schema.title === undefined) {
+        if (this.schema.title === undefined) {
             this.schema = Object.create(this.schema);
-            if(baseTitle !== undefined) {
+            if (baseTitle !== undefined) {
                 this.schema.title = baseTitle + " Item";
             }
-            else{
+            else {
                 this.schema.title = "Item";
             }
         }
@@ -209,13 +255,13 @@ class ArrayEditor implements IFormValue {
     }
 
     public setError(err: FormErrors, baseName: string) {
-        for(var i = 0; i < this.rows.length; ++i){
+        for (var i = 0; i < this.rows.length; ++i) {
             var rowName = err.addIndex(baseName, this.name, i);
             this.rows[i].setError(err, rowName);
         }
 
         var errorName = err.addKey(baseName, this.name);
-        if(err.hasValidationError(errorName)){
+        if (err.hasValidationError(errorName)) {
             this.errorToggle.on();
             this.errorMessage.setData(err.getValidationError(errorName));
         }
@@ -230,18 +276,18 @@ class ArrayEditor implements IFormValue {
         this.addRow();
     }
 
-    private addRow(): void{
-        if(this.pooledRows.length == 0){
+    private addRow(): void {
+        if (this.pooledRows.length == 0) {
             this.itemsView.appendData(this.schema, (bindings, data) => {
                 var row = new ArrayEditorRow(bindings, data, this.buildName + '-' + this.indexGen.getNext());
-                row.onRemoved.add((r) =>{
+                row.onRemoved.add((r) => {
                     this.rows.splice(this.rows.indexOf(r), 1); //It will always be there
                     this.pooledRows.push(r);
                 });
                 this.rows.push(row);
             });
         }
-        else{
+        else {
             var row = this.pooledRows.pop();
             row.restore();
             this.rows.push(row);
@@ -250,14 +296,14 @@ class ArrayEditor implements IFormValue {
 
     public getData(): any {
         var items = [];
-        for(var i = 0; i < this.rows.length; ++i){
+        for (var i = 0; i < this.rows.length; ++i) {
             var data = this.rows[i].getData();
-            if(this.isSimple && data !== null){
+            if (this.isSimple && data !== null) {
                 data = data[""];
             }
             items.push(data);
         }
-        if(items.length > 0){
+        if (items.length > 0) {
             return items;
         }
         return undefined;
@@ -265,7 +311,7 @@ class ArrayEditor implements IFormValue {
 
     public setData(data: any, serializer: formHelper.IFormSerializer) {
         var itemData: any[];
-        switch(formHelper.getDataType(data)){
+        switch (formHelper.getDataType(data)) {
             case formHelper.DataType.Object:
                 itemData = data[this.buildName];
                 break;
@@ -275,18 +321,18 @@ class ArrayEditor implements IFormValue {
         }
 
         var i = 0;
-        if(itemData) {
+        if (itemData) {
             //Make sure data is an array
-            if(!typeIds.isArray(itemData)){
+            if (!typeIds.isArray(itemData)) {
                 itemData = [itemData];
             }
 
-            for(; i < itemData.length; ++i){
-                if(i >= this.rows.length){
+            for (; i < itemData.length; ++i) {
+                if (i >= this.rows.length) {
                     this.addRow();
                 }
                 var rowData = itemData[i];
-                if(this.isSimple){
+                if (this.isSimple) {
                     rowData = {
                         "": rowData
                     }
@@ -294,12 +340,12 @@ class ArrayEditor implements IFormValue {
                 this.rows[i].setData(rowData, serializer);
             }
         }
-        for(; i < this.rows.length;){ //Does not increment, removing rows will de index for us
+        for (; i < this.rows.length;) { //Does not increment, removing rows will de index for us
             this.rows[i].remove();
         }
     }
 
-    public getBuildName(): string{
+    public getBuildName(): string {
         return this.buildName;
     }
 
@@ -307,32 +353,57 @@ class ArrayEditor implements IFormValue {
         return this.name;
     }
 
-    public delete(): boolean{
-        if(this.generated){
+    public delete(): boolean {
+        if (this.generated) {
             this.bindings.remove();
         }
         return this.generated;
     }
+
+    public get isChangeTrigger(): boolean {
+        return false;
+    }
+
+    public get onChanged() {
+        return null;
+    }
+
+    public handleChange(changedBuildName: string, values: expression.IValueSource): void {
+
+    }
 }
 
-export class BasicItemEditor implements IFormValue{
+export class BasicItemEditor implements IFormValue {
     private errorToggle: toggle.OnOffToggle;
     private errorMessage: view.IView<string>;
+    private changedEventHandler: event.ActionEventDispatcher<IFormValue> = null;
     protected name: string;
     protected buildName: string;
     protected bindings: BindingCollection;
     protected generated: boolean;
     protected element: HTMLElement;
+    protected displayExpression: expression.ExpressionTree;
 
-    constructor(args: IFormValueBuilderArgs){
+    constructor(args: IFormValueBuilderArgs) {
         this.name = args.item.name;
         this.buildName = args.item.buildName;
         this.bindings = args.bindings;
         this.generated = args.generated;
         this.element = args.inputElement;
+        this.displayExpression = args.item.displayExpression;
 
-        if(args.item["x-ui-disabled"] === true || args.item.readOnly === true) {
+        if (args.item["x-ui-disabled"] === true || args.item.readOnly === true) {
             this.element.setAttribute("disabled", "");
+        }
+
+        //temp way of handling changes, eventually add a way to specify that a particular form item
+        //can actually trigger changes
+        if (true) {
+            var self = this;
+            this.changedEventHandler = new event.ActionEventDispatcher<IFormValue>();
+            this.element.addEventListener("change", e => {
+                self.changedEventHandler.fire(self);
+            });
         }
 
         this.errorToggle = this.bindings.getToggle(this.buildName + "Error");
@@ -341,7 +412,7 @@ export class BasicItemEditor implements IFormValue{
 
     public setError(err: FormErrors, baseName: string) {
         var errorName = err.addKey(baseName, this.name);
-        if(err.hasValidationError(errorName)){
+        if (err.hasValidationError(errorName)) {
             this.errorToggle.on();
             this.errorMessage.setData(err.getValidationError(errorName));
         }
@@ -356,7 +427,7 @@ export class BasicItemEditor implements IFormValue{
     }
 
     public setData(data: any, serializer: formHelper.IFormSerializer) {
-        //Does nothing, relies on the normal form serializer function
+        //Only sets errors, relies on the formHelper.populate function to actually write the data
         this.setError(formHelper.getSharedClearingValidator(), "");
     }
 
@@ -368,11 +439,33 @@ export class BasicItemEditor implements IFormValue{
         return this.name;
     }
 
-    public delete(): boolean{
-        if(this.generated){
+    public delete(): boolean {
+        if (this.generated) {
             this.bindings.remove();
         }
         return this.generated;
+    }
+
+    public get isChangeTrigger(): boolean {
+        return this.changedEventHandler !== null;
+    }
+
+    public get onChanged() {
+        if (this.changedEventHandler !== null) {
+            return this.changedEventHandler.modifier;
+        }
+        return null;
+    }
+
+    public handleChange(changedBuildName: string, values: expression.IValueSource): void {
+        if (this.displayExpression) {
+            if (this.displayExpression.isTrue(values)) {
+                console.log("Display " + this.buildName);
+            }
+            else {
+                console.log("Hide " + this.buildName);
+            }
+        }
     }
 }
 
@@ -385,56 +478,56 @@ export class IFormValueBuilderArgs {
 }
 
 export interface IFormValueBuilder {
-    create(args: IFormValueBuilderArgs) : IFormValue | null;
+    create(args: IFormValueBuilderArgs): IFormValue | null;
 }
 
 function buildForm(componentName: string, schema: JsonSchema, parentElement: HTMLElement, baseName?: string, ignoreExisting?: boolean, formValues?: FormValues): FormValues {
-    if(ignoreExisting === undefined){
+    if (ignoreExisting === undefined) {
         ignoreExisting = false;
     }
 
-    if(baseName === undefined){
+    if (baseName === undefined) {
         baseName = "";
     }
 
-    if(formValues === undefined){
+    if (formValues === undefined) {
         formValues = new FormValues();
     }
-    
+
     var insertParent = parentElement;
     var dynamicInsertElement = domquery.first("[data-hr-form-end]", parentElement);
-    if(dynamicInsertElement !== null){
+    if (dynamicInsertElement !== null) {
         //Adjust parent to end element if one was found
         insertParent = dynamicInsertElement.parentElement;
     }
     var propArray: ProcessedJsonProperty[] = [];
     var props = schema.properties;
-    if(props === undefined){
+    if (props === undefined) {
         //No props, add the schema itself as a property
         propArray.push(processProperty(schema, baseName, baseName));
     }
     else {
-        
+
         var baseNameWithSep = baseName;
-        if(baseNameWithSep !== ""){
+        if (baseNameWithSep !== "") {
             baseNameWithSep = baseNameWithSep + '-';
         }
 
-        for(var key in props){
+        for (var key in props) {
             propArray.push(processProperty(props[key], key, baseNameWithSep + key));
         }
 
-        propArray.sort((a, b) =>{
+        propArray.sort((a, b) => {
             return a.buildOrder - b.buildOrder;
         });
     }
 
-    for(var i = 0; i < propArray.length; ++i){
+    for (var i = 0; i < propArray.length; ++i) {
         var item = propArray[i];
         var existing = <HTMLElement>domquery.first('[name=' + item.buildName + ']', parentElement);
         var bindings: BindingCollection = null;
         var generated = false;
-        if(ignoreExisting || existing === null){
+        if (ignoreExisting || existing === null) {
             //Create component if it is null
             bindings = component.one(componentName, item, insertParent, dynamicInsertElement, undefined, (i) => {
                 return i.buildType;
@@ -442,26 +535,26 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
 
             //Refresh existing, should be found now, when doing this always grab the last match.
             var elements = domquery.all('[name=' + item.buildName + ']', parentElement);
-            if(elements.length > 0){
+            if (elements.length > 0) {
                 existing = elements[elements.length - 1];
             }
-            else{
+            else {
                 existing = null;
             }
 
             generated = true;
         }
-        else{
+        else {
             //If this was an exising element, see if we should reuse what was found before, if the formValues already has an item, do nothing here
-            if(!formValues.hasFormValue(item.buildName)){
+            if (!formValues.hasFormValue(item.buildName)) {
                 //Not found, try to create a binding collection for it
                 //Walk up element parents trying to find one with a data-hr-form-start attribute on it.
                 var bindParent = existing;
-                while(bindings === null && bindParent !== null && bindParent !== parentElement){
-                    if(bindParent.hasAttribute("data-hr-form-start")){
+                while (bindings === null && bindParent !== null && bindParent !== parentElement) {
+                    if (bindParent.hasAttribute("data-hr-form-start")) {
                         bindings = new BindingCollection(bindParent);
                     }
-                    else{
+                    else {
                         bindParent = bindParent.parentElement;
                     }
                 }
@@ -481,19 +574,19 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
         }
 
         //If this is a child form, mark the element as a child so the form serializer will ignore it
-        if(IsElement(existing)){
+        if (IsElement(existing)) {
             existing.setAttribute("data-hr-form-level", baseName);
         }
 
         //If there are values defined for the element, put them on the page, this works for both
         //predefined and generated elements, which allows you to have predefined selects that can have dynamic values
-        if(item.buildValues !== undefined){
-            if(IsSelectElement(existing)){
-                for(var q = 0; q < item.buildValues.length; ++q){
+        if (item.buildValues !== undefined) {
+            if (IsSelectElement(existing)) {
+                for (var q = 0; q < item.buildValues.length; ++q) {
                     var current = item.buildValues[q];
                     var option = document.createElement("option");
                     option.text = current.label;
-                    if(current.value !== null && current.value !== undefined){
+                    if (current.value !== null && current.value !== undefined) {
                         option.value = current.value;
                     }
                     else {
@@ -508,11 +601,11 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
     return formValues;
 }
 
-function createBindings(args: IFormValueBuilderArgs) : IFormValue {
+function createBindings(args: IFormValueBuilderArgs): IFormValue {
     //See if there is a custom handler first
-    for(var i = 0; i < formValueBuilders.length; ++i){
+    for (var i = 0; i < formValueBuilders.length; ++i) {
         var created = formValueBuilders[i].create(args);
-        if(created !== null){
+        if (created !== null) {
             return created;
         }
     }
@@ -526,22 +619,22 @@ function createBindings(args: IFormValueBuilderArgs) : IFormValue {
     }
 }
 
-function IsElement(element: Node): element is HTMLElement{
+function IsElement(element: Node): element is HTMLElement {
     return element && (element.nodeName !== undefined);
 }
 
-function IsSelectElement(element: Node): element is HTMLSelectElement{
+function IsSelectElement(element: Node): element is HTMLSelectElement {
     return element && (element.nodeName === 'SELECT');
 }
 
-function extractLabels(prop: JsonProperty): JsonLabel[]{
+function extractLabels(prop: JsonProperty): JsonLabel[] {
     var values: JsonLabel[] = [];
     var theEnum = prop.enum;
     var enumNames = theEnum;
-    if(prop["x-enumNames"] !== undefined){
+    if (prop["x-enumNames"] !== undefined) {
         enumNames = prop["x-enumNames"];
     }
-    for(var i = 0; i < theEnum.length; ++i){
+    for (var i = 0; i < theEnum.length; ++i) {
         values.push({
             label: enumNames[i],
             value: theEnum[i]
@@ -550,64 +643,68 @@ function extractLabels(prop: JsonProperty): JsonLabel[]{
     return values;
 }
 
-function processProperty(prop: JsonProperty, name: string, buildName: string): ProcessedJsonProperty{
-    var processed : ProcessedJsonProperty = Object.create(prop);
+function processProperty(prop: JsonProperty, name: string, buildName: string): ProcessedJsonProperty {
+    var processed: ProcessedJsonProperty = Object.create(prop);
     processed.buildName = buildName;
     processed.name = name;
-    if(processed.title === undefined){ //Set title if it is not set
+    if (processed.title === undefined) { //Set title if it is not set
         processed.title = name;
     }
 
-    if(prop["x-ui-order"] !== undefined){
+    if (prop["x-ui-order"] !== undefined) {
         processed.buildOrder = prop["x-ui-order"];
     }
-    else{
+    else {
         processed.buildOrder = Number.MAX_VALUE;
+    }
+
+    if (prop["x-display-if"] !== undefined) {
+        processed.displayExpression = new expression.ExpressionTree(prop["x-display-if"]);
     }
 
     //Set this build type to what has been passed in, this will be processed further below
     processed.buildType = getPropertyType(prop).toLowerCase();
 
-    if(prop["x-values"] !== undefined){
+    if (prop["x-values"] !== undefined) {
         processed.buildValues = prop["x-values"];
     }
-    else if(prop.enum !== undefined){
+    else if (prop.enum !== undefined) {
         processed.buildValues = extractLabels(prop);
     }
 
     //Look for collections, anything defined as an array or that has x-values defined
-    if(processed.buildType === 'array'){
-        if(processed.buildValues !== undefined) {
+    if (processed.buildType === 'array') {
+        if (processed.buildValues !== undefined) {
             //Only supports checkbox and multiselect ui types. Checkboxes have to be requested.
-            if(prop["x-ui-type"] === "checkbox"){
+            if (prop["x-ui-type"] === "checkbox") {
                 //Nothing for checkboxes yet, just be a basic multiselect until they are implemented
                 processed.buildType = "multiselect";
             }
-            else{
+            else {
                 processed.buildType = "multiselect";
                 processed.size = processed.buildValues.length;
-                if(processed.size > 15){
+                if (processed.size > 15) {
                     processed.size = 15;
                 }
             }
         }
-        else{
+        else {
             //Array of complex objects, since values are not provided
             processed.buildType = "arrayEditor";
         }
     }
     else {
-        if(prop["x-ui-type"] !== undefined) {
+        if (prop["x-ui-type"] !== undefined) {
             processed.buildType = prop["x-ui-type"];
         }
         else {
-            if(processed.buildValues !== undefined) {
+            if (processed.buildValues !== undefined) {
                 //Has build options, force to select unless the user chose something else.
                 processed.buildType = "select";
             }
             else {
                 //Regular type, no options, derive html type
-                switch(processed.buildType) {
+                switch (processed.buildType) {
                     case 'integer':
                         processed.buildType = 'number';
                         break;
@@ -629,10 +726,10 @@ function processProperty(prop: JsonProperty, name: string, buildName: string): P
 
         //Post process elements that might have more special properties
         //Do this here, since we don't really know how we got to this build type
-        switch(processed.buildType){
+        switch (processed.buildType) {
             case 'checkbox':
                 processed.buildValue = "true";
-                if(prop["x-value"] !== undefined){
+                if (prop["x-value"] !== undefined) {
                     processed.buildValue = prop["x-value"];
                 }
                 break;

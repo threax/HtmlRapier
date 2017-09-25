@@ -1,5 +1,7 @@
 ///<amd-module name="hr.schema"/>
 
+import * as expression from 'hr.expressiontree';
+
 export type JsonPropertyMap = { [key: string]: JsonProperty };
 
 export interface JsonSchema {
@@ -22,6 +24,7 @@ export interface JsonProperty {
     enum?: string[];
     "x-enumNames"?: string[]; //The enum names, will be combined with enum to make values
     "x-value"?: string; //If there is a single value for the field, use that, can override default values for things like checkboxes
+    "x-display-if"?: expression.ExpressionNode;
 }
 
 export interface JsonLabel {
