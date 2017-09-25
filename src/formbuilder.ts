@@ -42,6 +42,7 @@ class FormValuesSource implements expression.IValueSource {
 class FormValues implements formHelper.IFormValues {
     private values: IFormValue[] = [];
     private valueSource: FormValuesSource;
+    private fireChangesToValues: boolean = false;
 
     constructor() {
         this.valueSource = new FormValuesSource(this);
@@ -50,7 +51,10 @@ class FormValues implements formHelper.IFormValues {
     public add(value: IFormValue): void {
         this.values.push(value);
         if (value.isChangeTrigger) {
-            value.onChanged.add(a => this.handleChange(a));
+            value.onChanged.add(a => this.handleChange(a.getBuildName()));
+        }
+        if (value.respondsToChanges) {
+            this.fireChangesToValues = true;
         }
     }
 
@@ -112,10 +116,11 @@ class FormValues implements formHelper.IFormValues {
         return undefined;
     }
 
-    private handleChange(item: IFormValue) {
-        var itemName = item.getBuildName();
-        for (var i = 0; i < this.values.length; ++i) {
-            this.values[i].handleChange(itemName, this.valueSource);
+    private handleChange(source: string | null) {
+        if (this.fireChangesToValues) {
+            for (var i = 0; i < this.values.length; ++i) {
+                this.values[i].handleChange(source, this.valueSource);
+            }
         }
     }
 }
@@ -141,6 +146,8 @@ export interface IFormValue {
     isChangeTrigger: boolean;
 
     onChanged: event.EventModifier<event.ActionEventListener<IFormValue>>;
+
+    respondsToChanges: boolean;
 
     handleChange(changedBuildName: string, values: expression.IValueSource): void;
 }
@@ -368,6 +375,10 @@ class ArrayEditor implements IFormValue {
         return null;
     }
 
+    public get respondsToChanges() {
+        return false;
+    }
+
     public handleChange(changedBuildName: string, values: expression.IValueSource): void {
 
     }
@@ -397,15 +408,11 @@ export class BasicItemEditor implements IFormValue {
             this.element.setAttribute("disabled", "");
         }
 
-        //temp way of handling changes, eventually add a way to specify that a particular form item
-        //can actually trigger changes
-        if (true) {
-            var self = this;
-            this.changedEventHandler = new event.ActionEventDispatcher<IFormValue>();
-            this.element.addEventListener("change", e => {
-                self.changedEventHandler.fire(self);
-            });
-        }
+        var self = this;
+        this.changedEventHandler = new event.ActionEventDispatcher<IFormValue>();
+        this.element.addEventListener("change", e => {
+            self.changedEventHandler.fire(self);
+        });
 
         this.errorToggle = this.bindings.getToggle(this.buildName + "Error");
         this.errorMessage = this.bindings.getView(this.buildName + "ErrorMessage");
@@ -457,6 +464,10 @@ export class BasicItemEditor implements IFormValue {
             return this.changedEventHandler.modifier;
         }
         return null;
+    }
+
+    public get respondsToChanges() {
+        return this.displayExpression !== undefined;
     }
 
     public handleChange(changedBuildName: string, values: expression.IValueSource): void {
