@@ -13,6 +13,7 @@ import { JsonProperty, JsonLabel, JsonSchema, resolveRef, RefNode } from 'hr.sch
 import { FormErrors } from 'hr.error';
 import * as typeIds from 'hr.typeidentifiers';
 import * as expression from 'hr.expressiontree';
+export {IFormValue} from 'hr.formhelper';
 
 interface ProcessedJsonProperty extends JsonProperty {
     name: string;
