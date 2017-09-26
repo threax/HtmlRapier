@@ -286,7 +286,8 @@ class ArrayEditor implements formHelper.IFormValue {
         for (var i = 0; i < this.rows.length; ++i) {
             var data = this.rows[i].getData();
             if (this.isSimple && data !== null) {
-                data = data[""];
+                var dataKey = Object.keys(data)[0];
+                data = data[dataKey];
             }
             items.push(data);
         }
