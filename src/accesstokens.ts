@@ -133,40 +133,47 @@ class TokenManager {
 
     private async doRefreshToken(): Promise<void> {
         try {
-            var data: any = await http.post(this.tokenPath);
-            this.currentToken = data.accessToken;
-
-            var tokenObj = parseJwt(this.currentToken);
-
-            if (this.currentSub !== undefined) {
-                if (this.currentSub !== tokenObj.sub) { //Do not combine ifs
-                    //Subjects do not match, clear tokens
-                    this.clearToken();
-                    throw new Error("Sub did not match on new token, likely a different user. Aborting refresh.");
-                }
-            }
-            else {
-                this.currentSub = tokenObj.sub;
-            }
-
-            this.startTime = tokenObj.nbf;
-            this.expirationTick = (tokenObj.exp - this.startTime) / 2; //After half the token time has expired we will turn it in for another one.
-
+            await this.readServerToken();
             this.resolveQueue();
         }
         catch (err) {
             //This error happens only if we can't get the access token
             //If we did not yet have a token, allow the request to finish, the user is not logged in
             //Otherwise try to get the login
-            if (this.currentToken === undefined || await this.fireNeedLogin()) {
+            if (this.currentToken === undefined) {
                 this.resolveQueue();
             }
-            else {
-                //Got false, which means no login was performed, return an error
+            else if (await this.fireNeedLogin()) {
+                //After login read the server token again and resolve the queue
+                await this.readServerToken();
+                this.resolveQueue();
+            }
+            else { //Got false from fireNeedLogin, which means no login was performed, return an error
                 this.startTime = undefined;
                 this.rejectQueue("Could not refresh access token or log back in.");
             }
         }
+    }
+
+    private async readServerToken(): Promise<void> {
+        var data: any = await http.post(this.tokenPath);
+        this.currentToken = data.accessToken;
+
+        var tokenObj = parseJwt(this.currentToken);
+
+        if (this.currentSub !== undefined) {
+            if (this.currentSub !== tokenObj.sub) { //Do not combine ifs
+                //Subjects do not match, clear tokens
+                this.clearToken();
+                throw new Error("Sub did not match on new token, likely a different user. Aborting refresh.");
+            }
+        }
+        else {
+            this.currentSub = tokenObj.sub;
+        }
+
+        this.startTime = tokenObj.nbf;
+        this.expirationTick = (tokenObj.exp - this.startTime) / 2; //After half the token time has expired we will turn it in for another one.
     }
 
     private clearToken(): void {
