@@ -239,6 +239,7 @@ class Form<T> {
             data: data,
             source: this
         });
+        this.clearError();
     }
 
     public clear() {
