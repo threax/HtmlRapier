@@ -158,3 +158,24 @@ export class NullDeepLinkManager implements IDeepLinkManager {
         return null;
     }
 }
+
+export class DeepLinkBaseUrlProvider {
+    constructor(private pageBaseUrl: string) {
+
+    }
+
+    public get baseUrl() {
+        return this.pageBaseUrl;
+    }
+}
+
+export function setPageUrl(services: di.ServiceCollection, pageBaseUrl: string) {
+    services.tryAddShared(DeepLinkBaseUrlProvider, s => new DeepLinkBaseUrlProvider(pageBaseUrl));
+}
+
+export function addServices(services: di.ServiceCollection) {
+    services.tryAddShared(IDeepLinkManager, s => {
+        var linkProvider = s.getRequiredService(DeepLinkBaseUrlProvider);
+        return new DeepLinkManager(linkProvider.baseUrl);
+    });
+}
