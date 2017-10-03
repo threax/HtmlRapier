@@ -115,6 +115,10 @@ export class Uri {
                         queryString += key + '=' + encodeURIComponent(arr[i]) + '&';
                     }
                 }
+                else if (data[key] instanceof Date) {
+                    var parsedDate = data[key].toISOString();
+                    queryString += queryString += key + '=' + encodeURIComponent(parsedDate) + '&';
+                }
                 else{
                     queryString += key + '=' + encodeURIComponent(data[key]) + '&';
                 }
