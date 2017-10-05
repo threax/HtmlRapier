@@ -69,9 +69,9 @@ class FormValues implements formHelper.IFormValues {
         }
     }
 
-    public setData(data: any, serializer: formHelper.IFormSerializer): void {
+    public setData(data: any): void {
         for (var i = 0; i < this.values.length; ++i) {
-            this.values[i].setData(data, serializer);
+            this.values[i].setData(data);
         }
     }
 
@@ -205,9 +205,8 @@ class ArrayEditorRow {
         return data; //Not an object, just return the data
     }
 
-    public setData(data: any, serializer: formHelper.IFormSerializer) {
-        serializer.populate(data, this.name);
-        this.formValues.setData(data, serializer);
+    public setData(data: any) {
+        this.formValues.setData(data);
         this.setError(formHelper.getSharedClearingValidator(), "");
     }
 }
@@ -297,7 +296,7 @@ class ArrayEditor implements formHelper.IFormValue {
         return undefined;
     }
 
-    public setData(data: any, serializer: formHelper.IFormSerializer) {
+    public setData(data: any) {
         var itemData: any[];
         switch (formHelper.getDataType(data)) {
             case formHelper.DataType.Object:
@@ -325,7 +324,7 @@ class ArrayEditor implements formHelper.IFormValue {
                         "": rowData
                     }
                 }
-                this.rows[i].setData(rowData, serializer);
+                this.rows[i].setData(rowData);
             }
         }
         for (; i < this.rows.length;) { //Does not increment, removing rows will de index for us
@@ -418,7 +417,7 @@ export class BasicItemEditor implements formHelper.IFormValue {
         return formHelper.readValue(this.element);
     }
 
-    public setData(data: any, serializer: formHelper.IFormSerializer) {
+    public setData(data: any) {
         var itemData: any;
         switch (formHelper.getDataType(data)) {
             case formHelper.DataType.Object:

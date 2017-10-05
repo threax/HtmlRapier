@@ -202,7 +202,6 @@ class Form<T> {
     private proto: T;
     private baseLevel: string = undefined;
     private formValues: formHelper.IFormValues;
-    private formSerializer: formHelper.IFormSerializer;
     private beforeSetDataEvent = new events.ActionEventDispatcher<IFormArgs<T>>();
     private afterSetDataEvent = new events.ActionEventDispatcher<IFormArgs<T>>();
     private beforeGetDataEvent = new events.ActionEventDispatcher<IFormGetArgs<T>>();
@@ -231,7 +230,7 @@ class Form<T> {
             source: this
         });
         if(this.formValues) {
-            this.formValues.setData(data, this.formSerializer);
+            this.formValues.setData(data);
             this.formValues.fireDataChanged();
         }
         else {
@@ -248,7 +247,7 @@ class Form<T> {
         this.clearError();
         formHelper.populate(this.form, sharedClearer);
         if(this.formValues) {
-            this.formValues.setData(sharedClearer, this.formSerializer);
+            this.formValues.setData(sharedClearer);
             this.formValues.fireDataChanged();
         }
     }
@@ -312,7 +311,6 @@ class Form<T> {
         else{
             this.formValues = formHelper.buildForm(componentName, schema, this.form);
             this.baseLevel = "";
-            this.formSerializer = new formHelper.FormSerializer(this.form);
             this.formValues.onChanged.add(a =>
                 this.onChangedEvent.fire({ source: this }));
         }

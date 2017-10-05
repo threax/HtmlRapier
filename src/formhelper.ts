@@ -232,24 +232,10 @@ export function setValue(element: HTMLInputElement | HTMLSelectElement, itemData
     }
 }
 
-export interface IFormSerializer {
-    populate: (data: any, level?: string) => void;
-}
-
-export class FormSerializer implements IFormSerializer{
-    constructor(private form: HTMLFormElement){
-
-    }
-
-    public populate(data: any, level?: string): void {
-        populate(this.form, data, level);
-    }
-}
-
 export interface IFormValues{
     setError(err: FormErrors): void;
 
-    setData(data: any, serializer: IFormSerializer): void;
+    setData(data: any): void;
 
     recoverData(proto: {} | null): any;
 
@@ -275,7 +261,7 @@ export interface IFormValue {
 
     getData(): any;
 
-    setData(data: any, serializer: IFormSerializer);
+    setData(data: any);
 
     /**
      * Delete the form value, this might not actually happen. Return true if the item was deleted
