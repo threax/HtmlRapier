@@ -45,6 +45,7 @@ class FormValues implements formHelper.IFormValues {
     private valueSource: FormValuesSource;
     private fireChangesToValues: boolean = false;
     private changedEventHandler: event.ActionEventDispatcher<formHelper.IFormValues> = new event.ActionEventDispatcher<formHelper.IFormValues>();
+    private complexValues: boolean = true; //If this is true, the values passed in are complex, which means they are functions or objects with multiple values, otherwise they are simple and the values should be used directly.
 
     constructor() {
         this.valueSource = new FormValuesSource(this);
@@ -72,14 +73,16 @@ class FormValues implements formHelper.IFormValues {
     public setData(data: any): void {
         for (var i = 0; i < this.values.length; ++i) {
             var item = this.values[i];
-            var itemData: any;
-            switch (formHelper.getDataType(data)) {
-                case formHelper.DataType.Object:
-                    itemData = data[item.getDataName()];
-                    break;
-                case formHelper.DataType.Function:
-                    itemData = data(item.getDataName());
-                    break;
+            var itemData: any = data;
+            if (this.complexValues) { //If this is complex values, lookup the data
+                switch (formHelper.getDataType(data)) {
+                    case formHelper.DataType.Object:
+                        itemData = data[item.getDataName()];
+                        break;
+                    case formHelper.DataType.Function:
+                        itemData = data(item.getDataName());
+                        break;
+                }
             }
             item.setData(itemData);
         }
@@ -139,6 +142,15 @@ class FormValues implements formHelper.IFormValues {
             }
         }
         this.changedEventHandler.fire(this);
+    }
+
+    /**
+     * Set this to true to set that the values are complex and should be looked up, otherwise they are simple and
+     * should be gotten / set directly.
+     * @param complex
+     */
+    public setComplex(complex: boolean) {
+        this.complexValues = complex;
     }
 }
 
@@ -318,13 +330,7 @@ class ArrayEditor implements formHelper.IFormValue {
                 if (i >= this.rows.length) {
                     this.addRow();
                 }
-                var rowData = data[i];
-                if (this.isSimple) {
-                    rowData = {
-                        "": rowData
-                    }
-                }
-                this.rows[i].setData(rowData);
+                this.rows[i].setData(data[i]);
             }
         }
         for (; i < this.rows.length;) { //Does not increment, removing rows will de index for us
@@ -510,10 +516,13 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
     var propArray: ProcessedJsonProperty[] = [];
     var props = schema.properties;
     if (props === undefined) {
-        //No props, add the schema itself as a property
+        //No props, add the schema itself as a property, this also means our formValues are simple values
         propArray.push(processProperty(schema, baseName, baseName));
+        formValues.setComplex(false);
     }
     else {
+        //There are properties, so the formValues are complex values
+        formValues.setComplex(true);
 
         var baseNameWithSep = baseName;
         if (baseNameWithSep !== "") {
