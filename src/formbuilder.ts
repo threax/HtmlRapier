@@ -71,11 +71,11 @@ class FormValues implements formHelper.IFormValues {
     }
 
     public setData(data: any): void {
-        for (var i = 0; i < this.values.length; ++i) {
+        var dataType = formHelper.getDataType(data);
+        for (var i = 0; i < this.values.length; ++i) { //Go through all items
             var item = this.values[i];
-            var itemData: any;
-            var dataType = formHelper.getDataType(data);
-            if (this.complexValues) { //If this is complex values, lookup the data
+            var itemData: any = undefined;
+            if (this.complexValues && data !== null) { //If this is complex values, lookup the data, also be sure the data isn't null or we will get an error
                 switch (dataType) {
                     case formHelper.DataType.Object:
                         itemData = data[item.getDataName()];
@@ -85,8 +85,8 @@ class FormValues implements formHelper.IFormValues {
                         break;
                 }
             }
-            else {
-                if (dataType !== formHelper.DataType.Function) { //Ignore functions for simple data, otherwise take it
+            else { //Simple value or null
+                if (dataType !== formHelper.DataType.Function) { //Ignore functions for simple data, otherwise take the data as the value (will also happen for null)
                     itemData = data;
                 }
             }
