@@ -179,7 +179,7 @@ class ArrayEditorRow {
         }
         this.setError(formHelper.getSharedClearingValidator(), "");
         this.pooled = this.bindings.pool();
-        formHelper.populate(this.root, sharedClearer, this.name); //Clear existing data
+        this.setData(sharedClearer);
         this.removed.fire(this);
     }
 

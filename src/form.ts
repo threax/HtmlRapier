@@ -245,10 +245,12 @@ class Form<T> {
 
     public clear() {
         this.clearError();
-        formHelper.populate(this.form, sharedClearer);
         if(this.formValues) {
             this.formValues.setData(sharedClearer);
             this.formValues.fireDataChanged();
+        }
+        else {
+            formHelper.populate(this.form, sharedClearer);
         }
     }
 
