@@ -427,8 +427,20 @@ export class BasicItemEditor implements formHelper.IFormValue {
                 itemData = data(this.name);
                 break;
         }
-        formHelper.setValue(<any>this.element, itemData);
+        this.doSetValue(itemData);
         this.setError(formHelper.getSharedClearingValidator(), "");
+    }
+
+    /**
+     * This function actually sets the value for the element, if you are creating a subclass for BasicItemEditor
+     * you should override this function to actually set the value instead of overriding setData,
+     * this way the other logic for setting data (getting the actual data, clearing errors, computing defaults) can
+     * still happen. There is no need to call super.doSetData as that will only set the data on the form
+     * using the formHelper.setValue function.
+     * @param itemData The data to set for the item, this is the final value that should be set, no lookup needed.
+     */
+    protected doSetValue(itemData: any) {
+        formHelper.setValue(<any>this.element, itemData);
     }
 
     public getBuildName(): string {

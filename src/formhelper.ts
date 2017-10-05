@@ -189,12 +189,9 @@ export function populate(form: HTMLElement | string, data:any, level?: string): 
     }
 }
 
-export function setValue(element: HTMLInputElement | HTMLSelectElement, itemData: any, defaultData?: any) {
+export function setValue(element: HTMLInputElement | HTMLSelectElement, itemData: any) {
     if (itemData === undefined) {
-        if (defaultData === undefined) {
-            defaultData = "";
-        }
-        itemData = defaultData;
+        itemData = "";
     }
 
     switch (element.type) {
