@@ -25,7 +25,6 @@ export interface JsonProperty {
     "x-enumNames"?: string[]; //The enum names, will be combined with enum to make values
     "x-value"?: string; //If there is a single value for the field, use that, can override default values for things like checkboxes
     "x-display-if"?: expression.ExpressionNode;
-    default?: any;
 }
 
 export interface JsonLabel {

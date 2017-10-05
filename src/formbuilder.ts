@@ -389,7 +389,6 @@ export class BasicItemEditor implements formHelper.IFormValue {
     protected generated: boolean;
     protected element: HTMLElement;
     protected displayExpression: expression.ExpressionTree;
-    protected default: any;
 
     constructor(args: IFormValueBuilderArgs) {
         this.name = args.item.name;
@@ -398,7 +397,6 @@ export class BasicItemEditor implements formHelper.IFormValue {
         this.generated = args.generated;
         this.element = args.inputElement;
         this.displayExpression = args.item.displayExpression;
-        this.default = args.item.default;
 
         if (args.item["x-ui-disabled"] === true || args.item.readOnly === true) {
             this.element.setAttribute("disabled", "");
