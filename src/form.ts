@@ -230,10 +230,12 @@ class Form<T> {
             data: data,
             source: this
         });
-        formHelper.populate(this.form, data, this.baseLevel);
         if(this.formValues) {
             this.formValues.setData(data, this.formSerializer);
             this.formValues.fireDataChanged();
+        }
+        else {
+            formHelper.populate(this.form, data, this.baseLevel);
         }
         this.afterSetDataEvent.fire({
             data: data,

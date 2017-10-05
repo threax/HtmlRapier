@@ -184,45 +184,51 @@ export function populate(form: HTMLElement | string, data:any, level?: string): 
                     itemData = data(dataName);
                     break;
             }
-            
-            if(itemData === undefined){
-                itemData = "";
-            }
-
-            switch (element.type) {
-                case 'checkbox':
-                    (<HTMLInputElement>element).checked = itemData;
-                    break;
-                case 'select-multiple':
-                    var options = (<HTMLSelectElement>element).options;
-                    if(Array.isArray(itemData)){
-                        for (var j = options.length - 1; j >= 0; j = j - 1) {
-                            options[j].selected = containsCoerced(itemData, options[j].value);
-                        }
-                    }
-                    break;
-                case 'select-one':
-                    var options = (<HTMLSelectElement>element).options;
-                    var valueToSet = "";
-                    if (options.length > 0) { //Default to setting the first value
-                        valueToSet = options[0].value;
-                    }
-                    if (itemData !== null && itemData !== undefined) {
-                        var itemDataString = String(itemData);
-                        //Scan options to find the value that is attempting to be set, if it does not exist, this will default back to the first value
-                        for (var j = options.length - 1; j >= 0; j = j - 1) {
-                            if (options[j].value === itemDataString) {
-                                valueToSet = itemDataString;
-                            }
-                        }
-                    }
-                    element.value = valueToSet;
-                    break;
-                default:
-                    element.value = itemData;
-                    break;
-            }
+            setValue(element, itemData);            
         }
+    }
+}
+
+export function setValue(element: HTMLInputElement | HTMLSelectElement, itemData: any, defaultData?: any) {
+    if (itemData === undefined) {
+        if (defaultData === undefined) {
+            defaultData = "";
+        }
+        itemData = defaultData;
+    }
+
+    switch (element.type) {
+        case 'checkbox':
+            (<HTMLInputElement>element).checked = itemData;
+            break;
+        case 'select-multiple':
+            var options = (<HTMLSelectElement>element).options;
+            if (Array.isArray(itemData)) {
+                for (var j = options.length - 1; j >= 0; j = j - 1) {
+                    options[j].selected = containsCoerced(itemData, options[j].value);
+                }
+            }
+            break;
+        case 'select-one':
+            var options = (<HTMLSelectElement>element).options;
+            var valueToSet = "";
+            if (options.length > 0) { //Default to setting the first value
+                valueToSet = options[0].value;
+            }
+            if (itemData !== null && itemData !== undefined) {
+                var itemDataString = String(itemData);
+                //Scan options to find the value that is attempting to be set, if it does not exist, this will default back to the first value
+                for (var j = options.length - 1; j >= 0; j = j - 1) {
+                    if (options[j].value === itemDataString) {
+                        valueToSet = itemDataString;
+                    }
+                }
+            }
+            element.value = valueToSet;
+            break;
+        default:
+            element.value = itemData;
+            break;
     }
 }
 
@@ -233,10 +239,6 @@ export interface IFormSerializer {
 export class FormSerializer implements IFormSerializer{
     constructor(private form: HTMLFormElement){
 
-    }
-
-    public serialize(level?: string): any {
-        return serialize(this.form, undefined, level);
     }
 
     public populate(data: any, level?: string): void {

@@ -301,10 +301,10 @@ class ArrayEditor implements formHelper.IFormValue {
         var itemData: any[];
         switch (formHelper.getDataType(data)) {
             case formHelper.DataType.Object:
-                itemData = data[this.buildName];
+                itemData = data[this.name];
                 break;
             case formHelper.DataType.Function:
-                itemData = data(this.buildName);
+                itemData = data(this.name);
                 break;
         }
 
@@ -376,6 +376,7 @@ export class BasicItemEditor implements formHelper.IFormValue {
     protected generated: boolean;
     protected element: HTMLElement;
     protected displayExpression: expression.ExpressionTree;
+    protected default: any;
 
     constructor(args: IFormValueBuilderArgs) {
         this.name = args.item.name;
@@ -384,6 +385,7 @@ export class BasicItemEditor implements formHelper.IFormValue {
         this.generated = args.generated;
         this.element = args.inputElement;
         this.displayExpression = args.item.displayExpression;
+        this.default = args.item.default;
 
         if (args.item["x-ui-disabled"] === true || args.item.readOnly === true) {
             this.element.setAttribute("disabled", "");
@@ -417,7 +419,16 @@ export class BasicItemEditor implements formHelper.IFormValue {
     }
 
     public setData(data: any, serializer: formHelper.IFormSerializer) {
-        //Only sets errors, relies on the formHelper.populate function to actually write the data
+        var itemData: any;
+        switch (formHelper.getDataType(data)) {
+            case formHelper.DataType.Object:
+                itemData = data[this.name];
+                break;
+            case formHelper.DataType.Function:
+                itemData = data(this.name);
+                break;
+        }
+        formHelper.setValue(<any>this.element, itemData);
         this.setError(formHelper.getSharedClearingValidator(), "");
     }
 
