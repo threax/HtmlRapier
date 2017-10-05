@@ -73,9 +73,10 @@ class FormValues implements formHelper.IFormValues {
     public setData(data: any): void {
         for (var i = 0; i < this.values.length; ++i) {
             var item = this.values[i];
-            var itemData: any = data;
+            var itemData: any;
+            var dataType = formHelper.getDataType(data);
             if (this.complexValues) { //If this is complex values, lookup the data
-                switch (formHelper.getDataType(data)) {
+                switch (dataType) {
                     case formHelper.DataType.Object:
                         itemData = data[item.getDataName()];
                         break;
@@ -84,22 +85,36 @@ class FormValues implements formHelper.IFormValues {
                         break;
                 }
             }
+            else {
+                if (dataType !== formHelper.DataType.Function) { //Ignore functions for simple data, otherwise take it
+                    itemData = data;
+                }
+            }
             item.setData(itemData);
         }
     }
 
     public recoverData(proto: {} | null): any {
-        var data = Object.create(proto || null);
+        if (this.complexValues) {
+            var data = Object.create(proto || null);
 
-        for (var i = 0; i < this.values.length; ++i) {
-            var item = this.values[i];
-            var value = item.getData();
-            if (formHelper.shouldAddValue(value)) { //Do not record undefined, null or empty values
-                data[item.getDataName()] = value;
+            for (var i = 0; i < this.values.length; ++i) {
+                var item = this.values[i];
+                var value = item.getData();
+                if (formHelper.shouldAddValue(value)) { //Do not record undefined, null or empty values
+                    data[item.getDataName()] = value;
+                }
             }
-        }
 
-        return data;
+            return data;
+        }
+        else {
+            //Simple data only supports one return value, so return the first value item
+            if (this.values.length > 0) {
+                return this.values[0].getData();
+            }
+            return undefined; //No data to get, return undefined.
+        }
     }
 
     public changeSchema(componentName: string, schema: JsonSchema, parentElement: HTMLElement): void {
@@ -238,7 +253,6 @@ class ArrayEditor implements formHelper.IFormValue {
     private pooledRows: ArrayEditorRow[] = [];
     private rows: ArrayEditorRow[] = [];
     private indexGen: InfiniteIndex = new InfiniteIndex();
-    private isSimple: boolean;
 
     private errorToggle: toggle.OnOffToggle;
     private errorMessage: view.IView<string>;
@@ -246,7 +260,6 @@ class ArrayEditor implements formHelper.IFormValue {
     constructor(private name: string, private buildName: string, baseTitle: string, private bindings: BindingCollection, private schema: JsonSchema, private generated: boolean) {
         this.itemsView = bindings.getView<JsonSchema>("items");
         bindings.setListener(this);
-        this.isSimple = schema.type !== "object";
 
         if (this.schema.title === undefined) {
             this.schema = Object.create(this.schema);
@@ -305,12 +318,7 @@ class ArrayEditor implements formHelper.IFormValue {
     public getData(): any {
         var items = [];
         for (var i = 0; i < this.rows.length; ++i) {
-            var data = this.rows[i].getData();
-            if (this.isSimple && data !== null) {
-                var dataKey = Object.keys(data)[0];
-                data = data[dataKey];
-            }
-            items.push(data);
+            items.push(this.rows[i].getData());
         }
         if (items.length > 0) {
             return items;
