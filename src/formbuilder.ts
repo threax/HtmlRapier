@@ -71,7 +71,17 @@ class FormValues implements formHelper.IFormValues {
 
     public setData(data: any): void {
         for (var i = 0; i < this.values.length; ++i) {
-            this.values[i].setData(data);
+            var item = this.values[i];
+            var itemData: any;
+            switch (formHelper.getDataType(data)) {
+                case formHelper.DataType.Object:
+                    itemData = data[item.getDataName()];
+                    break;
+                case formHelper.DataType.Function:
+                    itemData = data(item.getDataName());
+                    break;
+            }
+            item.setData(itemData);
         }
     }
 
@@ -296,29 +306,19 @@ class ArrayEditor implements formHelper.IFormValue {
         return undefined;
     }
 
-    public setData(data: any) {
-        var itemData: any[];
-        switch (formHelper.getDataType(data)) {
-            case formHelper.DataType.Object:
-                itemData = data[this.name];
-                break;
-            case formHelper.DataType.Function:
-                itemData = data(this.name);
-                break;
-        }
-
+    public setData(data: any[]) {
         var i = 0;
-        if (itemData) {
+        if (data) {
             //Make sure data is an array
-            if (!typeIds.isArray(itemData)) {
-                itemData = [itemData];
+            if (!typeIds.isArray(data)) {
+                data = [data];
             }
 
-            for (; i < itemData.length; ++i) {
+            for (; i < data.length; ++i) {
                 if (i >= this.rows.length) {
                     this.addRow();
                 }
-                var rowData = itemData[i];
+                var rowData = data[i];
                 if (this.isSimple) {
                     rowData = {
                         "": rowData
@@ -418,16 +418,7 @@ export class BasicItemEditor implements formHelper.IFormValue {
     }
 
     public setData(data: any) {
-        var itemData: any;
-        switch (formHelper.getDataType(data)) {
-            case formHelper.DataType.Object:
-                itemData = data[this.name];
-                break;
-            case formHelper.DataType.Function:
-                itemData = data(this.name);
-                break;
-        }
-        this.doSetValue(itemData);
+        this.doSetValue(data);
         this.setError(formHelper.getSharedClearingValidator(), "");
     }
 
