@@ -581,6 +581,10 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
                     }
                 }
 
+                if (bindings === null) { //Could not find form data-hr-form-start element, just use the element as the base for the binding collection
+                    bindings = new BindingCollection(existing);
+                }
+
                 generated = false;
             }
         }
