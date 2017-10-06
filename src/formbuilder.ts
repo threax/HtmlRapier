@@ -570,10 +570,10 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
             //If this was an exising element, see if we should reuse what was found before, if the formValues already has an item, do nothing here
             if (!formValues.hasFormValue(item.buildName)) {
                 //Not found, try to create a binding collection for it
-                //Walk up element parents trying to find one with a data-hr-form-start attribute on it.
+                //Walk up element parents trying to find one with a data-hr-input-start attribute on it.
                 var bindParent = existing;
                 while (bindings === null && bindParent !== null && bindParent !== parentElement) {
-                    if (bindParent.hasAttribute("data-hr-form-start")) {
+                    if (bindParent.hasAttribute("data-hr-input-start")) {
                         bindings = new BindingCollection(bindParent);
                     }
                     else {
@@ -581,7 +581,7 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
                     }
                 }
 
-                if (bindings === null) { //Could not find form data-hr-form-start element, just use the element as the base for the binding collection
+                if (bindings === null) { //Could not find form data-hr-input-start element, just use the element as the base for the binding collection
                     bindings = new BindingCollection(existing);
                 }
 
