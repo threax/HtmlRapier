@@ -778,10 +778,10 @@ function getPropertyType(prop: JsonProperty) {
             }
         }
     }
-    else {
+    else if(prop.type) { //If the property type is set, return it
         return prop.type;
     }
-    return "null";
+    return "string"; //Otherwise fallback to string
 }
 
 var formValueBuilders: IFormValueBuilder[] = [];
