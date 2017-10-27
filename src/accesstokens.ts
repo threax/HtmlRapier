@@ -1,10 +1,10 @@
 ﻿///<amd-module name="hr.accesstokens"/>
 
 import * as http from 'hr.http';
-import * as uri from 'hr.uri';
 import { Fetcher, RequestInfo, RequestInit, Response, Request } from 'hr.fetcher';
 import * as events from 'hr.eventdispatcher';
 import * as ep from 'hr.externalpromise';
+import {IWhitelist} from 'hr.whitelist';
 
 //From https://github.com/auth0/jwt-decode/blob/master/lib/base64_url_decode.js
 function b64DecodeUnicode(str: string) {
@@ -50,59 +50,14 @@ function parseJwt(token: string, options?: any) {
     return JSON.parse(base64_url_decode(token.split('.')[pos]));
 };
 
-export interface IAccessWhitelist {
-    canSendAccessToken(url: RequestInfo): boolean;
-}
-
-function requestIsRequestObject(test: RequestInfo): test is Request {
-    return (<Request>test).url !== undefined;
-}
-
-export class AccessWhitelist implements IAccessWhitelist {
-    private whitelist: uri.Uri[] = [];
-
-    constructor(whitelist?: string[]) {
-        if (whitelist) {
-            for (var i = 0; i < whitelist.length; ++i) {
-                this.add(whitelist[i]);
-            }
-        }
-    }
-
-    public add(url: string) {
-        this.whitelist.push(new uri.Uri(this.transformInput(url)));
-    }
-
-    public canSendAccessToken(url: RequestInfo): boolean {
-        var testUri: uri.Uri;
-        if (requestIsRequestObject(url)) {
-            testUri = new uri.Uri(this.transformInput(url.url));
-        }
-        else {
-            testUri = new uri.Uri(this.transformInput(url));
-        }
-
-        for (var i = 0; i < this.whitelist.length; ++i) {
-            var item = this.whitelist[i];
-            //Check to see if the urls match here, check that authorities match and
-            //that the path for the item starts with the whitelisted path.
-            if ((item.protocol === 'HTTPS' || item.protocol === '') //Accept https or empty protocol only 
-                && item.authority == testUri.authority
-                && (<any>testUri.path).startsWith(item.path)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private transformInput(url: string): string {
-        return url.toLocaleUpperCase();
-    }
+interface IServerTokenResult {
+    headerName: string;
+    accessToken: string;
 }
 
 class TokenManager {
     private currentToken: string;
+    private _headerName: string;
     private startTime: number;
     private currentSub: string;
     private expirationTick: number;
@@ -156,8 +111,9 @@ class TokenManager {
     }
 
     private async readServerToken(): Promise<void> {
-        var data: any = await http.post(this.tokenPath);
+        var data = await http.post<IServerTokenResult>(this.tokenPath);
         this.currentToken = data.accessToken;
+        this._headerName = data.headerName;
 
         var tokenObj = parseJwt(this.currentToken);
 
@@ -190,6 +146,10 @@ class TokenManager {
      */
     public get onNeedLogin(): events.EventModifier<events.FuncEventListener<Promise<boolean>, TokenManager>> {
         return this.needLoginEvent.modifier;
+    }
+
+    public get headerName() {
+        return this._headerName;
     }
 
     private async fireNeedLogin(): Promise<boolean> {
@@ -227,12 +187,12 @@ export class AccessTokenManager extends Fetcher {
     }
 
     private next: Fetcher;
-    private accessWhitelist: IAccessWhitelist;
+    private accessWhitelist: IWhitelist;
     private tokenManager: TokenManager;
     private needLoginEvent: events.PromiseEventDispatcher<boolean, AccessTokenManager> = new events.PromiseEventDispatcher<boolean, AccessTokenManager>();
     private _alwaysRefreshToken: boolean = false;
 
-    constructor(tokenPath: string, accessWhitelist: IAccessWhitelist, next: Fetcher) {
+    constructor(tokenPath: string, accessWhitelist: IWhitelist, next: Fetcher) {
         super();
         this.tokenManager = new TokenManager(tokenPath);
         this.tokenManager.onNeedLogin.add((t) => this.fireNeedLogin());
@@ -242,14 +202,15 @@ export class AccessTokenManager extends Fetcher {
 
     public async fetch(url: RequestInfo, init?: RequestInit): Promise<Response> {
         //Make sure the request is allowed to send an access token
-        var whitelisted: boolean = this.accessWhitelist.canSendAccessToken(url);
+        var whitelisted: boolean = this.accessWhitelist.isWhitelisted(url);
 
         //Sometimes we always refresh the token even if the item is not on the whitelist
         //This is configured by the user
         if (whitelisted || this._alwaysRefreshToken) {
             var token: string = await this.tokenManager.getToken();
-            if (whitelisted) {
-                (<any>init.headers).bearer = token;
+            var headerName: string = this.tokenManager.headerName;
+            if (whitelisted && headerName) {
+                init.headers[headerName] = token;
             }
         }
 

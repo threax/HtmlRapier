@@ -1,7 +1,7 @@
 ///<amd-module name="hr.credentialsfetcher"/>
 
 import { Fetcher, RequestInfo, RequestInit, Response } from 'hr.Fetcher';
-import { AccessWhitelist } from 'hr.accesstokens';
+import {IWhitelist} from 'hr.whitelist';
 
 /**
  * A fetcher that adds credentials to whitelisted urls.
@@ -10,15 +10,15 @@ import { AccessWhitelist } from 'hr.accesstokens';
  */
 export class WithCredentialsFetcher implements Fetcher {
     private next: Fetcher;
-    private accessWhitelist: AccessWhitelist;
+    private accessWhitelist: IWhitelist;
 
-    constructor(accessWhitelist: AccessWhitelist, next: Fetcher) {
+    constructor(accessWhitelist: IWhitelist, next: Fetcher) {
         this.next = next;
         this.accessWhitelist = accessWhitelist;
     }
 
     fetch(url: RequestInfo, init?: RequestInit): Promise<Response> {
-        if(this.accessWhitelist.canSendAccessToken(url)) {
+        if(this.accessWhitelist.isWhitelisted(url)) {
             if(init === undefined){
                 init = {};
             }
