@@ -64,7 +64,7 @@ class TokenManager {
     private needLoginEvent: events.PromiseEventDispatcher<boolean, TokenManager> = new events.PromiseEventDispatcher<boolean, TokenManager>();
     private queuePromise: ep.ExternalPromise<string> = null;
 
-    constructor(private tokenPath: string) {
+    constructor(private tokenPath: string, private fetcher: Fetcher) {
 
     }
 
@@ -111,7 +111,7 @@ class TokenManager {
     }
 
     private async readServerToken(): Promise<void> {
-        var data = await http.post<IServerTokenResult>(this.tokenPath);
+        var data = await http.post<IServerTokenResult>(this.tokenPath, undefined, this.fetcher);
         this.currentToken = data.accessToken;
         this._headerName = data.headerName;
 
@@ -180,21 +180,21 @@ class TokenManager {
     }
 }
 
-export class AccessTokenManager extends Fetcher {
-    public static isInstance(t: any): t is AccessTokenManager {
-        return (<AccessTokenManager>t).onNeedLogin !== undefined
-            && (<AccessTokenManager>t).fetch !== undefined;
+export class AccessTokenFetcher extends Fetcher {
+    public static isInstance(t: any): t is AccessTokenFetcher {
+        return (<AccessTokenFetcher>t).onNeedLogin !== undefined
+            && (<AccessTokenFetcher>t).fetch !== undefined;
     }
 
     private next: Fetcher;
     private accessWhitelist: IWhitelist;
     private tokenManager: TokenManager;
-    private needLoginEvent: events.PromiseEventDispatcher<boolean, AccessTokenManager> = new events.PromiseEventDispatcher<boolean, AccessTokenManager>();
+    private needLoginEvent: events.PromiseEventDispatcher<boolean, AccessTokenFetcher> = new events.PromiseEventDispatcher<boolean, AccessTokenFetcher>();
     private _alwaysRefreshToken: boolean = false;
 
     constructor(tokenPath: string, accessWhitelist: IWhitelist, next: Fetcher) {
         super();
-        this.tokenManager = new TokenManager(tokenPath);
+        this.tokenManager = new TokenManager(tokenPath, next);
         this.tokenManager.onNeedLogin.add((t) => this.fireNeedLogin());
         this.next = next;
         this.accessWhitelist = accessWhitelist;
@@ -209,7 +209,7 @@ export class AccessTokenManager extends Fetcher {
         if (whitelisted || this._alwaysRefreshToken) {
             var token: string = await this.tokenManager.getToken();
             var headerName: string = this.tokenManager.headerName;
-            if (whitelisted && headerName) {
+            if (whitelisted && headerName && token) {
                 init.headers[headerName] = token;
             }
         }
@@ -221,7 +221,7 @@ export class AccessTokenManager extends Fetcher {
      * This event will fire if the token manager tried to get an access token and failed. You can try
      * to log the user back in at this point.
      */
-    public get onNeedLogin(): events.EventModifier<events.FuncEventListener<Promise<boolean>, AccessTokenManager>> {
+    public get onNeedLogin(): events.EventModifier<events.FuncEventListener<Promise<boolean>, AccessTokenFetcher>> {
         return this.needLoginEvent;
     }
 

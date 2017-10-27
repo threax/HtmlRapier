@@ -53,7 +53,7 @@ export class CookieStorageDriver implements IStorageDriver {
      * @param {type} value - The value of the cookie
      * @param {type} days - The expiration in days for the cookie
      */
-    protected static createRaw(name: string, value: string, path: string, days: number): void {
+    public static createRaw(name: string, value: string, path: string, days: number): void {
         if (days) {
             var date = new Date();
             date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
@@ -68,7 +68,7 @@ export class CookieStorageDriver implements IStorageDriver {
      * @param {type} name - The name of the cookie to read
      * @returns {type} - The cookie value.
      */
-    protected static readRaw(name): string | null {
+    public static readRaw(name): string | null {
         var nameEQ = name + "=";
         var ca = document.cookie.split(';');
         for (var i = 0; i < ca.length; i++) {
