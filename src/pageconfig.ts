@@ -23,5 +23,5 @@ export function read<T>(config?: T): T{
     if(config === undefined){
         config = <T>{};
     }
-    return hr_config ? hr_config(config) : config;
+    return (<any>window).hr_config ? (<any>window).hr_config(config) : config;
 }
