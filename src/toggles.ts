@@ -207,7 +207,7 @@ export interface IToggleStates {
  */
 export abstract class ToggleStates implements IToggleStates {
     private next: IToggleStates;
-    private states = {};
+    private states: { [k: string]: string } = {};
     private toggle: TypedToggle;
 
     constructor(next: IToggleStates) {
@@ -276,6 +276,38 @@ export class MultiToggleStates implements IToggleStates {
         for (var i = 0; i < this.childStates.length; ++i) {
             this.childStates[i].setToggle(toggle);
         }
+    }
+}
+
+export class DisabledToggleStates extends ToggleStates {
+    constructor(private element, next: ToggleStates) {
+        super(next);
+    }
+
+    public activateState(style): boolean {
+        if (Boolean(style)) {
+            this.element.setAttribute('disabled', 'disabled');
+        }
+        else {
+            this.element.removeAttribute('disabled');
+        }
+        return true;
+    }
+}
+
+export class ReadonlyToggleStates extends ToggleStates {
+    constructor(private element, next: ToggleStates) {
+        super(next);
+    }
+
+    public activateState(style): boolean {
+        if (Boolean(style)) {
+            this.element.setAttribute('readonly', 'readonly');
+        }
+        else {
+            this.element.removeAttribute('readonly');
+        }
+        return true;
     }
 }
 
@@ -418,6 +450,8 @@ export function build(element: Element, stateNames: string[]): IToggleStates {
     if (element !== null) {
         toggle = extractStates(element, stateNames, 'data-hr-style-', StyleStates, toggle);
         toggle = extractStates(element, stateNames, 'data-hr-class-', ClassStates, toggle);
+        toggle = extractStates(element, stateNames, 'data-hr-disabled-', DisabledToggleStates, toggle);
+        toggle = extractStates(element, stateNames, 'data-hr-readonly-', ReadonlyToggleStates, toggle);
 
         //Now toggle plugin chain
         for (var i = 0; i < togglePlugins.length; ++i) {
