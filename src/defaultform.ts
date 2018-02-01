@@ -32,12 +32,22 @@ if (!component.isDefined("hr.forms.default")) {
     builder.addVariant("arrayEditor", new VariantBuilder(
         '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;"><div data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error"><label class="control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label><div data-hr-view="items" data-hr-view-component="hr.forms.default-arrayEditorItem"></div><button class="btn btn-default" data-hr-on-click="add">Add</button></div></div>'
     ));
+    builder.addVariant("multicheckbox", new VariantBuilder(
+        '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;">' +
+        '<div data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error">' +
+            '<label class="control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label>' +
+            '<div data-hr-view="items" data-hr-view-component="hr.forms.default-multicheckboxitem"></div>' +
+        '</div></div>'
+    ));
     component.register("hr.forms.default", builder);
 
-    var arrayEditorItem = new ComponentBuilder(
+    component.register("hr.forms.default-multicheckboxitem", new ComponentBuilder(
+        '<div class="checkbox"><label><input type="checkbox" value="{{value}}" data-hr-handle="check" />&nbsp;{{label}}</label></div>'
+    ));
+
+    component.register("hr.forms.default-arrayEditorItem", new ComponentBuilder(
         '<div><button data-hr-on-click="remove" class="btn btn-default" data-hr-form-end>Remove</button></div>'
-    );
-    component.register("hr.forms.default-arrayEditorItem", arrayEditorItem);
+    ));
 }
 
 //Register horizontal form
@@ -69,10 +79,20 @@ if (!component.isDefined("hr.forms.horizontal")) {
     builder.addVariant("arrayEditor", new VariantBuilder(
         '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;"><div data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error"><label class="control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label><div data-hr-view="items" data-hr-view-component="hr.forms.horizontal-arrayEditorItem"></div><button class="btn btn-default" data-hr-on-click="add">Add</button></div></div>'
     ));
+    builder.addVariant("multicheckbox", new VariantBuilder(
+        '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;">' +
+        '<div data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error">' +
+        '<label class="control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label>' +
+        '<div data-hr-view="items" data-hr-view-component="hr.forms.horizontal-multicheckboxitem"></div>' +
+        '</div></div>'
+    ));
     component.register("hr.forms.horizontal", builder);
 
-    var arrayEditorItem = new ComponentBuilder(
+    component.register("hr.forms.horizontal-multicheckboxitem", new ComponentBuilder(
+        '<div class="checkbox"><label><input type="checkbox" value="{{value}}" data-hr-handle="check" />&nbsp;{{label}}</label></div>'
+    ));
+
+    component.register("hr.forms.horizontal-arrayEditorItem", new ComponentBuilder(
         '<div><button data-hr-on-click="remove" class="btn btn-default" data-hr-form-end>Remove</button></div>'
-    );
-    component.register("hr.forms.horizontal-arrayEditorItem", arrayEditorItem);
+    ));
 }
