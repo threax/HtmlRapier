@@ -39,10 +39,21 @@ if (!component.isDefined("hr.forms.default")) {
             '<div data-hr-view="items" data-hr-view-component="hr.forms.default-multicheckboxitem"></div>' +
         '</div></div>'
     ));
+    builder.addVariant("radiobutton", new VariantBuilder(
+        '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;">' +
+        '<div data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error">' +
+        '<label class="control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label>' +
+        '<div data-hr-view="items" data-hr-view-component="hr.forms.default-radiobutton"></div>' +
+        '</div></div>'
+    ));
     component.register("hr.forms.default", builder);
 
     component.register("hr.forms.default-multicheckboxitem", new ComponentBuilder(
         '<div class="checkbox"><label><input type="checkbox" value="{{value}}" data-hr-handle="check" />&nbsp;{{label}}</label></div>'
+    ));
+
+    component.register("hr.forms.default-radiobutton", new ComponentBuilder(
+        '<div class="radio"><label><input type="radio" name="{{name}}" value="{{value}}" data-hr-handle="radio" />&nbsp;{{label}}</label></div>'
     ));
 
     component.register("hr.forms.default-arrayEditorItem", new ComponentBuilder(
@@ -86,10 +97,21 @@ if (!component.isDefined("hr.forms.horizontal")) {
         '<div data-hr-view="items" data-hr-view-component="hr.forms.horizontal-multicheckboxitem"></div>' +
         '</div></div>'
     ));
+    builder.addVariant("radiobutton", new VariantBuilder(
+        '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;">' +
+        '<div data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error">' +
+        '<label class="control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label>' +
+        '<div data-hr-view="items" data-hr-view-component="hr.forms.horizontal-radiobutton"></div>' +
+        '</div></div>'
+    ));
     component.register("hr.forms.horizontal", builder);
 
     component.register("hr.forms.horizontal-multicheckboxitem", new ComponentBuilder(
         '<div class="checkbox"><label><input type="checkbox" value="{{value}}" data-hr-handle="check" />&nbsp;{{label}}</label></div>'
+    ));
+
+    component.register("hr.forms.horizontal-radiobutton", new ComponentBuilder(
+        '<div class="radio"><label><input type="radio" name="{{name}}" value="{{value}}" data-hr-handle="radio" />&nbsp;{{label}}</label></div>'
     ));
 
     component.register("hr.forms.horizontal-arrayEditorItem", new ComponentBuilder(

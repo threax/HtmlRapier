@@ -195,6 +195,7 @@ export function setValue(element: HTMLInputElement | HTMLSelectElement, itemData
     }
 
     switch (element.type) {
+        case 'radio':
         case 'checkbox':
             (<HTMLInputElement>element).checked = itemData;
             break;

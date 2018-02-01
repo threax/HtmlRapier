@@ -14,6 +14,7 @@ import { FormErrors } from 'hr.error';
 import * as typeIds from 'hr.typeidentifiers';
 import * as expression from 'hr.expressiontree';
 export { IFormValue } from 'hr.formhelper';
+import * as iterable from 'hr.iterable';
 
 interface ProcessedJsonProperty extends JsonProperty {
     name: string;
@@ -654,6 +655,153 @@ export class MultiCheckBoxEditor implements formHelper.IFormValue {
     }
 }
 
+export class RadioButtonEditor implements formHelper.IFormValue {
+    private itemsView: view.IView<JsonLabel>;
+    private errorToggle: toggle.OnOffToggle;
+    private errorMessage: view.IView<string>;
+    private hideToggle: toggle.OnOffToggle;
+    private changedEventHandler: event.ActionEventDispatcher<formHelper.IFormValue> = null;
+    protected name: string;
+    protected buildName: string;
+    protected bindings: BindingCollection;
+    protected generated: boolean;
+    protected displayExpression: expression.ExpressionTree;
+    protected elements: HTMLInputElement[] = [];
+    protected nullElement: HTMLInputElement = null;
+
+    constructor(args: IFormValueBuilderArgs) {
+        this.itemsView = args.bindings.getView<any>("items");
+        this.name = args.item.name;
+        this.buildName = args.item.buildName;
+        this.bindings = args.bindings;
+        this.generated = args.generated;
+        this.displayExpression = args.item.displayExpression;
+
+        var disabled = args.item["x-ui-disabled"] === true || args.item.readOnly === true;
+
+        var self = this;
+        this.changedEventHandler = new event.ActionEventDispatcher<formHelper.IFormValue>();
+        var iter = new iterable.Iterable(args.item.buildValues).select(i => {
+            var shadow = Object.create(i);
+            shadow.name = this.buildName;
+            return shadow;
+        });
+        this.itemsView.setData(iter, (created, item) => {
+            var element = created.getHandle("radio");
+
+            //If this is the null value item, keep track of its element separately
+            if (item.value === null) {
+                this.nullElement = element;
+            }
+
+            this.elements.push(element);
+            element.addEventListener("change", e => {
+                self.changedEventHandler.fire(self);
+            });
+
+            if (disabled) {
+                element.setAttribute("disabled", "");
+            }
+        });
+
+        this.errorToggle = this.bindings.getToggle(this.buildName + "Error");
+        this.errorMessage = this.bindings.getView(this.buildName + "ErrorMessage");
+        this.hideToggle = this.bindings.getToggle(this.buildName + "Hide");
+    }
+
+    public setError(err: FormErrors, baseName: string) {
+        var errorName = err.addKey(baseName, this.name);
+        if (err.hasValidationError(errorName)) {
+            this.errorToggle.on();
+            this.errorMessage.setData(err.getValidationError(errorName));
+        }
+        else {
+            this.errorToggle.off();
+            this.errorMessage.setData("");
+        }
+    }
+
+    public getData(): any {
+        for (var i = 0; i < this.elements.length; ++i) {
+            var radio = this.elements[i];
+            if (radio.checked) {
+                return formHelper.readValue(radio);
+            }
+        }
+        return undefined;
+    }
+
+    public setData(data: any) {
+        this.doSetValue(data);
+        this.setError(formHelper.getSharedClearingValidator(), "");
+    }
+
+    /**
+     * This function actually sets the value for the element, if you are creating a subclass for BasicItemEditor
+     * you should override this function to actually set the value instead of overriding setData,
+     * this way the other logic for setting data (getting the actual data, clearing errors, computing defaults) can
+     * still happen. There is no need to call super.doSetData as that will only set the data on the form
+     * using the formHelper.setValue function.
+     * @param itemData The data to set for the item, this is the final value that should be set, no lookup needed.
+     */
+    protected doSetValue(itemData: any) {
+        if (itemData !== null && itemData !== undefined) {
+            for (var i = 0; i < this.elements.length; ++i) {
+                var check = this.elements[i];
+                if (check.value === itemData) {
+                    formHelper.setValue(<any>check, true);
+                }
+            }
+        }
+        else {
+            if (this.nullElement !== null) {
+                formHelper.setValue(<any>this.nullElement, true);
+            }
+        }
+    }
+
+    public getBuildName(): string {
+        return this.buildName;
+    }
+
+    public getDataName(): string {
+        return this.name;
+    }
+
+    public delete(): boolean {
+        if (this.generated) {
+            this.bindings.remove();
+        }
+        return this.generated;
+    }
+
+    public get isChangeTrigger(): boolean {
+        return this.changedEventHandler !== null;
+    }
+
+    public get onChanged() {
+        if (this.changedEventHandler !== null) {
+            return this.changedEventHandler.modifier;
+        }
+        return null;
+    }
+
+    public get respondsToChanges() {
+        return this.displayExpression !== undefined;
+    }
+
+    public handleChange(values: expression.IValueSource): void {
+        if (this.displayExpression) {
+            if (this.displayExpression.isTrue(values)) {
+                this.hideToggle.off();
+            }
+            else {
+                this.hideToggle.on();
+            }
+        }
+    }
+}
+
 export class IFormValueBuilderArgs {
     item: ProcessedJsonProperty;
     bindings: BindingCollection;
@@ -808,6 +956,9 @@ function createBindings(args: IFormValueBuilderArgs): formHelper.IFormValue {
     }
     else if (args.item.buildType === "multicheckbox") {
         return new MultiCheckBoxEditor(args);
+    }
+    else if (args.item.buildType === "radiobutton") {
+        return new RadioButtonEditor(args);
     }
     else {
         return new BasicItemEditor(args);
