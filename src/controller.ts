@@ -25,7 +25,7 @@ export abstract class InjectControllerData{
     //This is useless on its own, just provides a function based handle to data.
 }
 
-export type CreateCallback = (bindings: BindingCollection, data: any) => void;
+export type CreateCallback<T> = (bindings: BindingCollection, data: any) => T;
 
 /**
  * This class builds controllers using dependency injection.
@@ -162,7 +162,7 @@ export class InjectedControllerBuilder {
      * This will create a callback function that will create a new controller when it is called.
      * @returns
      */
-    public createOnCallback(controllerConstructor: di.DiFunction<any>): CreateCallback {
+    public createOnCallback<T>(controllerConstructor: di.DiFunction<T>): CreateCallback<T> {
         return this.createOnCallbackId(undefined, controllerConstructor);
     }
 
@@ -171,7 +171,7 @@ export class InjectedControllerBuilder {
      * This version will use the service identified by id.
      * @returns
      */
-    public createOnCallbackId<T, TId>(id: TId, controllerConstructor: di.DiFunction<T>): CreateCallback {
+    public createOnCallbackId<T, TId>(id: TId, controllerConstructor: di.DiFunction<T>): CreateCallback<T> {
         return (bindings: BindingCollection, data: any) => {
             var services = new di.ServiceCollection();
             var scope = this.baseScope.createChildScope(services);
