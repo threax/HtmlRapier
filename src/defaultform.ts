@@ -65,7 +65,7 @@ if (!component.isDefined("hr.forms.default")) {
     ));
 
     component.register("hr.forms.default-arrayEditorItem", new ComponentBuilder(
-        '<div><button data-hr-on-click="remove" class="btn btn-default" data-hr-form-end>Remove</button></div>'
+        '<div class="panel panel-default"><div class="panel-body"><button data-hr-on-click="remove" class="btn btn-default" data-hr-form-end>Remove</button></div></div>'
     ));
 }
 
@@ -131,6 +131,6 @@ if (!component.isDefined("hr.forms.horizontal")) {
     ));
 
     component.register("hr.forms.horizontal-arrayEditorItem", new ComponentBuilder(
-        '<div><button data-hr-on-click="remove" class="btn btn-default" data-hr-form-end>Remove</button></div>'
+        '<div class="panel panel-default"><div class="panel-body"><button data-hr-on-click="remove" class="btn btn-default" data-hr-form-end>Remove</button></div></div>'
     ));
 }
