@@ -30,14 +30,22 @@ if (!component.isDefined("hr.forms.default")) {
         '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;"><div class="form-group" data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error"><label class="control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label><select class="form-control" name="{{buildName}}" multiple size="{{size}}"/></div></div>'
     ));
     builder.addVariant("arrayEditor", new VariantBuilder(
-        '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;"><div data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error"><label class="control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label><div data-hr-view="items" data-hr-view-component="hr.forms.default-arrayEditorItem"></div><button class="btn btn-default" data-hr-on-click="add">Add</button></div></div>'
+        '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;">'
+            +'<div data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error">'
+            +'<label class="control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label>'
+            +'<div class="panel panel-default"><div class="panel-body">'
+                +'<div data-hr-view="items" data-hr-view-component="hr.forms.default-arrayEditorItem"></div>'
+                +'<button class="btn btn-default" data-hr-on-click="add">Add</button>'
+            +'</div></div>'
+        +'</div></div>'
     ));
     builder.addVariant("multicheckbox", new VariantBuilder(
         '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;">' +
-        '<div class="form-group" data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error">' +
-            '<label class="control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label>' +
-            '<div data-hr-view="items" data-hr-view-component="hr.forms.default-multicheckboxitem"></div>' +
-        '</div></div>'
+            '<div class="form-group" data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error">' +
+                '<label class="control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label>' +
+                '<div class="panel panel-default" style="max-height:150px;overflow:auto;">' +
+                    '<div data-hr-view="items" data-hr-view-component="hr.forms.default-multicheckboxitem"></div>' +
+        '</div></div></div>'
     ));
     builder.addVariant("radiobutton", new VariantBuilder(
         '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;">' +
@@ -88,14 +96,22 @@ if (!component.isDefined("hr.forms.horizontal")) {
         '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;"><div class="form-group" data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error"><label class="col-sm-2 control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label><div class="col-sm-10"><select class="form-control" name="{{buildName}}" multiple size="{{size}}"/></div></div></div>'
     ));
     builder.addVariant("arrayEditor", new VariantBuilder(
-        '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;"><div data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error"><label class="control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label><div data-hr-view="items" data-hr-view-component="hr.forms.horizontal-arrayEditorItem"></div><button class="btn btn-default" data-hr-on-click="add">Add</button></div></div>'
+        '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;">'
+            +'<div data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error">'
+                +'<label class="control-label col-sm-2">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label>'
+                +'<div class="col-sm-10 panel panel-default"><div class="panel-body">'
+                    +'<div data-hr-view="items" data-hr-view-component="hr.forms.horizontal-arrayEditorItem"></div>'
+                    +'<button class="btn btn-default" data-hr-on-click="add">Add</button>'
+                +'</div></div>'
+        +'</div></div>'
     ));
     builder.addVariant("multicheckbox", new VariantBuilder(
         '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;">' +
-        '<div data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error">' +
-            '<label class="control-label col-sm-2">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label>' +
-            '<div class="col-sm-10" data-hr-view="items" data-hr-view-component="hr.forms.horizontal-multicheckboxitem"></div>' +
-        '</div></div>'
+            '<div data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error">' +
+                '<label class="control-label col-sm-2">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label>' +
+                '<div class="col-sm-10 panel panel-default" style="max-height:150px;overflow:auto;">' +
+                    '<div class="panel-body" data-hr-view="items" data-hr-view-component="hr.forms.horizontal-multicheckboxitem"></div>' +
+        '</div></div></div>'
     ));
     builder.addVariant("radiobutton", new VariantBuilder(
         '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;">' +
