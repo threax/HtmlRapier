@@ -131,9 +131,9 @@ export class Uri {
     }
 
     /**
-     * Create an object from the uri's query string. These values
-     * will be sent through the escape function to help prevent xss before
-     * you get the values back. All query string names will be set to lower case
+     * Create an object from the uri's query string. The values will
+     * all be run through decodeURIComponent. 
+     * All query string names will be set to lower case
      * to make looking them back up possible no matter the url case.
      * @returns An object version of the query string.
      */
@@ -150,7 +150,7 @@ export class Uri {
                 var name = pair[0].toLowerCase();
                 var pairValue = "";
                 if (pair.length > 1) {
-                    pairValue = escape(decodeURIComponent(pair[1].replace(/\+/g, ' ')));
+                    pairValue = decodeURIComponent(pair[1].replace(/\+/g, ' '));
                 }
                 if(val[name] === undefined){
                     //Undefined, set value directly
