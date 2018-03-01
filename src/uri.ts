@@ -2,8 +2,6 @@
 
 "use strict";
 
-import { escape } from 'hr.escape';
-
 // based on parseUri 1.2.2
 // (c) Steven Levithan <stevenlevithan.com>
 // MIT License
@@ -86,10 +84,6 @@ export class Uri {
         }
         else if (i < this.splitPath.length) {
             part = this.splitPath[i];
-        }
-
-        if (part !== null) {
-            part = escape(part);
         }
 
         return part;
@@ -185,9 +179,8 @@ export class Uri {
 }
 
 /**
- * Get an object with the values from the query string. These values
- * will be sent through the escape function to help prevent xss before
- * you get the values back. All query string names will be set to lower case
+ * Get an object with the values from the query string. The values will all be
+ * uri decoded before being returned. All query string names will be set to lower case
  * to make looking them back up possible no matter the url case.
  * @returns {type} The window's query as an object.
  */
