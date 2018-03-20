@@ -115,6 +115,33 @@ export class SessionStorageDriver implements IStorageDriver {
     }
 }
 
+export class LocalStorageDriver implements IStorageDriver {
+    constructor(protected name: string) {
+
+    }
+
+    /**
+     * Get the value stored by the driver, will be null if there is no value
+     */
+    getValue(): string | null {
+        return localStorage.getItem(this.name);
+    }
+
+    /**
+     * Set the value stored by the driver.
+     */
+    setValue(val: string): void {
+        localStorage.setItem(this.name, val);
+    }
+
+    /**
+     * Erase the value stored by the driver.
+     */
+    erase(): void {
+        this.setValue(null);
+    }
+}
+
 export interface IStorage<T> {
     getValue(defaultValue?: T): T;
     setValue(val: T): void;
