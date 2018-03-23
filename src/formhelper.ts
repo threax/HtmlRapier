@@ -277,6 +277,10 @@ export interface IFormValue {
     handleChange(values: expression.IValueSource): void;
 }
 
+export interface IFormValueWithOptions extends IFormValue {
+    addOption(label: string, value: any);
+}
+
 export type BuildFormFunc = (componentName: string, schema: JsonSchema, parentElement: HTMLElement) => IFormValues;
 
 var buildFormCb: BuildFormFunc;

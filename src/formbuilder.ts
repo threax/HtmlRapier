@@ -379,7 +379,7 @@ class ArrayEditor implements formHelper.IFormValue {
     }
 }
 
-export class BasicItemEditor implements formHelper.IFormValue {
+export class BasicItemEditor implements formHelper.IFormValueWithOptions {
     private errorToggle: toggle.OnOffToggle;
     private errorMessage: view.IView<string>;
     private hideToggle: toggle.OnOffToggle;
@@ -425,7 +425,7 @@ export class BasicItemEditor implements formHelper.IFormValue {
         }
     }
 
-    protected addOption(label: string, value: any) {
+    public addOption(label: string, value: any) {
         if (IsSelectElement(this.element)) {
             var option = document.createElement("option");
             option.text = label;
@@ -514,7 +514,7 @@ export class BasicItemEditor implements formHelper.IFormValue {
     }
 }
 
-export class MultiCheckBoxEditor implements formHelper.IFormValue {
+export class MultiCheckBoxEditor implements formHelper.IFormValueWithOptions {
     private itemsView: view.IView<JsonLabel>;
     private errorToggle: toggle.OnOffToggle;
     private errorMessage: view.IView<string>;
@@ -611,7 +611,7 @@ export class MultiCheckBoxEditor implements formHelper.IFormValue {
         }
     }
 
-    protected addOption(label: string, value: any) {
+    public addOption(label: string, value: any) {
         this.itemsView.appendData({label: label, value: value}, (created, item) => this.checkElementCreated(created, item));
     }
 
