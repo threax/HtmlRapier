@@ -687,7 +687,7 @@ export class MultiCheckBoxEditor implements formHelper.IFormValueWithOptions {
     }
 }
 
-export class RadioButtonEditor implements formHelper.IFormValue {
+export class RadioButtonEditor implements formHelper.IFormValueWithOptions {
     private itemsView: view.IView<JsonLabel>;
     private errorToggle: toggle.OnOffToggle;
     private errorMessage: view.IView<string>;
@@ -700,6 +700,7 @@ export class RadioButtonEditor implements formHelper.IFormValue {
     protected displayExpression: expression.ExpressionTree;
     protected elements: HTMLInputElement[] = [];
     protected nullElement: HTMLInputElement = null;
+    private disabled: boolean;
 
     constructor(args: IFormValueBuilderArgs) {
         this.itemsView = args.bindings.getView<any>("items");
@@ -708,37 +709,23 @@ export class RadioButtonEditor implements formHelper.IFormValue {
         this.bindings = args.bindings;
         this.generated = args.generated;
         this.displayExpression = args.item.displayExpression;
-
-        var disabled = args.item["x-ui-disabled"] === true || args.item.readOnly === true;
-
-        var self = this;
+        this.disabled = args.item["x-ui-disabled"] === true || args.item.readOnly === true;
         this.changedEventHandler = new event.ActionEventDispatcher<formHelper.IFormValue>();
+
         var iter = new iterable.Iterable(args.item.buildValues).select(i => {
             var shadow = Object.create(i);
             shadow.name = this.buildName;
             return shadow;
         });
-        this.itemsView.setData(iter, (created, item) => {
-            var element = created.getHandle("radio");
-
-            //If this is the null value item, keep track of its element separately
-            if (item.value === null) {
-                this.nullElement = element;
-            }
-
-            this.elements.push(element);
-            element.addEventListener("change", e => {
-                self.changedEventHandler.fire(self);
-            });
-
-            if (disabled) {
-                element.setAttribute("disabled", "");
-            }
-        });
+        this.itemsView.setData(iter, (created, item) => this.radioElementCreated(created, item));
 
         this.errorToggle = this.bindings.getToggle(this.buildName + "Error");
         this.errorMessage = this.bindings.getView(this.buildName + "ErrorMessage");
         this.hideToggle = this.bindings.getToggle(this.buildName + "Hide");
+    }
+
+    public addOption(label: string, value: any) {
+        this.itemsView.appendData({label: label, value: value}, (created, item) => this.radioElementCreated(created, item));
     }
 
     public setError(err: FormErrors, baseName: string) {
@@ -830,6 +817,24 @@ export class RadioButtonEditor implements formHelper.IFormValue {
             else {
                 this.hideToggle.on();
             }
+        }
+    }
+
+    private radioElementCreated(created, item) {
+        var element = created.getHandle("radio");
+
+        //If this is the null value item, keep track of its element separately
+        if (item.value === null) {
+            this.nullElement = element;
+        }
+
+        this.elements.push(element);
+        element.addEventListener("change", e => {
+            this.changedEventHandler.fire(this);
+        });
+
+        if (this.disabled) {
+            element.setAttribute("disabled", "");
         }
     }
 }
