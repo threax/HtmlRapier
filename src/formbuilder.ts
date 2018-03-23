@@ -1026,7 +1026,7 @@ function processProperty(prop: JsonProperty, name: string, buildName: string): P
 
     //Look for collections, anything defined as an array or that has x-values defined
     if (processed.buildType === 'array') {
-        if (processed.buildValues !== undefined) {
+        if (processed.buildValues !== undefined || processed["x-lazy-load-values"] === true) {
             //Only supports checkbox and multiselect ui types. Checkboxes have to be requested.
             if (prop["x-ui-type"] === "checkbox") {
                 //Nothing for checkboxes yet, just be a basic multiselect until they are implemented
@@ -1034,9 +1034,11 @@ function processProperty(prop: JsonProperty, name: string, buildName: string): P
             }
             else {
                 processed.buildType = "multiselect";
-                processed.size = processed.buildValues.length;
-                if (processed.size > 15) {
-                    processed.size = 15;
+                if (processed.buildValues !== undefined) {
+                    processed.size = processed.buildValues.length;
+                    if (processed.size > 15) {
+                        processed.size = 15;
+                    }
                 }
             }
         }
@@ -1050,7 +1052,7 @@ function processProperty(prop: JsonProperty, name: string, buildName: string): P
             processed.buildType = prop["x-ui-type"];
         }
         else {
-            if (processed.buildValues !== undefined) {
+            if (processed.buildValues !== undefined || processed["x-lazy-load-values"] === true) {
                 //Has build options, force to select unless the user chose something else.
                 processed.buildType = "select";
             }

@@ -25,6 +25,7 @@ export interface JsonProperty {
     "x-enumNames"?: string[]; //The enum names, will be combined with enum to make values
     "x-value"?: string; //If there is a single value for the field, use that, can override default values for things like checkboxes
     "x-display-if"?: expression.ExpressionNode;
+    "x-lazy-load-values"?: boolean; //This will be true if the property will lazy load its values later, if this is true the property will be treated like it has values set
 }
 
 export interface JsonLabel {
