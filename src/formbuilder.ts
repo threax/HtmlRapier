@@ -425,7 +425,7 @@ export class BasicItemEditor implements formHelper.IFormValue {
         }
     }
 
-    protected addOption(label: string, value: any){
+    protected addOption(label: string, value: any) {
         if (IsSelectElement(this.element)) {
             var option = document.createElement("option");
             option.text = label;
@@ -527,6 +527,7 @@ export class MultiCheckBoxEditor implements formHelper.IFormValue {
     protected displayExpression: expression.ExpressionTree;
     protected checkboxElements: HTMLInputElement[] = [];
     protected nullCheckboxElement: HTMLInputElement = null;
+    private disabled: boolean;
 
     constructor(args: IFormValueBuilderArgs) {
         this.itemsView = args.bindings.getView<any>("items");
@@ -535,33 +536,12 @@ export class MultiCheckBoxEditor implements formHelper.IFormValue {
         this.bindings = args.bindings;
         this.generated = args.generated;
         this.displayExpression = args.item.displayExpression;
-
-        var disabled = args.item["x-ui-disabled"] === true || args.item.readOnly === true;
-
-        var self = this;
+        this.disabled = args.item["x-ui-disabled"] === true || args.item.readOnly === true;
         this.changedEventHandler = new event.ActionEventDispatcher<formHelper.IFormValue>();
-        this.itemsView.setData(args.item.buildValues, (created, item) => {
-            var element = created.getHandle("check");
-            if (item.value !== null) {
-                this.checkboxElements.push(element);
-                element.addEventListener("change", e => {
-                    if (this.nullCheckboxElement !== null) {
-                        formHelper.setValue(<any>this.nullCheckboxElement, false);
-                    }
-                    self.changedEventHandler.fire(self);
-                });
-            }
-            else {
-                this.nullCheckboxElement = element;
-                element.addEventListener("change", e => {
-                    self.doSetValue(null); //Clear values
-                    self.changedEventHandler.fire(self);
-                });
-            }
-            if (disabled) {
-                element.setAttribute("disabled", "");
-            }
-        });
+
+        if (args.item.buildValues !== undefined) {
+            this.itemsView.setData(args.item.buildValues, (created, item) => this.checkElementCreated(created, item));
+        }
 
         this.errorToggle = this.bindings.getToggle(this.buildName + "Error");
         this.errorMessage = this.bindings.getView(this.buildName + "ErrorMessage");
@@ -631,6 +611,10 @@ export class MultiCheckBoxEditor implements formHelper.IFormValue {
         }
     }
 
+    protected addOption(label: string, value: any) {
+        this.itemsView.appendData({label: label, value: value}, (created, item) => this.checkElementCreated(created, item));
+    }
+
     public getBuildName(): string {
         return this.buildName;
     }
@@ -676,6 +660,29 @@ export class MultiCheckBoxEditor implements formHelper.IFormValue {
         for (var i = 0; i < this.checkboxElements.length; ++i) {
             var check = this.checkboxElements[i];
             formHelper.setValue(<any>check, false);
+        }
+    }
+
+    private checkElementCreated(created, item): void {
+        var element = created.getHandle("check");
+        if (item.value !== null) {
+            this.checkboxElements.push(element);
+            element.addEventListener("change", e => {
+                if (this.nullCheckboxElement !== null) {
+                    formHelper.setValue(<any>this.nullCheckboxElement, false);
+                }
+                this.changedEventHandler.fire(this);
+            });
+        }
+        else {
+            this.nullCheckboxElement = element;
+            element.addEventListener("change", e => {
+                this.doSetValue(null); //Clear values
+                this.changedEventHandler.fire(this);
+            });
+        }
+        if (this.disabled) {
+            element.setAttribute("disabled", "");
         }
     }
 }

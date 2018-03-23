@@ -1,6 +1,6 @@
 {
   "name": "htmlrapier",
-  "version": "14.7.0",
+  "version": "14.8.0",
   "private": false,
   "dependencies": {
     "@types/es6-promise": "^0.0.32",
