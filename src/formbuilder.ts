@@ -412,6 +412,31 @@ export class BasicItemEditor implements formHelper.IFormValue {
         this.errorToggle = this.bindings.getToggle(this.buildName + "Error");
         this.errorMessage = this.bindings.getView(this.buildName + "ErrorMessage");
         this.hideToggle = this.bindings.getToggle(this.buildName + "Hide");
+
+        //If there are values defined for the element, put them on the page, this works for both
+        //predefined and generated elements, which allows you to have predefined selects that can have dynamic values
+        if (args.item.buildValues !== undefined) {
+            if (IsSelectElement(args.inputElement)) {
+                for (var q = 0; q < args.item.buildValues.length; ++q) {
+                    var current = args.item.buildValues[q];
+                    this.addOption(current.label, current.value);
+                }
+            }
+        }
+    }
+
+    protected addOption(label: string, value: any){
+        if (IsSelectElement(this.element)) {
+            var option = document.createElement("option");
+            option.text = label;
+            if (value !== null && value !== undefined) {
+                option.value = value;
+            }
+            else {
+                option.value = ""; //Make sure this stays as empty string, which will be null for these forms
+            }
+            this.element.options.add(option);
+        }
     }
 
     public setError(err: FormErrors, baseName: string) {
@@ -916,25 +941,6 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
         //If this is a child form, mark the element as a child so the form serializer will ignore it
         if (IsElement(existing)) {
             existing.setAttribute("data-hr-form-level", baseName);
-        }
-
-        //If there are values defined for the element, put them on the page, this works for both
-        //predefined and generated elements, which allows you to have predefined selects that can have dynamic values
-        if (item.buildValues !== undefined) {
-            if (IsSelectElement(existing)) {
-                for (var q = 0; q < item.buildValues.length; ++q) {
-                    var current = item.buildValues[q];
-                    var option = document.createElement("option");
-                    option.text = current.label;
-                    if (current.value !== null && current.value !== undefined) {
-                        option.value = current.value;
-                    }
-                    else {
-                        option.value = ""; //Make sure this stays as empty string, which will be null for these forms
-                    }
-                    existing.options.add(option);
-                }
-            }
         }
     }
 
