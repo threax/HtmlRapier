@@ -25,6 +25,7 @@ interface ProcessedJsonProperty extends JsonProperty {
     size?: number;
     buildValue?: string; //The value if there is a single value for this item, e.g. checkboxes
     displayExpression?: expression.ExpressionTree;
+    uniqueId: string;
 }
 
 class FormValuesSource implements expression.IValueSource {
@@ -258,7 +259,19 @@ class ArrayEditor implements formHelper.IFormValue {
     private errorToggle: toggle.OnOffToggle;
     private errorMessage: view.IView<string>;
 
-    constructor(private name: string, private buildName: string, baseTitle: string, private bindings: BindingCollection, private schema: JsonSchema, private generated: boolean) {
+    private name: string;
+    private buildName: string;
+    private bindings: BindingCollection;
+    private generated: boolean;
+
+    constructor(args: IFormValueBuilderArgs, private schema: JsonSchema) {
+        var baseTitle: string = args.item.title;
+        var bindings = args.bindings;
+        this.name = args.item.name;
+        this.buildName = args.item.buildName;
+        this.bindings = args.bindings;
+        this.generated = args.generated;
+
         this.itemsView = bindings.getView<JsonSchema>("items");
         bindings.setListener(this);
 
@@ -970,7 +983,7 @@ function createBindings(args: IFormValueBuilderArgs): formHelper.IFormValue {
 
     if (args.item.buildType === "arrayEditor") {
         var resolvedItems = resolveRef(<RefNode>args.item.items, args.schema);
-        return new ArrayEditor(args.item.name, args.item.buildName, args.item.title, args.bindings, resolvedItems, args.generated);
+        return new ArrayEditor(args, resolvedItems);
     }
     else if (args.item.buildType === "multicheckbox") {
         return new MultiCheckBoxEditor(args);
@@ -1007,8 +1020,11 @@ function extractLabels(prop: JsonProperty): JsonLabel[] {
     return values;
 }
 
+var propertyUniqueIndex = new InfiniteIndex();
+
 function processProperty(prop: JsonProperty, name: string, buildName: string): ProcessedJsonProperty {
     var processed: ProcessedJsonProperty = Object.create(prop);
+    processed.uniqueId = "hr-form-prop-" + propertyUniqueIndex.getNext();
     processed.buildName = buildName;
     processed.name = name;
     if (processed.title === undefined) { //Set title if it is not set
