@@ -438,27 +438,26 @@ function extractStates(element: Element, states: string[], attrPrefix: string, t
 
 const toggleAttributeStart = 'data-hr-attr-';
 
-type LazyMap<T> = { [key: string]: T; }
-
 function extractAttrStates(element: Element, states: string[], nextToggle: IToggleStates): IToggleStates {
-    var created: LazyMap<AttributeToggleStates> = {};
+    var lastCreated: AttributeToggleStates = null;
     var ariaStates: { [ariaName: string]: {}; } = {};
     var attributes = element.attributes;
-    for (var i = 0; i < states.length; ++i) {
-        var state = states[i];
-        var end = "-" + state;
-        for (var a = 0; a < attributes.length; ++a) {
-            var attr = attributes[a];
-            var attrName = (<any>attr.name);
-            if (attrName.startsWith(toggleAttributeStart) && attrName.endsWith(end)) {
+    for (var a = 0; a < attributes.length; ++a) { //For each attribute
+        var attr = attributes[a];
+        var attrName = (<any>attr.name);
+        for (var i = 0; i < states.length; ++i) { //For each state
+            var state = states[i];
+            var end = "-" + state;
+            if (attrName.startsWith(toggleAttributeStart) && attrName.endsWith(end)) { //If the attribute name matches the expected value (data-hr-attr-ATTRIBUTE-STATE)
                 var toggleAttrName = attrName.substring(toggleAttributeStart.length, attrName.length - end.length);
-                var toggleStates = created[toggleAttrName];
-                if (toggleStates === undefined) {
-                    nextToggle = toggleStates = created[toggleAttrName] = new AttributeToggleStates(toggleAttrName, element, nextToggle);
+                if (lastCreated === null) { //See if we need to create the attribute toggle
+                    nextToggle = lastCreated = new AttributeToggleStates(toggleAttrName, element, nextToggle);
                 }
-                toggleStates.addState(state, attr.value);
+                lastCreated.addState(state, attr.value);
             }
         }
+
+        lastCreated = null; //Reset the last created toggle, so a new one is made for each attribute.
     }
 
     return nextToggle;
