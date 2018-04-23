@@ -68,12 +68,31 @@ export class SchemaViewDataFormatter<T> {
     private extract(name: string, data: any) {
         var prop = this.schema.properties[name];
         var rawData = data[name];
+        if (rawData === undefined) {
+            rawData = null; //Normalize to null
+        }
+
         if (prop) {
             var values = prop['x-values'];
             if (values !== undefined && Array.isArray(values)) {
                 for (var i = 0; i < values.length; ++i) {
                     if (values[i].value == rawData) {
                         return values[i].label;
+                    }
+                }
+            }
+            else {
+                //Enums are separate arrays
+                var enumNames = prop['x-enumNames'];
+                var enumValues = prop['enum'];
+                if (enumNames !== undefined && Array.isArray(enumNames) &&
+                    enumValues !== undefined && Array.isArray(enumValues) &&
+                    enumNames.length === enumValues.length)
+                {
+                    for (var i = 0; i < enumValues.length; ++i) {
+                        if (enumValues[i] == rawData) {
+                            return enumNames[i];
+                        }
                     }
                 }
             }
@@ -95,7 +114,7 @@ export class SchemaViewDataFormatter<T> {
         }
 
         //Handle undefined and null the same way
-        if (rawData === undefined || rawData === null) {
+        if (rawData === null) {
             return (prop !== undefined && prop['x-null-value']) || "";
         }
 
