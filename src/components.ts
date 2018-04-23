@@ -5,10 +5,13 @@
 import * as typeId from 'hr.typeidentifiers';
 import * as domquery from 'hr.domquery';
 import { BindingCollection } from 'hr.bindingcollection';
-import {ComponentBuilder, VariantBuilder} from 'hr.componentbuilder';
+
+export interface IComponentBuilder {
+    create(data, parentComponent, insertBeforeSibling, variant): BindingCollection;
+}
 
 interface ComponentFactory {
-    [s: string]: ComponentBuilder
+    [s: string]: IComponentBuilder;
 }
 
 var factory: ComponentFactory = {};
@@ -18,7 +21,7 @@ var factory: ComponentFactory = {};
  * @param name - The name of the component
  * @param createFunc - The function that creates the new component.
  */
-export function register(name: string, builder: ComponentBuilder): void {
+export function register(name: string, builder: IComponentBuilder): void {
     factory[name] = builder;
 }
 
@@ -26,7 +29,7 @@ export function isDefined(name: string): boolean{
     return factory[name] !== undefined;
 }
 
-export function getComponent(name: string): ComponentBuilder{
+export function getComponent(name: string): IComponentBuilder{
     return factory[name];
 }
 

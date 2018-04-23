@@ -1,7 +1,8 @@
 ///<amd-module name="hr.componentbuilder"/>
 
 import {BindingCollection} from 'hr.bindingcollection';
-import {TextStream} from 'hr.textstream';
+import { TextStream } from 'hr.textstream';
+import { IComponentBuilder } from 'hr.components';
 
 export class VariantBuilder{
     private tokenizedString: TextStream;
@@ -28,7 +29,7 @@ export class VariantBuilder{
 
 type VariantBuilderMap = {[key: string]: VariantBuilder};
 
-export class ComponentBuilder{
+export class ComponentBuilder implements IComponentBuilder {
     private variants: VariantBuilderMap = {};
     private tokenizedString;
     private currentBuildFunc;
