@@ -5,8 +5,8 @@ import * as components from 'hr.components';
 import * as typeId from 'hr.typeidentifiers';
 import * as domQuery from 'hr.domquery';
 import * as iter from 'hr.iterable';
-import { Extractor, IViewDataFormatter } from 'hr.viewformatter';
-export { SchemaViewFormatter as SchemaViewDataFormatter, Extractor, IViewDataFormatter } from 'hr.viewformatter';
+import { Extractor, IViewDataFormatter, IViewDataFormatterWithExternal, IDataResolver, DataResolver } from 'hr.viewformatter';
+export { SchemaViewFormatter as SchemaViewDataFormatter, Extractor, IViewDataFormatter, IViewDataFormatterWithExternal } from 'hr.viewformatter';
 
 /**
  * The basic interface for view instances.
@@ -40,6 +40,137 @@ export interface IView<T>{
      * Set the formater to use when reading values out of the data.
      */
     setFormatter(formatter: IViewDataFormatter<T>): void;
+
+    /**
+     * Visit each variable name for this view.
+     * @param foundCb The function that is called with each variable name when found.
+     */
+    visitVariables(data: T, foundCb: components.VisitVariableCallback, variantFinderCallback?: components.VariantFinderCallback<T>): void;
+}
+
+export interface IAsyncView<T> {
+    /**
+     * Set the data on the view.
+     */
+    setData(data: T | T[] | iter.IterableInterface<T>, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): Promise<void>;
+
+    /**
+     * Add more data to the model, does not erase existing data.
+     */
+    appendData(data: T | T[] | iter.IterableInterface<T>, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): Promise<void>;
+
+    /**
+     * Insert more data in the model, does not erase existing data.
+     */
+    insertData(data: T | T[] | iter.IterableInterface<T>, insertBeforeSibling: Node, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): Promise<void>;
+
+    /**
+     * Clear all data from the model.
+     */
+    clear(): Promise<void>;
+
+    /**
+     * Set the formater to use when reading values out of the data.
+     */
+    setFormatter(formatter: IViewDataFormatterWithExternal<T>): void;
+}
+
+export class AsyncViewWrapper<T> implements IAsyncView<T> {
+    private formatter: IViewDataFormatterWithExternal<T> = null;
+
+    constructor(private view: IView<T>) {
+
+    }
+
+    /**
+     * Set the data on the view.
+     */
+    public async setData(data: T | T[] | iter.IterableInterface<T>, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): Promise<void> {
+        var processed = await this.loadExternalData(data, variantFinderCallback);
+        this.view.setData(processed, createdCallback, variantFinderCallback);
+    }
+
+    /**
+     * Add more data to the model, does not erase existing data.
+     */
+    public async appendData(data: T | T[] | iter.IterableInterface<T>, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): Promise<void> {
+        var processed = await this.loadExternalData(data, variantFinderCallback);
+        this.view.appendData(processed, createdCallback, variantFinderCallback);
+    }
+
+    /**
+     * Insert more data in the model, does not erase existing data.
+     */
+    public async insertData(data: T | T[] | iter.IterableInterface<T>, insertBeforeSibling: Node, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): Promise<void> {
+        var processed = await this.loadExternalData(data, variantFinderCallback);
+        this.view.insertData(processed, insertBeforeSibling, createdCallback, variantFinderCallback);
+    }
+
+    /**
+     * Clear all data from the model.
+     */
+    public async clear(): Promise<void> {
+        this.view.clear();
+    }
+
+    /**
+     * Set the formater to use when reading values out of the data.
+     */
+    public setFormatter(formatter: IViewDataFormatterWithExternal<T>): void {
+        this.formatter = formatter;
+        this.view.setFormatter(formatter);
+    }
+
+    private async loadExternalData(data: T | T[] | iter.IterableInterface<T>, variantFinderCallback?: components.VariantFinderCallback<T>): Promise<T[] | T> {
+        var resolvers: IDataResolver[] = [];
+        if (this.formatter !== null) {
+            if (Array.isArray(data)) {
+                for (var i = 0; i < data.length; ++i) {
+                    var rowData = data[i];
+                    var resolver = new DataResolver(rowData);
+                    resolvers.push(resolver);
+                    this.view.visitVariables(rowData, (name) => {
+                        this.formatter.handleExternalForRow(rowData, name, resolver);
+                    }, variantFinderCallback);
+                }
+
+                this.formatter.processedAllRows();
+            }
+            else if (typeId.isForEachable(data)) {
+                (<any>data).forEach((rowData) => {
+                    var resolver = new DataResolver(rowData);
+                    resolvers.push(resolver);
+                    this.view.visitVariables(rowData, (name) => {
+                        this.formatter.handleExternalForRow(rowData, name, resolver);
+                    }, variantFinderCallback);
+                });
+
+                this.formatter.processedAllRows();
+            }
+            else {
+                var resolver = new DataResolver(data);
+                resolvers.push(resolver);
+                this.view.visitVariables(data, (name) => {
+                    this.formatter.handleExternalForRow(data, name, resolver);
+                }, variantFinderCallback);
+
+                this.formatter.processedAllRows();
+            }
+        }
+
+        //Resolve all the resolvers, ideally this can be done without the array
+        var resolvedData: T[] = [];
+        for (var i = 0; i < resolvers.length; ++i) {
+            resolvedData.push(await resolvers[i].getResolved());
+        }
+
+        //Return the data itself if there is only 1 item, this way we don't modify the incoming data too much
+        if (resolvedData.length === 1) {
+            return resolvedData[0];
+        }
+
+        return resolvedData;
+    }
 }
 
 class ComponentView<T> implements IView<T> {
@@ -99,11 +230,15 @@ class ComponentView<T> implements IView<T> {
     public setFormatter(formatter: IViewDataFormatter<T>): void {
         this.formatter = formatter;
     }
+
+    visitVariables(data: any, foundCb: components.VisitVariableCallback, variantFinderCallback?: components.VariantFinderCallback<T>): void {
+        components.visitVariables(this.component, data, foundCb, variantFinderCallback);
+    }
 }
 
 class TextNodeView<T> implements IView<T> {
     private formatter: IViewDataFormatter<T>;
-    private dataTextElements = undefined;
+    private dataTextElements: DataTextElement[] = undefined;
 
     constructor(private element: HTMLElement){
 
@@ -120,19 +255,49 @@ class TextNodeView<T> implements IView<T> {
     public insertData(data: T | T[] | iter.IterableInterface<T>): void{
         if(this.formatter !== undefined){
             var extractor = this.formatter.convert(<T>data);
-            this.dataTextElements = bindData(extractor, this.element, this.dataTextElements);
+            this.bindData(extractor);
         }
         else{
-            this.dataTextElements = bindData(data, this.element, this.dataTextElements);
+            this.bindData(data);
         }
     }
 
     public clear(): void {
-        this.dataTextElements = bindData(sharedClearer, this.element, this.dataTextElements);
+        this.bindData(sharedClearer);
     }
 
     public setFormatter(formatter: IViewDataFormatter<T>): void {
         this.formatter = formatter;
+    }
+
+    visitVariables(data: any, foundCb: components.VisitVariableCallback, variantFinderCallback?: components.VariantFinderCallback<T>): void {
+        this.ensureDataTextElements();
+        for (var i = 0; i < this.dataTextElements.length; ++i) {
+            this.dataTextElements[i].stream.visitVariables(foundCb);
+        }
+    }
+
+    private bindData(data: any): void {
+        this.ensureDataTextElements();
+        for (var i = 0; i < this.dataTextElements.length; ++i) {
+            var node = this.dataTextElements[i];
+            node.node.textContent = node.stream.format(data);
+        }
+    }
+
+    private ensureDataTextElements() {
+        if (this.dataTextElements === undefined) {
+            this.dataTextElements = [];
+            domQuery.iterateNodes(this.element, NodeFilter.SHOW_TEXT, (node) => {
+                var textStream = new TextStream(node.textContent, { escape: false }); //Since we are using textContent, there is no need to escape the input
+                if (textStream.foundVariable()) {
+                    this.dataTextElements.push({
+                        node: node,
+                        stream: textStream
+                    });
+                }
+            });
+        }
     }
 }
 
@@ -158,6 +323,10 @@ class NullView<T> implements IView<T> {
     }
 
     public setFormatter(formatter: IViewDataFormatter<T>): void {
+        
+    }
+
+    visitVariables(data: any, foundCb: components.VisitVariableCallback, variantFinderCallback?: components.VariantFinderCallback<T>): void {
         
     }
 }
@@ -191,32 +360,6 @@ export function build<T>(element: Node) : IView<T> {
 interface DataTextElement{
     node: Node
     stream: TextStream
-}
-
-function bindData(data: any, element: HTMLElement, dataTextElements: DataTextElement[]): DataTextElement[] {
-    //No found elements, iterate everything.
-    if (dataTextElements === undefined) {
-        dataTextElements = [];
-        domQuery.iterateNodes(element, NodeFilter.SHOW_TEXT, function (node) {
-            var textStream = new TextStream(node.textContent, { escape: false }); //Since we are using textContent, there is no need to escape the input
-            if (textStream.foundVariable()) {
-                node.textContent = textStream.format(data);
-                dataTextElements.push({
-                    node: node,
-                    stream: textStream
-                });
-            }
-        });
-    }
-    //Already found the text elements, output those.
-    else {
-        for (var i = 0; i < dataTextElements.length; ++i) {
-            var node = dataTextElements[i];
-            node.node.textContent = node.stream.format(data);
-        }
-    }
-
-    return dataTextElements;
 }
 
 function sharedClearer(i: number) {

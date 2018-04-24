@@ -1,7 +1,13 @@
 import * as schema from 'hr.schema';
+import * as typeId from 'hr.typeidentifiers';
 
 export interface IViewDataFormatter<T> {
     convert(data: T): Extractor<T>;
+}
+
+export interface IViewDataFormatterWithExternal<T> extends IViewDataFormatter<T> {
+    handleExternalForRow(data: T, name: string, resolver: IDataResolver): void;
+    processedAllRows(): void;
 }
 
 export interface Extractor<T> {
@@ -17,12 +23,20 @@ export interface ISchemaViewFormatterArgs {
     name: string;
 }
 
+export interface ISchemaViewExternalFormatterArgs extends ISchemaViewFormatterArgs {
+    resolver: IDataResolver
+}
+
 export interface ISchemaViewFormatterExtension {
     /**
      * Get the data specified by args. Return undefined if the data is not handled.
      * @param args
      */
     extract(args: ISchemaViewFormatterArgs): any | undefined;
+
+    handleExternalForRow<T>(args: ISchemaViewExternalFormatterArgs): void;
+
+    processedAllExternalData(): void;
 }
 
 var schemaFormatterExtensions: ISchemaViewFormatterExtension[] = [];
@@ -31,7 +45,89 @@ export function registerSchemaViewFormatterExtension(builder: ISchemaViewFormatt
     schemaFormatterExtensions.push(builder);
 }
 
-export class SchemaViewFormatter<T> implements IViewDataFormatter<T> {
+export interface IDataResolver {
+    /**
+     * Add a promise to resolve a named property.
+     * @param name
+     * @param resolver
+     */
+    addResolver(name: string, resolver: Promise<any>): void;
+
+    /**
+     * Get the final resolved data.
+     * @param data
+     */
+    getResolved(): Promise<any>;
+}
+
+interface IDataResolverEntry {
+    name: string,
+    promise: Promise<any>;
+}
+
+export class DataResolver<T> implements IDataResolver {
+    private promises: IDataResolverEntry[] = [];
+    private resolved: T = undefined;
+
+    constructor(private data: T) {
+
+    }
+
+    public addResolver(name: string, resolver: Promise<any>) {
+        this.promises.push({
+            name: name,
+            promise: resolver
+        });
+    }
+
+    public async getResolved(): Promise<T> {
+        if (this.resolved !== undefined) {
+            return this.resolved;
+        }
+
+        if (this.data === undefined || this.data === null) {
+            return this.data;
+        }
+
+        if (this.data === undefined) {
+            this.data = null;
+        }
+
+        var resolutions;
+
+        if (typeId.isFunction(this.data)) {
+            resolutions = {};
+        }
+        else {
+            //For objects use Object.create to create another object with the original as its prototype
+            resolutions = Object.create(this.data as {});
+        }
+
+        for (var i = 0; i < this.promises.length; ++i) {
+            var item = this.promises[i];
+            resolutions[item.name] = await item.promise;
+        }
+
+        if (typeId.isFunction(this.data)) {
+            //For functions, wrap the passed function with our own resolutions
+            var func = (name) => {
+                if (resolutions.hasOwnProperty(name)) {
+                    return resolutions[name];
+                }
+                return (this.data as any)(name);
+            };
+
+            this.resolved = func as any;
+        }
+        else {
+            this.resolved = resolutions as T;
+        }
+
+        return this.resolved;
+    }
+}
+
+export class SchemaViewFormatter<T> implements IViewDataFormatterWithExternal<T> {
      constructor(private schema: schema.JsonSchema) {
 
     }
@@ -48,7 +144,13 @@ export class SchemaViewFormatter<T> implements IViewDataFormatter<T> {
 
     private extract(name: string, data: any) {
         var prop = this.schema.properties[name];
-        var rawData = data[name];
+        var rawData;
+        if (typeId.isFunction(data)) {
+            rawData = data[name];
+        }
+        else {
+            rawData = data[name];
+        }
         if (rawData === undefined) {
             rawData = null; //Normalize to null
         }
@@ -124,5 +226,39 @@ export class SchemaViewFormatter<T> implements IViewDataFormatter<T> {
         }
 
         return rawData;
+    }
+
+    public handleExternalForRow<T>(data: T, name: string, resolver: IDataResolver): void {
+        var prop = this.schema.properties[name];
+        var rawData;
+        if (typeId.isFunction(data)) {
+            rawData = data[name];
+        }
+        else {
+            rawData = data[name];
+        }
+        if (rawData === undefined) {
+            rawData = null; //Normalize to null
+        }
+
+        if (prop) {
+            var args: ISchemaViewExternalFormatterArgs = {
+                data: data,
+                name: name,
+                prop: prop,
+                propData: rawData,
+                schema: this.schema,
+                resolver: resolver
+            }
+            for (var i = 0; i < schemaFormatterExtensions.length; ++i) {
+                schemaFormatterExtensions[i].handleExternalForRow(args);
+            }
+        }
+    }
+
+    public processedAllRows(): void {
+        for (var i = 0; i < schemaFormatterExtensions.length; ++i) {
+            schemaFormatterExtensions[i].processedAllExternalData();
+        }
     }
 }

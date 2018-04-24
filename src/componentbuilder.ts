@@ -1,29 +1,30 @@
 ///<amd-module name="hr.componentbuilder"/>
 
-import {BindingCollection} from 'hr.bindingcollection';
-import { TextStream } from 'hr.textstream';
+import { BindingCollection } from 'hr.bindingcollection';
+import { TextStream, VisitVariableCallback } from 'hr.textstream';
 import { IComponentBuilder } from 'hr.components';
 
 export class VariantBuilder{
-    private tokenizedString: TextStream;
-    private currentBuildFunc;
+    private tokenizedString: TextStream = null;
 
     constructor(private componentString: string){
-        this.currentBuildFunc = this.tokenize;
-    }
-
-    public tokenize(data, parentComponent, insertBeforeSibling) {
-        this.tokenizedString = new TextStream(this.componentString);
-        this.currentBuildFunc = this.build;
-        return this.build(data, parentComponent, insertBeforeSibling);
-    }
-
-    public build(data, parentComponent, insertBeforeSibling) {
-        return createItem(data, this.tokenizedString, parentComponent, insertBeforeSibling);
+        
     }
 
     public create(data, parentComponent, insertBeforeSibling) {
-        return this.currentBuildFunc(data, parentComponent, insertBeforeSibling);
+        this.ensureTokenizer();
+        return createItem(data, this.tokenizedString, parentComponent, insertBeforeSibling);
+    }
+
+    public visitVariables(foundCb: VisitVariableCallback) {
+        this.ensureTokenizer();
+        this.tokenizedString.visitVariables(foundCb);
+    }
+
+    private ensureTokenizer(): void {
+        if (this.tokenizedString === null) {
+            this.tokenizedString = new TextStream(this.componentString);
+        }
     }
 }
 
@@ -31,32 +32,38 @@ type VariantBuilderMap = {[key: string]: VariantBuilder};
 
 export class ComponentBuilder implements IComponentBuilder {
     private variants: VariantBuilderMap = {};
-    private tokenizedString;
-    private currentBuildFunc;
+    private tokenizedString: TextStream = null;
 
     constructor(private componentString: string){
-        this.currentBuildFunc = this.tokenize;
-    }
-
-    public tokenize(data, parentComponent, insertBeforeSibling) {
-        this.tokenizedString = new TextStream(this.componentString);
-        this.currentBuildFunc = this.build;
-        return this.build(data, parentComponent, insertBeforeSibling);
-    }
-
-    public build(data, parentComponent, insertBeforeSibling) {
-        return createItem(data, this.tokenizedString, parentComponent, insertBeforeSibling);
     }
 
     public create(data, parentComponent, insertBeforeSibling, variant) {
         if (variant !== null && this.variants.hasOwnProperty(variant)) {
             return this.variants[variant].create(data, parentComponent, insertBeforeSibling);
         }
-        return this.currentBuildFunc(data, parentComponent, insertBeforeSibling);
+
+        this.ensureTokenizer();
+        return createItem(data, this.tokenizedString, parentComponent, insertBeforeSibling);
     }
 
     public addVariant(name: string, variantBuilder: VariantBuilder) {
         this.variants[name] = variantBuilder;
+    }
+
+    public visitVariables(foundCb: VisitVariableCallback, variant) {
+        if (variant !== null && this.variants.hasOwnProperty(variant)) {
+            this.variants[variant].visitVariables(foundCb);
+        }
+        else {
+            this.ensureTokenizer();
+            this.tokenizedString.visitVariables(foundCb);
+        }
+    }
+
+    private ensureTokenizer(): void {
+        if (this.tokenizedString === null) {
+            this.tokenizedString = new TextStream(this.componentString);
+        }
     }
 }
 
