@@ -52,17 +52,22 @@ export interface IAsyncView<T> {
     /**
      * Set the data on the view.
      */
-    setData(data: T | T[] | iter.IterableInterface<T>, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): Promise<void>;
+    setData(data: T | T[] | iter.IterableInterface<T>, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): void;
 
     /**
      * Add more data to the model, does not erase existing data.
      */
-    appendData(data: T | T[] | iter.IterableInterface<T>, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): Promise<void>;
+    appendData(data: T | T[] | iter.IterableInterface<T>, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): void;
 
     /**
      * Insert more data in the model, does not erase existing data.
      */
-    insertData(data: T | T[] | iter.IterableInterface<T>, insertBeforeSibling: Node, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): Promise<void>;
+    insertData(data: T | T[] | iter.IterableInterface<T>, insertBeforeSibling: Node, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): void;
+
+    /**
+     * Apply any outstanding changes to the view. This must be called for the display to update. Await the result to make sure the view is totally loaded before continuing.
+     */
+    applyChanges(): Promise<void>;
 
     /**
      * Clear all data from the model.
@@ -75,8 +80,17 @@ export interface IAsyncView<T> {
     setFormatter(formatter: IViewDataFormatterWithExternal<T>): void;
 }
 
+interface IAsyncViewWrapperItem<T> {
+    createdCallback?: components.CreatedCallback<T>;
+    variantFinderCallback?: components.VariantFinderCallback<T>;
+    insertBeforeSibling: Node;
+    resolver: IDataResolver;
+}
+
 export class AsyncViewWrapper<T> implements IAsyncView<T> {
     private formatter: IViewDataFormatterWithExternal<T> = null;
+    private items: IAsyncViewWrapperItem<T>[] = [];
+    private clearOnApply: boolean = false;
 
     constructor(private view: IView<T>) {
 
@@ -85,34 +99,47 @@ export class AsyncViewWrapper<T> implements IAsyncView<T> {
     /**
      * Set the data on the view.
      */
-    public async setData(data: T | T[] | iter.IterableInterface<T>, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): Promise<void> {
-        var processed = await this.loadExternalData(data, variantFinderCallback);
-        this.view.setData(processed, createdCallback, variantFinderCallback);
+    public setData(data: T | T[] | iter.IterableInterface<T>, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): void {
+        this.clear();
+        this.gatherItems(data, null, createdCallback, variantFinderCallback);
     }
 
     /**
      * Add more data to the model, does not erase existing data.
      */
-    public async appendData(data: T | T[] | iter.IterableInterface<T>, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): Promise<void> {
-        var processed = await this.loadExternalData(data, variantFinderCallback);
-        this.view.appendData(processed, createdCallback, variantFinderCallback);
+    public appendData(data: T | T[] | iter.IterableInterface<T>, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): void {
+        this.gatherItems(data, null, createdCallback, variantFinderCallback);
     }
 
     /**
      * Insert more data in the model, does not erase existing data.
      */
-    public async insertData(data: T | T[] | iter.IterableInterface<T>, insertBeforeSibling: Node, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): Promise<void> {
-        var processed = await this.loadExternalData(data, variantFinderCallback);
-        this.view.insertData(processed, insertBeforeSibling, createdCallback, variantFinderCallback);
+    public insertData(data: T | T[] | iter.IterableInterface<T>, insertBeforeSibling: Node, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): void {
+        this.gatherItems(data, null, createdCallback, variantFinderCallback);
+    }
+
+    /**
+     * Apply any outstanding changes, the async views are not modified on the screen until this is called. It can be awaited to
+     * make sure the work is done before continuing.
+     */
+    public async applyChanges(): Promise<void> {
+        this.formatter.processedAllRows();
+        if (this.clearOnApply) {
+            this.view.clear();
+        }
+        for (var i = 0; i < this.items.length; ++i) {
+            var item = this.items[i];
+            this.view.insertData(await item.resolver.getResolved(), item.insertBeforeSibling, item.createdCallback, item.variantFinderCallback);
+        }
     }
 
     /**
      * Clear all data from the model.
      */
     public clear(): void {
-        this.view.clear();
+        this.clearOnApply = true;
+        this.items = [];
     }
-
     /**
      * Set the formater to use when reading values out of the data.
      */
@@ -121,55 +148,53 @@ export class AsyncViewWrapper<T> implements IAsyncView<T> {
         this.view.setFormatter(formatter);
     }
 
-    private async loadExternalData(data: T | T[] | iter.IterableInterface<T>, variantFinderCallback?: components.VariantFinderCallback<T>): Promise<T[] | T> {
-        var resolvers: IDataResolver[] = [];
-        if (this.formatter !== null) {
-            if (Array.isArray(data)) {
-                for (var i = 0; i < data.length; ++i) {
-                    var rowData = data[i];
-                    var resolver = new DataResolver(rowData);
-                    resolvers.push(resolver);
-                    this.view.visitVariables(rowData, (name) => {
-                        this.formatter.handleExternalForRow(rowData, name, resolver);
-                    }, variantFinderCallback);
-                }
-
-                this.formatter.processedAllRows();
-            }
-            else if (typeId.isForEachable(data)) {
-                (<any>data).forEach((rowData) => {
-                    var resolver = new DataResolver(rowData);
-                    resolvers.push(resolver);
-                    this.view.visitVariables(rowData, (name) => {
-                        this.formatter.handleExternalForRow(rowData, name, resolver);
-                    }, variantFinderCallback);
-                });
-
-                this.formatter.processedAllRows();
-            }
-            else {
-                var resolver = new DataResolver(data);
-                resolvers.push(resolver);
-                this.view.visitVariables(data, (name) => {
-                    this.formatter.handleExternalForRow(data, name, resolver);
+    private gatherItems(data: T | T[] | iter.IterableInterface<T>, insertBeforeSibling: Node, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): void {
+        if (Array.isArray(data)) {
+            for (var i = 0; i < data.length; ++i) {
+                var item = data[i];
+                var resolver = new DataResolver(item);
+                this.view.visitVariables(item, (name) => {
+                    this.formatter.handleExternalForRow(item, name, resolver);
                 }, variantFinderCallback);
 
-                this.formatter.processedAllRows();
+                this.items.push({
+                    createdCallback: createdCallback,
+                    insertBeforeSibling: insertBeforeSibling,
+                    variantFinderCallback: variantFinderCallback,
+                    resolver: resolver
+                });
             }
         }
+        else if (typeId.isForEachable<T>(data)) {
+            //Data supports a 'foreach' method, use this to iterate it
+            (<any>data).forEach((item) => {
+                var resolver = new DataResolver(item);
+                this.view.visitVariables(item, (name) => {
+                    this.formatter.handleExternalForRow(item, name, resolver);
+                }, variantFinderCallback);
 
-        //Resolve all the resolvers, ideally this can be done without the array
-        var resolvedData: T[] = [];
-        for (var i = 0; i < resolvers.length; ++i) {
-            resolvedData.push(await resolvers[i].getResolved());
+                this.items.push({
+                    createdCallback: createdCallback,
+                    insertBeforeSibling: insertBeforeSibling,
+                    variantFinderCallback: variantFinderCallback,
+                    resolver: resolver
+                });
+            });
         }
+        else {
+            //Single item
+            var resolver = new DataResolver(data);
+            this.view.visitVariables(data, (name) => {
+                this.formatter.handleExternalForRow(data, name, resolver);
+            }, variantFinderCallback);
 
-        //Return the data itself if there is only 1 item, this way we don't modify the incoming data too much
-        if (resolvedData.length === 1) {
-            return resolvedData[0];
+            this.items.push({
+                createdCallback: createdCallback,
+                insertBeforeSibling: insertBeforeSibling,
+                variantFinderCallback: variantFinderCallback,
+                resolver: resolver
+            });
         }
-
-        return resolvedData;
     }
 }
 
