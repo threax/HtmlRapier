@@ -67,7 +67,7 @@ export interface IAsyncView<T> {
     /**
      * Clear all data from the model.
      */
-    clear(): Promise<void>;
+    clear(): void;
 
     /**
      * Set the formater to use when reading values out of the data.
@@ -109,7 +109,7 @@ export class AsyncViewWrapper<T> implements IAsyncView<T> {
     /**
      * Clear all data from the model.
      */
-    public async clear(): Promise<void> {
+    public clear(): void {
         this.view.clear();
     }
 
