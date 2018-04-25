@@ -253,10 +253,6 @@ export class BindingCollection {
         return view.build<T>(targetElement);
     }
 
-    public getAsyncView<T>(name: string): view.IAsyncView<T> {
-        return new view.AsyncViewWrapper<T>(this.getView<T>(name));
-    }
-
     private findElement(query: string): Node{
         for (var eIx = 0; eIx < this.elements.length; ++eIx) {
             var element = this.elements[eIx];

@@ -12,7 +12,7 @@ import { ActionEventDispatcher } from 'hr.eventdispatcher';
 import * as di from 'hr.di';
 export { DiFunction, ServiceCollection, InjectableArgs } from 'hr.di';
 export { IForm } from 'hr.form';
-export { IView, IAsyncView } from 'hr.view';
+export { IView } from 'hr.view';
 
 /**
  * This class provides a way to get a handle to the data provided by the
