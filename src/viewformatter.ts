@@ -15,28 +15,26 @@ export interface Extractor<T> {
     original: T;
 };
 
-export interface ISchemaViewFormatterArgs {
+export interface ISchemaRowArgs {
     prop: schema.JsonProperty;
     schema: schema.JsonSchema;
     propData: any;
     data: any;
     name: string;
-}
-
-export interface ISchemaViewExternalFormatterArgs extends ISchemaViewFormatterArgs {
     resolver: IDataResolver
 }
 
 export interface ISchemaViewFormatterExtension {
     /**
-     * Get the data specified by args. Return undefined if the data is not handled.
-     * @param args
+     * Called as each row is added.
+     * @param args Event args.
      */
-    extract(args: ISchemaViewFormatterArgs): any | undefined;
+    handleRow<T>(args: ISchemaRowArgs): void;
 
-    handleExternalForRow<T>(args: ISchemaViewExternalFormatterArgs): void;
-
-    processedAllExternalData(): void;
+    /**
+     * Called after all rows have been added.
+     */
+    processedAllRows(): void;
 }
 
 var schemaFormatterExtensions: ISchemaViewFormatterExtension[] = [];
@@ -156,20 +154,6 @@ export class SchemaViewFormatter<T> implements IViewDataFormatterWithExternal<T>
         }
 
         if (prop) {
-            var args: ISchemaViewFormatterArgs = {
-                data: data,
-                name: name,
-                prop: prop,
-                propData: rawData,
-                schema: this.schema
-            }
-            for (var i = 0; i < schemaFormatterExtensions.length; ++i) {
-                var result = schemaFormatterExtensions[i].extract(args);
-                if (result !== undefined) {
-                    return result;
-                }
-            }
-
             var values = prop['x-values'];
             if (values !== undefined && Array.isArray(values)) {
                 for (var i = 0; i < values.length; ++i) {
@@ -242,7 +226,7 @@ export class SchemaViewFormatter<T> implements IViewDataFormatterWithExternal<T>
         }
 
         if (prop) {
-            var args: ISchemaViewExternalFormatterArgs = {
+            var args: ISchemaRowArgs = {
                 data: data,
                 name: name,
                 prop: prop,
@@ -251,14 +235,14 @@ export class SchemaViewFormatter<T> implements IViewDataFormatterWithExternal<T>
                 resolver: resolver
             }
             for (var i = 0; i < schemaFormatterExtensions.length; ++i) {
-                schemaFormatterExtensions[i].handleExternalForRow(args);
+                schemaFormatterExtensions[i].handleRow(args);
             }
         }
     }
 
     public processedAllRows(): void {
         for (var i = 0; i < schemaFormatterExtensions.length; ++i) {
-            schemaFormatterExtensions[i].processedAllExternalData();
+            schemaFormatterExtensions[i].processedAllRows();
         }
     }
 }

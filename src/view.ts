@@ -48,6 +48,11 @@ export interface IView<T>{
     visitVariables(data: T, foundCb: components.VisitVariableCallback, variantFinderCallback?: components.VariantFinderCallback<T>): void;
 }
 
+/**
+ * Async views are like regular views, except they make it easier to load external data and wait until that data has fully loaded
+ * before continuing. The usage is the same as IView, except you must call applyChanges in order to actually get the changes
+ * onto the screen.
+ */
 export interface IAsyncView<T> {
     /**
      * Set the data on the view.
