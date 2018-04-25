@@ -5,8 +5,8 @@ import * as components from 'hr.components';
 import * as typeId from 'hr.typeidentifiers';
 import * as domQuery from 'hr.domquery';
 import * as iter from 'hr.iterable';
-import { Extractor, IViewDataFormatter, IViewDataFormatterWithExternal, IDataResolver, DataResolver } from 'hr.viewformatter';
-export { SchemaViewFormatter as SchemaViewDataFormatter, Extractor, IViewDataFormatter, IViewDataFormatterWithExternal } from 'hr.viewformatter';
+import { Extractor, IViewDataFormatter} from 'hr.viewformatter';
+export { SchemaViewFormatter as SchemaViewDataFormatter, Extractor, IViewDataFormatter } from 'hr.viewformatter';
 
 /**
  * The basic interface for view instances.
@@ -40,12 +40,6 @@ export interface IView<T>{
      * Set the formater to use when reading values out of the data.
      */
     setFormatter(formatter: IViewDataFormatter<T>): void;
-
-    /**
-     * Visit each variable name for this view.
-     * @param foundCb The function that is called with each variable name when found.
-     */
-    visitVariables(data: T, foundCb: components.VisitVariableCallback, variantFinderCallback?: components.VariantFinderCallback<T>): void;
 }
 
 class ComponentView<T> implements IView<T> {
@@ -105,10 +99,6 @@ class ComponentView<T> implements IView<T> {
     public setFormatter(formatter: IViewDataFormatter<T>): void {
         this.formatter = formatter;
     }
-
-    visitVariables(data: any, foundCb: components.VisitVariableCallback, variantFinderCallback?: components.VariantFinderCallback<T>): void {
-        components.visitVariables(this.component, data, foundCb, variantFinderCallback);
-    }
 }
 
 class TextNodeView<T> implements IView<T> {
@@ -143,13 +133,6 @@ class TextNodeView<T> implements IView<T> {
 
     public setFormatter(formatter: IViewDataFormatter<T>): void {
         this.formatter = formatter;
-    }
-
-    visitVariables(data: any, foundCb: components.VisitVariableCallback, variantFinderCallback?: components.VariantFinderCallback<T>): void {
-        this.ensureDataTextElements();
-        for (var i = 0; i < this.dataTextElements.length; ++i) {
-            this.dataTextElements[i].stream.visitVariables(foundCb);
-        }
     }
 
     private bindData(data: any): void {
@@ -198,10 +181,6 @@ class NullView<T> implements IView<T> {
     }
 
     public setFormatter(formatter: IViewDataFormatter<T>): void {
-        
-    }
-
-    visitVariables(data: any, foundCb: components.VisitVariableCallback, variantFinderCallback?: components.VariantFinderCallback<T>): void {
         
     }
 }

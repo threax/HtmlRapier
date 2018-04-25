@@ -1,7 +1,7 @@
 ///<amd-module name="hr.componentbuilder"/>
 
 import { BindingCollection } from 'hr.bindingcollection';
-import { TextStream, VisitVariableCallback } from 'hr.textstream';
+import { TextStream } from 'hr.textstream';
 import { IComponentBuilder } from 'hr.components';
 
 export class VariantBuilder{
@@ -14,11 +14,6 @@ export class VariantBuilder{
     public create(data, parentComponent, insertBeforeSibling) {
         this.ensureTokenizer();
         return createItem(data, this.tokenizedString, parentComponent, insertBeforeSibling);
-    }
-
-    public visitVariables(foundCb: VisitVariableCallback) {
-        this.ensureTokenizer();
-        this.tokenizedString.visitVariables(foundCb);
     }
 
     private ensureTokenizer(): void {
@@ -48,16 +43,6 @@ export class ComponentBuilder implements IComponentBuilder {
 
     public addVariant(name: string, variantBuilder: VariantBuilder) {
         this.variants[name] = variantBuilder;
-    }
-
-    public visitVariables(foundCb: VisitVariableCallback, variant) {
-        if (variant !== null && this.variants.hasOwnProperty(variant)) {
-            this.variants[variant].visitVariables(foundCb);
-        }
-        else {
-            this.ensureTokenizer();
-            this.tokenizedString.visitVariables(foundCb);
-        }
     }
 
     private ensureTokenizer(): void {

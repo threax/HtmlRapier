@@ -5,12 +5,9 @@
 import * as typeId from 'hr.typeidentifiers';
 import * as domquery from 'hr.domquery';
 import { BindingCollection } from 'hr.bindingcollection';
-import { VisitVariableCallback } from 'hr.textstream';
-export { VisitVariableCallback } from 'hr.textstream';
 
 export interface IComponentBuilder {
     create(data, parentComponent, insertBeforeSibling, variant): BindingCollection;
-    visitVariables(foundCb: VisitVariableCallback, variant): void;
 }
 
 interface ComponentFactory {
@@ -105,16 +102,6 @@ export function many<T>(name: string, data: T[] | typeId.ForEachable<T>, parentC
     }
 
     parentComponent.insertBefore(fragmentParent, insertBefore);
-}
-
-export function visitVariables<T>(name: string, data: T, foundCb: VisitVariableCallback, variantFinder?: VariantFinderCallback<T>) {
-    if (variantFinder === undefined) {
-        variantFinder = getDefaultVariant;
-    }
-
-    if (factory.hasOwnProperty(name)) {
-        factory[name].visitVariables(foundCb, variantFinder(data));
-    }
 }
 
 /**

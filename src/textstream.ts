@@ -5,12 +5,9 @@
 import {escape} from 'hr.escape';
 import * as typeId from 'hr.typeidentifiers';
 
-export type VisitVariableCallback = (name: string) => void;
-
 interface IStreamNode{
     writeFunction(data: (variable: string) => any);
     writeObject(data: any);
-    visitVariables(foundCb: VisitVariableCallback);
 }
 
 class TextNode implements IStreamNode{
@@ -24,10 +21,6 @@ class TextNode implements IStreamNode{
 
     writeFunction(data: (variable: string) => any){
         return this.writeObject(data);
-    }
-
-    visitVariables(foundCb: VisitVariableCallback) {
-        
     }
 }
 
@@ -43,10 +36,6 @@ class VariableNode implements IStreamNode {
     writeFunction(data: (variable: string) => any){
         return data(this.variable);
     }
-
-    visitVariables(foundCb: VisitVariableCallback) {
-        foundCb(this.variable);
-    }
 }
 
 class ThisVariableNode implements IStreamNode {
@@ -61,10 +50,6 @@ class ThisVariableNode implements IStreamNode {
     writeFunction(data: (variable: string) => any){
         return data('this');
     }
-
-    visitVariables(foundCb: VisitVariableCallback) {
-        foundCb('this');
-    }
 }
 
 class EscapeVariableNode implements IStreamNode {
@@ -78,10 +63,6 @@ class EscapeVariableNode implements IStreamNode {
 
     writeFunction(data: (variable: string) => any){
         return escape(this.wrapped.writeFunction(data));
-    }
-
-    visitVariables(foundCb: VisitVariableCallback) {
-        this.wrapped.visitVariables(foundCb);
     }
 }
 
@@ -225,11 +206,5 @@ export class TextStream {
 
     public foundVariable() {
         return this.variablesFound;
-    }
-
-    public visitVariables(foundCb: VisitVariableCallback) {
-        for (var i = 0; i < this.streamNodes.length; ++i) {
-            this.streamNodes[i].visitVariables(foundCb);
-        }
     }
 }
