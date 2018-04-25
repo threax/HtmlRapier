@@ -5,7 +5,7 @@ import * as components from 'hr.components';
 import * as typeId from 'hr.typeidentifiers';
 import * as domQuery from 'hr.domquery';
 import * as iter from 'hr.iterable';
-import { Extractor, IViewDataFormatter} from 'hr.viewformatter';
+import { Extractor, IViewDataFormatter } from 'hr.viewformatter';
 export { SchemaViewFormatter as SchemaViewDataFormatter, Extractor, IViewDataFormatter } from 'hr.viewformatter';
 
 /**

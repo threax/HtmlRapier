@@ -19,7 +19,11 @@ export interface ISchemaViewFormatterArgs {
 }
 
 export interface ISchemaViewFormatterExtension {
-    extract(args: ISchemaViewFormatterArgs): any;
+    /**
+     * Get the data specified by args. Return undefined if the data is not handled.
+     * @param args
+     */
+    extract(args: ISchemaViewFormatterArgs): any | undefined;
 }
 
 var schemaFormatterExtensions: ISchemaViewFormatterExtension[] = [];
