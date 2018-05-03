@@ -610,7 +610,7 @@ export class MultiCheckBoxEditor implements formHelper.IFormValueWithOptions {
         if (itemData !== null && itemData !== undefined && itemData.length > 0) {
             for (var i = 0; i < this.checkboxElements.length; ++i) {
                 var check = this.checkboxElements[i];
-                formHelper.setValue(<any>check, itemData.indexOf((<any>check).value) !== -1);
+                formHelper.setValue(<any>check, looseIndexOf(itemData, (<any>check).value) !== -1);
             }
             if (this.nullCheckboxElement !== null) {
                 formHelper.setValue(<any>this.nullCheckboxElement, false);
@@ -698,6 +698,15 @@ export class MultiCheckBoxEditor implements formHelper.IFormValueWithOptions {
             element.setAttribute("disabled", "");
         }
     }
+}
+
+function looseIndexOf(array: any[], find: any) {
+    for (var i = 0; i < array.length; ++i) {
+        if (array[i] == find) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 export class RadioButtonEditor implements formHelper.IFormValueWithOptions {
