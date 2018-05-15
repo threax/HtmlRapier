@@ -105,13 +105,15 @@ export class SchemaViewFormatter<T> implements IViewDataFormatter<T> {
             }
 
             //Check for dates, come in a couple ways
-            switch (format) {
-                case 'date':
-                    var date = new Date(rawData);
-                    return date.toLocaleDateString();
-                case 'date-time':
-                    var date = new Date(rawData);
-                    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+            if(rawData !== null) {
+                switch (format) {
+                    case 'date':
+                        var date = new Date(rawData);
+                        return date.toLocaleDateString();
+                    case 'date-time':
+                        var date = new Date(rawData);
+                        return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+                }
             }
         }
 
