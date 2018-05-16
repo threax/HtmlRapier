@@ -23,7 +23,7 @@ function EventRunner(name: string, listener: any) {
 function bindEvents(elements: HTMLElement[], listener: any) {
     for (var eIx = 0; eIx < elements.length; ++eIx) {
         var element = elements[eIx];
-        domQuery.iterateNodes(element, NodeFilter.SHOW_ELEMENT, function (node) {
+        domQuery.iterateElementNodes(element, function (node) {
             //Look for attribute
             for (var i = 0; i < node.attributes.length; i++) {
                 var attribute = node.attributes[i];
@@ -111,7 +111,7 @@ function getConfig(elements: HTMLElement[]) {
     var data = {};
     for (var eIx = 0; eIx < elements.length; ++eIx) {
         var element = elements[eIx];
-        domQuery.iterateNodes(element, NodeFilter.SHOW_ELEMENT, function (node) {
+        domQuery.iterateElementNodes(element, function (node) {
             //Look for attribute
             for (var i = 0; i < node.attributes.length; i++) {
                 var attribute = node.attributes[i];

@@ -128,6 +128,21 @@ export function iterateNodes(node: Node, whatToShow?: number, cb?: NodeIteratorC
 }
 
 /**
+ * Iterate an element collection using createNodeIterator with SHOW_ELEMENT as its arg. 
+ * There is no query for this version as it iterates everything and allows you to extract what is needed.
+ * @param  element - The root element
+ * @param {NodeFilter} whatToShow - see createNodeIterator, defaults to SHOW_ALL
+ * @param  cb - The function called for each item iterated
+ */
+export function iterateElementNodes(node: Node, cb?: ElementIteratorCallback) {
+    var iter = document.createNodeIterator(node, NodeFilter.SHOW_ELEMENT, <any>alwaysTrue, false);
+    var resultNode: any;
+    while (resultNode = iter.nextNode()) {
+        cb(resultNode);
+    }
+}
+
+/**
  * Determine if an element matches the given selector.
  * @param {type} element
  * @param {type} selector
