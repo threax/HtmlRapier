@@ -9,7 +9,7 @@ import * as view from 'hr.view';
 import * as toggle from 'hr.toggles';
 import * as event from 'hr.eventdispatcher';
 import * as formHelper from 'hr.formhelper';
-import { JsonProperty, JsonLabel, JsonSchema, resolveRef, RefNode } from 'hr.schema';
+import { JsonProperty, JsonLabel, JsonSchema, resolveRef, RefNode, isRefNode } from 'hr.schema';
 import { FormErrors } from 'hr.error';
 import * as typeIds from 'hr.typeidentifiers';
 import * as expression from 'hr.expressiontree';
@@ -896,7 +896,7 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
     var props = schema.properties;
     if (props === undefined) {
         //No props, add the schema itself as a property, this also means our formValues are simple values
-        propArray.push(processProperty(schema, baseName, baseName));
+        propArray.push(processProperty(schema, baseName, baseName, schema));
         formValues.setComplex(false);
     }
     else {
@@ -909,7 +909,7 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
         }
 
         for (var key in props) {
-            propArray.push(processProperty(props[key], key, baseNameWithSep + key));
+            propArray.push(processProperty(props[key], key, baseNameWithSep + key, schema));
         }
 
         propArray.sort((a, b) => {
@@ -1040,7 +1040,7 @@ function extractLabels(prop: JsonProperty): JsonLabel[] {
 
 var propertyUniqueIndex = new InfiniteIndex();
 
-function processProperty(prop: JsonProperty, name: string, buildName: string): ProcessedJsonProperty {
+function processProperty(prop: JsonProperty, name: string, buildName: string, schema: JsonSchema): ProcessedJsonProperty {
     var processed: ProcessedJsonProperty = Object.create(prop);
     processed.uniqueId = "hr-form-prop-" + propertyUniqueIndex.getNext();
     processed.buildName = buildName;
@@ -1068,6 +1068,16 @@ function processProperty(prop: JsonProperty, name: string, buildName: string): P
     }
     else if (prop.enum !== undefined) {
         processed.buildValues = extractLabels(prop);
+    }
+    else {
+        var refType = null;
+        if (isRefNode(prop)) {
+            refType = resolveRef(prop, schema);
+
+            if (refType && refType.enum !== undefined) {
+                processed.buildValues = extractLabels(refType);
+            }
+        }
     }
 
     //Look for collections, anything defined as an array or that has x-values defined

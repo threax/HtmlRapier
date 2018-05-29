@@ -37,6 +37,10 @@ export interface RefNode{
     $ref?: string;
 }
 
+export function isRefNode(test: any): test is RefNode {
+    return test.$ref !== undefined;
+}
+
 /**
  * Find the ref and return it for node if it exists.
  * @param node The node to expand
