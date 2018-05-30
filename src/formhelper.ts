@@ -194,35 +194,49 @@ export function setValue(element: HTMLInputElement | HTMLSelectElement, itemData
         itemData = "";
     }
 
-    switch (element.type) {
-        case 'radio':
-        case 'checkbox':
-            (<HTMLInputElement>element).checked = itemData;
-            break;
-        case 'select-multiple':
-            var options = (<HTMLSelectElement>element).options;
-            if (Array.isArray(itemData)) {
-                for (var j = options.length - 1; j >= 0; j = j - 1) {
-                    options[j].selected = containsCoerced(itemData, options[j].value);
-                }
+    switch (element.nodeName) {
+        case 'INPUT':
+            switch (element.type) {
+                case 'radio':
+                case 'checkbox':
+                    (<HTMLInputElement>element).checked = itemData;
+                    break;
+                default:
+                    element.value = itemData;
+                    break;
             }
             break;
-        case 'select-one':
-            var options = (<HTMLSelectElement>element).options;
-            var valueToSet = "";
-            if (options.length > 0) { //Default to setting the first value
-                valueToSet = options[0].value;
-            }
-            if (itemData !== null && itemData !== undefined) {
-                var itemDataString = String(itemData);
-                //Scan options to find the value that is attempting to be set, if it does not exist, this will default back to the first value
-                for (var j = options.length - 1; j >= 0; j = j - 1) {
-                    if (options[j].value === itemDataString) {
-                        valueToSet = itemDataString;
+        case 'TEXTAREA':
+            element.value = itemData ? itemData : "";
+            break;
+        case 'SELECT':
+            switch (element.type) {
+                case 'select-multiple':
+                    var options = (<HTMLSelectElement>element).options;
+                    if (Array.isArray(itemData)) {
+                        for (var j = options.length - 1; j >= 0; j = j - 1) {
+                            options[j].selected = containsCoerced(itemData, options[j].value);
+                        }
                     }
-                }
+                    break;
+                case 'select-one':
+                    var options = (<HTMLSelectElement>element).options;
+                    var valueToSet = "";
+                    if (options.length > 0) { //Default to setting the first value
+                        valueToSet = options[0].value;
+                    }
+                    if (itemData !== null && itemData !== undefined) {
+                        var itemDataString = String(itemData);
+                        //Scan options to find the value that is attempting to be set, if it does not exist, this will default back to the first value
+                        for (var j = options.length - 1; j >= 0; j = j - 1) {
+                            if (options[j].value === itemDataString) {
+                                valueToSet = itemDataString;
+                            }
+                        }
+                    }
+                    element.value = valueToSet;
+                    break;
             }
-            element.value = valueToSet;
             break;
         default:
             element.value = itemData;
