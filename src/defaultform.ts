@@ -45,7 +45,10 @@ if (!component.isDefined("hr.forms.default")) {
                 '<label class="control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label>' +
                 '<div class="panel panel-default" style="max-height:150px;overflow:auto;">' +
                     '<div data-hr-view="items" data-hr-view-component="hr.forms.default-multicheckboxitem"></div>' +
-        '</div></div></div>'
+                '</div>' + 
+                '<div class="clearfix"></div>' +
+            '</div>' + 
+        '</div>'
     ));
     builder.addVariant("radiobutton", new VariantBuilder(
         '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;">' +
@@ -111,7 +114,10 @@ if (!component.isDefined("hr.forms.horizontal")) {
                 '<label class="control-label col-sm-2">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label>' +
                 '<div class="col-sm-10 panel panel-default" style="max-height:150px;overflow:auto;">' +
                     '<div class="panel-body" data-hr-view="items" data-hr-view-component="hr.forms.horizontal-multicheckboxitem"></div>' +
-        '</div></div></div>'
+                '</div>' + 
+                '<div class="clearfix"></div>' +
+            '</div>' + 
+        '</div>'
     ));
     builder.addVariant("radiobutton", new VariantBuilder(
         '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;">' +
