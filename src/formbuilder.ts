@@ -1022,19 +1022,32 @@ function IsSelectElement(element: Node): element is HTMLSelectElement {
     return element && (element.nodeName === 'SELECT');
 }
 
-function extractLabels(prop: JsonProperty): JsonLabel[] {
+function extractLabels(valuesProp: JsonProperty, originalProp: JsonProperty): JsonLabel[] {
     var values: JsonLabel[] = [];
-    var theEnum = prop.enum;
+    var foundNull = false;
+
+    var theEnum = valuesProp.enum;
     var enumNames = theEnum;
-    if (prop["x-enumNames"] !== undefined) {
-        enumNames = prop["x-enumNames"];
+    if (valuesProp["x-enumNames"] !== undefined) {
+        enumNames = valuesProp["x-enumNames"];
     }
     for (var i = 0; i < theEnum.length; ++i) {
+        var value = theEnum[i];
+        foundNull = foundNull || value === null;
         values.push({
             label: enumNames[i],
-            value: theEnum[i]
+            value: value
         });
     }
+
+    if (!foundNull && propertyCanBeNull(originalProp)) {
+        var nullLabel = originalProp['x-null-value-label'] || "None";
+        values.splice(0, 0, {
+            label: nullLabel,
+            value: null
+        });
+    }
+
     return values;
 }
 
@@ -1063,29 +1076,18 @@ function processProperty(prop: JsonProperty, name: string, buildName: string, sc
     //Set this build type to what has been passed in, this will be processed further below
     processed.buildType = getPropertyType(prop).toLowerCase();
 
-    if (prop["x-values"] !== undefined) {
-        processed.buildValues = prop["x-values"];
-    }
-    else if (prop.enum !== undefined) {
-        processed.buildValues = extractLabels(prop);
-    }
-    else {
-        var refType = null;
-        if (isRefNode(prop)) {
-            refType = resolveRef(prop, schema);
-
-            if (refType && refType.enum !== undefined) {
-                processed.buildValues = extractLabels(refType);
-            }
-        }
-    }
-
     //Look for collections, anything defined as an array or that has x-values defined
     if (processed.buildType === 'array') {
+        //In an array we might have items with values defined, so look for that
+        var valuesProp = prop;
+        if (valuesProp.items && (<any>valuesProp.items).$ref) {
+            valuesProp = valuesProp.items;
+        }
+        extractPropValues(valuesProp, processed, schema, prop);
+
         if (processed.buildValues !== undefined || processed["x-lazy-load-values"] === true) {
             //Only supports checkbox and multiselect ui types. Checkboxes have to be requested.
             if (prop["x-ui-type"] === "checkbox") {
-                //Nothing for checkboxes yet, just be a basic multiselect until they are implemented
                 processed.buildType = "multicheckbox";
             }
             else {
@@ -1104,6 +1106,8 @@ function processProperty(prop: JsonProperty, name: string, buildName: string, sc
         }
     }
     else {
+        extractPropValues(prop, processed, schema, prop);
+
         if (prop["x-ui-type"] !== undefined) {
             processed.buildType = prop["x-ui-type"];
         }
@@ -1154,7 +1158,25 @@ function processProperty(prop: JsonProperty, name: string, buildName: string, sc
     return processed;
 }
 
-function getPropertyType(prop: JsonProperty) {
+function extractPropValues(prop: JsonProperty, processed: ProcessedJsonProperty, schema: JsonSchema, originalProp: JsonProperty) {
+    if (prop["x-values"] !== undefined) {
+        processed.buildValues = prop["x-values"];
+    }
+    else if (prop.enum !== undefined) {
+        processed.buildValues = extractLabels(prop, originalProp);
+    }
+    else {
+        var refType = null;
+        if (isRefNode(prop)) {
+            refType = resolveRef(prop, schema);
+            if (refType && refType.enum !== undefined) {
+                processed.buildValues = extractLabels(refType, originalProp);
+            }
+        }
+    }
+}
+
+function getPropertyType(prop: JsonProperty): string {
     if (Array.isArray(prop.type)) {
         for (var j = 0; j < prop.type.length; ++j) {
             if (prop.type[j] !== "null") {
@@ -1166,6 +1188,20 @@ function getPropertyType(prop: JsonProperty) {
         return prop.type;
     }
     return "string"; //Otherwise fallback to string
+}
+
+function propertyCanBeNull(prop: JsonProperty): boolean {
+    if (Array.isArray(prop.type)) {
+        for (var j = 0; j < prop.type.length; ++j) {
+            if (prop.type[j] === "null") {
+                return true;
+            }
+        }
+    }
+    else if (prop.type === "null") {
+        return true;
+    }
+    return false;
 }
 
 var formValueBuilders: IFormValueBuilder[] = [];
