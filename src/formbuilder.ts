@@ -585,6 +585,7 @@ export class SearchItemEditor implements formHelper.IFormValueWithOptions {
     private searchResultProvider: ISearchResultProvider;
     private searchFocusParent: HTMLElement;
     private typingTrigger = new TimedTrigger<SearchItemEditor>(400);
+    private lastSearchTerm: string;
     protected name: string;
     protected buildName: string;
     protected bindings: BindingCollection;
@@ -741,8 +742,11 @@ export class SearchItemEditor implements formHelper.IFormValueWithOptions {
         this.resultsView.clear();
         this.popupToggle.on();
         var searchTerm = formHelper.readValue(this.element);
+        this.lastSearchTerm = searchTerm;
         var results = await this.searchResultProvider.search(searchTerm);
-        this.resultsView.setData(results, (element, data) => new SearchResultRow(this, new BindingCollection(element.elements), data));
+        if (this.lastSearchTerm === searchTerm) {
+            this.resultsView.setData(results, (element, data) => new SearchResultRow(this, new BindingCollection(element.elements), data));
+        }
     }
 }
 
