@@ -16,6 +16,7 @@ import * as expression from 'hr.expressiontree';
 export { IFormValue, GetParentData } from 'hr.formhelper';
 import * as iterable from 'hr.iterable';
 import { GetParentData } from 'hr.formhelper';
+import { TimedTrigger } from 'hr.timedtrigger';
 
 interface ProcessedJsonProperty extends JsonProperty {
     name: string;
@@ -534,11 +535,47 @@ export class BasicItemEditor implements formHelper.IFormValueWithOptions {
     }
 }
 
+export interface SearchResult {
+    title: string;
+    value: any;
+}
+
+export class SearchResultRow {
+    constructor(private searchEditor: SearchItemEditor, bindings: BindingCollection, private data: SearchResult) {
+        bindings.setListener(this);
+    }
+
+    public selectItem(evt: Event): void {
+        evt.preventDefault();
+        this.searchEditor.setDataFromSearchResult(this.data);
+    }
+}
+
+export class SearchResultProvider {
+    public async search(term: string): Promise<iterable.Iterable<SearchResult>> {
+        var count = 0;
+        return new iterable.Iterable<SearchResult>(() => {
+            var item: SearchResult = {
+                title: String(count),
+                value: count
+            }
+            if (count++ < 2) {
+                return item;
+            }
+        });
+    }
+}
+
 export class SearchItemEditor implements formHelper.IFormValueWithOptions {
     private errorToggle: toggle.OnOffToggle;
     private errorMessage: view.IView<string>;
     private hideToggle: toggle.OnOffToggle;
     private changedEventHandler: event.ActionEventDispatcher<formHelper.IFormValue> = null;
+    private popupToggle: toggle.OnOffToggle;
+    private resultsView: view.IView<SearchResult>;
+    private searchResultProvider: SearchResultProvider = new SearchResultProvider();
+    private searchFocusParent: HTMLElement;
+    private typingTrigger = new TimedTrigger<SearchItemEditor>(400);
     protected name: string;
     protected buildName: string;
     protected bindings: BindingCollection;
@@ -547,6 +584,7 @@ export class SearchItemEditor implements formHelper.IFormValueWithOptions {
     protected displayExpression: expression.ExpressionTree;
     protected currentValueProperty: string;
     protected currentData: any;
+    protected currentDisplay: any;
 
     constructor(args: IFormValueBuilderArgs) {
         this.name = args.item.name;
@@ -555,6 +593,10 @@ export class SearchItemEditor implements formHelper.IFormValueWithOptions {
         this.generated = args.generated;
         this.element = args.inputElement;
         this.displayExpression = args.item.displayExpression;
+        this.popupToggle = this.bindings.getToggle("popup");
+        this.resultsView = this.bindings.getView("results");
+        this.searchFocusParent = this.bindings.getHandle("searchFocusParent");
+        this.typingTrigger.addListener(arg => this.runSearch(arg));
 
         if (args.item["x-ui-disabled"] === true || args.item.readOnly === true) {
             this.element.setAttribute("disabled", "");
@@ -564,9 +606,7 @@ export class SearchItemEditor implements formHelper.IFormValueWithOptions {
 
         var self = this;
         this.changedEventHandler = new event.ActionEventDispatcher<formHelper.IFormValue>();
-        this.element.addEventListener("change", e => {
-            self.changedEventHandler.fire(self);
-        });
+        this.bindings.setListener(this);
 
         this.errorToggle = this.bindings.getToggle(this.buildName + "Error");
         this.errorMessage = this.bindings.getView(this.buildName + "ErrorMessage");
@@ -619,6 +659,7 @@ export class SearchItemEditor implements formHelper.IFormValueWithOptions {
         if (this.currentValueProperty) {
             data = parentDataAccess(this.currentValueProperty);
         }
+        this.currentDisplay = data;
         formHelper.setValue(<any>this.element, data);
         this.setError(formHelper.getSharedClearingValidator(), "");
     }
@@ -662,6 +703,36 @@ export class SearchItemEditor implements formHelper.IFormValueWithOptions {
                 this.hideToggle.on();
             }
         }
+    }
+
+    public stopSearch(evt: FocusEvent): void {
+        evt.preventDefault();
+        if (!this.searchFocusParent.contains(<HTMLElement>evt.relatedTarget)) {
+            this.typingTrigger.cancel();
+            formHelper.setValue(<any>this.element, this.currentDisplay);
+            this.popupToggle.off();
+        }
+    }
+
+    private updateSearch(evt: Event): void {
+        evt.preventDefault();
+        this.typingTrigger.fire(this);
+    }
+
+    public setDataFromSearchResult(result: SearchResult): void {
+        formHelper.setValue(<any>this.element, result.title);
+        this.currentData = result.value;
+        this.currentDisplay = result.title;
+        this.popupToggle.off();
+        this.changedEventHandler.fire(this);
+    }
+
+    private async runSearch(arg: SearchItemEditor): Promise<void> {
+        this.resultsView.clear();
+        this.popupToggle.on();
+        var searchTerm = formHelper.readValue(this.element);
+        var results = await this.searchResultProvider.search(searchTerm);
+        this.resultsView.setData(results, (element, data) => new SearchResultRow(this, new BindingCollection(element.elements), data));
     }
 }
 

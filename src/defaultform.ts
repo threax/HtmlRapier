@@ -132,8 +132,8 @@ if (!component.isDefined("hr.forms.horizontal")) {
                 <label for="{{uniqueId}}" class="col-sm-2 control-label">
                     {{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span>
                 </label>
-                <div class="col-sm-10">
-                    <input id="{{uniqueId}}" class="form-control" name="{{buildName}}" type="input" />
+                <div class="col-sm-10" data-hr-on-focusout="stopSearch" data-hr-handle="searchFocusParent">
+                    <input id="{{uniqueId}}" class="form-control" name="{{buildName}}" type="input" data-hr-on-input="updateSearch"/>
                     <div class="dropdown" data-hr-toggle="popup" data-hr-class-on="open">
                         <ul class="dropdown-menu" data-hr-view="results" data-hr-view-component="hr.forms.horizontal-searchResult">
                         </ul>
@@ -157,6 +157,6 @@ if (!component.isDefined("hr.forms.horizontal")) {
     ));
 
     component.register("hr.forms.horizontal-searchResult", new ComponentBuilder(
-        '<li><a href="{{href}}">{{linkText}}</a></li>'
+        '<li data-hr-on-click="selectItem">{{title}}</li>'
     ));
 }
