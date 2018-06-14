@@ -264,6 +264,8 @@ export interface IFormValues{
     fireDataChanged(): void;
 }
 
+export type GetParentData = (propName: string) => any;
+
 export interface IFormValue {
     setError(err: FormErrors, baseName: string);
 
@@ -273,7 +275,7 @@ export interface IFormValue {
 
     getData(): any;
 
-    setData(data: any);
+    setData(data: any, parentDataAccess?: GetParentData);
 
     /**
      * Delete the form value, this might not actually happen. Return true if the item was deleted

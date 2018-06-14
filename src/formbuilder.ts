@@ -13,8 +13,9 @@ import { JsonProperty, JsonLabel, JsonSchema, resolveRef, RefNode, isRefNode } f
 import { FormErrors } from 'hr.error';
 import * as typeIds from 'hr.typeidentifiers';
 import * as expression from 'hr.expressiontree';
-export { IFormValue } from 'hr.formhelper';
+export { IFormValue, GetParentData } from 'hr.formhelper';
 import * as iterable from 'hr.iterable';
+import { GetParentData } from 'hr.formhelper';
 
 interface ProcessedJsonProperty extends JsonProperty {
     name: string;
@@ -74,25 +75,31 @@ class FormValues implements formHelper.IFormValues {
 
     public setData(data: any): void {
         var dataType = formHelper.getDataType(data);
+        var parentRecovery: GetParentData;
+
+        if (this.complexValues && data !== null) { //If this is complex values, lookup the data, also be sure the data isn't null or we will get an error
+            switch (dataType) {
+                case formHelper.DataType.Object:
+                    parentRecovery = (name: string) => data[name];
+                    break;
+                case formHelper.DataType.Function:
+                    parentRecovery = data;
+                    break;
+            }
+        }
+        else { //Simple value or null
+            if (dataType !== formHelper.DataType.Function) { //Ignore functions for simple data, otherwise take the data as the value (will also happen for null)
+                parentRecovery = (name: string) => data;
+            }
+            else {
+                parentRecovery = (name: string) => null;
+            }
+        }
+
         for (var i = 0; i < this.values.length; ++i) { //Go through all items
             var item = this.values[i];
-            var itemData: any = undefined;
-            if (this.complexValues && data !== null) { //If this is complex values, lookup the data, also be sure the data isn't null or we will get an error
-                switch (dataType) {
-                    case formHelper.DataType.Object:
-                        itemData = data[item.getDataName()];
-                        break;
-                    case formHelper.DataType.Function:
-                        itemData = data(item.getDataName());
-                        break;
-                }
-            }
-            else { //Simple value or null
-                if (dataType !== formHelper.DataType.Function) { //Ignore functions for simple data, otherwise take the data as the value (will also happen for null)
-                    itemData = data;
-                }
-            }
-            item.setData(itemData);
+            var itemData: any = parentRecovery(item.getDataName());
+            item.setData(itemData, parentRecovery);
         }
     }
 
@@ -483,6 +490,137 @@ export class BasicItemEditor implements formHelper.IFormValueWithOptions {
      */
     protected doSetValue(itemData: any) {
         formHelper.setValue(<any>this.element, itemData);
+    }
+
+    public getBuildName(): string {
+        return this.buildName;
+    }
+
+    public getDataName(): string {
+        return this.name;
+    }
+
+    public delete(): boolean {
+        if (this.generated) {
+            this.bindings.remove();
+        }
+        return this.generated;
+    }
+
+    public get isChangeTrigger(): boolean {
+        return this.changedEventHandler !== null;
+    }
+
+    public get onChanged() {
+        if (this.changedEventHandler !== null) {
+            return this.changedEventHandler.modifier;
+        }
+        return null;
+    }
+
+    public get respondsToChanges() {
+        return this.displayExpression !== undefined;
+    }
+
+    public handleChange(values: expression.IValueSource): void {
+        if (this.displayExpression) {
+            if (this.displayExpression.isTrue(values)) {
+                this.hideToggle.off();
+            }
+            else {
+                this.hideToggle.on();
+            }
+        }
+    }
+}
+
+export class SearchItemEditor implements formHelper.IFormValueWithOptions {
+    private errorToggle: toggle.OnOffToggle;
+    private errorMessage: view.IView<string>;
+    private hideToggle: toggle.OnOffToggle;
+    private changedEventHandler: event.ActionEventDispatcher<formHelper.IFormValue> = null;
+    protected name: string;
+    protected buildName: string;
+    protected bindings: BindingCollection;
+    protected generated: boolean;
+    protected element: HTMLElement;
+    protected displayExpression: expression.ExpressionTree;
+    protected currentValueProperty: string;
+    protected currentData: any;
+
+    constructor(args: IFormValueBuilderArgs) {
+        this.name = args.item.name;
+        this.buildName = args.item.buildName;
+        this.bindings = args.bindings;
+        this.generated = args.generated;
+        this.element = args.inputElement;
+        this.displayExpression = args.item.displayExpression;
+
+        if (args.item["x-ui-disabled"] === true || args.item.readOnly === true) {
+            this.element.setAttribute("disabled", "");
+        }
+
+        this.currentValueProperty = args.item["x-search"].valueProperty;
+
+        var self = this;
+        this.changedEventHandler = new event.ActionEventDispatcher<formHelper.IFormValue>();
+        this.element.addEventListener("change", e => {
+            self.changedEventHandler.fire(self);
+        });
+
+        this.errorToggle = this.bindings.getToggle(this.buildName + "Error");
+        this.errorMessage = this.bindings.getView(this.buildName + "ErrorMessage");
+        this.hideToggle = this.bindings.getToggle(this.buildName + "Hide");
+
+        //If there are values defined for the element, put them on the page, this works for both
+        //predefined and generated elements, which allows you to have predefined selects that can have dynamic values
+        if (args.item.buildValues !== undefined) {
+            if (IsSelectElement(args.inputElement)) {
+                for (var q = 0; q < args.item.buildValues.length; ++q) {
+                    var current = args.item.buildValues[q];
+                    this.addOption(current.label, current.value);
+                }
+            }
+        }
+    }
+
+    public addOption(label: string, value: any) {
+        if (IsSelectElement(this.element)) {
+            var option = document.createElement("option");
+            option.text = label;
+            if (value !== null && value !== undefined) {
+                option.value = value;
+            }
+            else {
+                option.value = ""; //Make sure this stays as empty string, which will be null for these forms
+            }
+            this.element.options.add(option);
+        }
+    }
+
+    public setError(err: FormErrors, baseName: string) {
+        var errorName = err.addKey(baseName, this.name);
+        if (err.hasValidationError(errorName)) {
+            this.errorToggle.on();
+            this.errorMessage.setData(err.getValidationError(errorName));
+        }
+        else {
+            this.errorToggle.off();
+            this.errorMessage.setData("");
+        }
+    }
+
+    public getData(): any {
+        return this.currentData;
+    }
+
+    public setData(data: any, parentDataAccess?: GetParentData) {
+        this.currentData = data;
+        if (this.currentValueProperty) {
+            data = parentDataAccess(this.currentValueProperty);
+        }
+        formHelper.setValue(<any>this.element, data);
+        this.setError(formHelper.getSharedClearingValidator(), "");
     }
 
     public getBuildName(): string {
@@ -1009,6 +1147,9 @@ function createBindings(args: IFormValueBuilderArgs): formHelper.IFormValue {
     else if (args.item.buildType === "radiobutton") {
         return new RadioButtonEditor(args);
     }
+    else if(args.item.buildType === "search"){
+        return new SearchItemEditor(args);
+    }
     else {
         return new BasicItemEditor(args);
     }
@@ -1110,6 +1251,9 @@ function processProperty(prop: JsonProperty, name: string, buildName: string, sc
 
         if (prop["x-ui-type"] !== undefined) {
             processed.buildType = prop["x-ui-type"];
+        }
+        else if(prop["x-search"] !== undefined){
+            processed.buildType = "search";
         }
         else {
             if (processed.buildValues !== undefined || processed["x-lazy-load-values"] === true) {

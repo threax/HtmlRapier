@@ -4,6 +4,11 @@ import * as expression from 'hr.expressiontree';
 
 export type JsonPropertyMap = { [key: string]: JsonProperty };
 
+export interface SearchInfo {
+    provider: string;
+    valueProperty: string;
+}
+
 export interface JsonSchema {
     title?: string;
     type?: string;
@@ -26,6 +31,7 @@ export interface JsonProperty {
     "x-value"?: string; //If there is a single value for the field, use that, can override default values for things like checkboxes
     "x-display-if"?: expression.ExpressionNode;
     "x-lazy-load-values"?: boolean; //This will be true if the property will lazy load its values later, if this is true the property will be treated like it has values set
+    "x-search"?: SearchInfo;
 }
 
 export interface JsonLabel {
