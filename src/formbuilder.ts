@@ -551,20 +551,29 @@ export class SearchResultRow {
     }
 }
 
-export class SearchResultProvider {
-    public async search(term: string): Promise<iterable.Iterable<SearchResult>> {
-        var count = 0;
-        return new iterable.Iterable<SearchResult>(() => {
-            var item: SearchResult = {
-                title: String(count),
-                value: count
-            }
-            if (count++ < 2) {
-                return item;
-            }
-        });
+export interface ISearchResultProvider {
+    search(term: string): Promise<iterable.Iterable<SearchResult>>;
+}
+
+export type SearchResultProviderFactoryCb = () => ISearchResultProvider;
+
+class SearchResultProviderFactory {
+    private factories: { [key: string]: SearchResultProviderFactoryCb } = {};
+
+    public addFactory(name: string, factory: SearchResultProviderFactoryCb) {
+        this.factories[name] = factory;
+    }
+
+    public create(name: string): ISearchResultProvider {
+        var factory = this.factories[name];
+        if (factory === undefined) {
+            throw new Error("A Search Provider Factory named " + name + " cannot be found. Did you forget to register it?");
+        }
+        return factory();
     }
 }
+
+export var SearchResultProvider = new SearchResultProviderFactory();
 
 export class SearchItemEditor implements formHelper.IFormValueWithOptions {
     private errorToggle: toggle.OnOffToggle;
@@ -573,7 +582,7 @@ export class SearchItemEditor implements formHelper.IFormValueWithOptions {
     private changedEventHandler: event.ActionEventDispatcher<formHelper.IFormValue> = null;
     private popupToggle: toggle.OnOffToggle;
     private resultsView: view.IView<SearchResult>;
-    private searchResultProvider: SearchResultProvider = new SearchResultProvider();
+    private searchResultProvider: ISearchResultProvider;
     private searchFocusParent: HTMLElement;
     private typingTrigger = new TimedTrigger<SearchItemEditor>(400);
     protected name: string;
@@ -597,6 +606,7 @@ export class SearchItemEditor implements formHelper.IFormValueWithOptions {
         this.resultsView = this.bindings.getView("results");
         this.searchFocusParent = this.bindings.getHandle("searchFocusParent");
         this.typingTrigger.addListener(arg => this.runSearch(arg));
+        this.searchResultProvider = args.searchResultProviderFactory.create(args.item["x-search"].provider);
 
         if (args.item["x-ui-disabled"] === true || args.item.readOnly === true) {
             this.element.setAttribute("disabled", "");
@@ -1076,6 +1086,7 @@ export class IFormValueBuilderArgs {
     generated: boolean;
     schema: JsonSchema;
     inputElement: HTMLElement;
+    searchResultProviderFactory: SearchResultProviderFactory;
 }
 
 export interface IFormValueBuilder {
@@ -1186,7 +1197,8 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
                 generated: generated,
                 item: item,
                 schema: schema,
-                inputElement: existing
+                inputElement: existing,
+                searchResultProviderFactory: SearchResultProvider
             }));
         }
 
