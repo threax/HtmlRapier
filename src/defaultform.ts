@@ -157,6 +157,6 @@ if (!component.isDefined("hr.forms.horizontal")) {
     ));
 
     component.register("hr.forms.horizontal-searchResult", new ComponentBuilder(
-        '<li data-hr-on-click="selectItem">{{title}}</li>'
+        '<li><a href="#" data-hr-on-click="selectItem">{{title}}</a></li>'
     ));
 }
