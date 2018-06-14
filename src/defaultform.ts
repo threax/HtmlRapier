@@ -57,6 +57,21 @@ if (!component.isDefined("hr.forms.default")) {
             '<div data-hr-view="items" data-hr-view-component="hr.forms.default-radiobutton"></div>' +
         '</div></div>'
     ));
+    builder.addVariant("search", new VariantBuilder(
+        `<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;">
+            <div class="form-group" data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error">
+                <label for="{{uniqueId}}" class="control-label">
+                    {{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span>
+                </label>
+                <div data-hr-on-focusout="stopSearch" data-hr-handle="searchFocusParent">
+                    <input id="{{uniqueId}}" class="form-control" name="{{buildName}}" type="text" data-hr-on-input="updateSearch" />
+                    <div class="dropdown" data-hr-toggle="popup" data-hr-class-on="open">
+                        <ul class="dropdown-menu" data-hr-view="results" data-hr-view-component="hr.forms.default-searchResult"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>`
+    ));
     component.register("hr.forms.default", builder);
 
     component.register("hr.forms.default-multicheckboxitem", new ComponentBuilder(
@@ -69,6 +84,10 @@ if (!component.isDefined("hr.forms.default")) {
 
     component.register("hr.forms.default-arrayEditorItem", new ComponentBuilder(
         '<div class="panel panel-default"><div class="panel-body"><button data-hr-on-click="remove" class="btn btn-default" data-hr-form-end>Remove</button></div></div>'
+    ));
+
+    component.register("hr.forms.default-searchResult", new ComponentBuilder(
+        '<li><a href="#" data-hr-on-click="selectItem">{{title}}</a></li>'
     ));
 }
 
@@ -133,7 +152,7 @@ if (!component.isDefined("hr.forms.horizontal")) {
                     {{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span>
                 </label>
                 <div class="col-sm-10" data-hr-on-focusout="stopSearch" data-hr-handle="searchFocusParent">
-                    <input id="{{uniqueId}}" class="form-control" name="{{buildName}}" type="input" data-hr-on-input="updateSearch"/>
+                    <input id="{{uniqueId}}" class="form-control" name="{{buildName}}" type="text" data-hr-on-input="updateSearch"/>
                     <div class="dropdown" data-hr-toggle="popup" data-hr-class-on="open">
                         <ul class="dropdown-menu" data-hr-view="results" data-hr-view-component="hr.forms.horizontal-searchResult">
                         </ul>
