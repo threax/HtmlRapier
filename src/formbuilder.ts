@@ -552,7 +552,7 @@ export class SearchResultRow {
 }
 
 export interface ISearchResultProvider {
-    search(term: string): Promise<iterable.Iterable<SearchResult>>;
+    search(term: string): Promise<iterable.IterableInterface<SearchResult>>;
 }
 
 export type SearchResultProviderFactoryCb = () => ISearchResultProvider;
