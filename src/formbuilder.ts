@@ -9,7 +9,7 @@ import * as view from 'hr.view';
 import * as toggle from 'hr.toggles';
 import * as event from 'hr.eventdispatcher';
 import * as formHelper from 'hr.formhelper';
-import { JsonProperty, JsonLabel, JsonSchema, resolveRef, RefNode, isRefNode } from 'hr.schema';
+import { JsonProperty, JsonLabel, JsonSchema, resolveRef, RefNode, isRefNode, mergeDefinitions } from 'hr.schema';
 import { FormErrors } from 'hr.error';
 import * as typeIds from 'hr.typeidentifiers';
 import * as expression from 'hr.expressiontree';
@@ -147,9 +147,26 @@ class FormValues implements formHelper.IFormValues {
         return false;
     }
 
+    /**
+     * Get a form value by the generated build name. This will require it to be fully qualified.
+     * @param buildName The build name for the form value to lookup
+     */
     public getFormValue(buildName: string): formHelper.IFormValue {
         for (var i = 0; i < this.values.length; ++i) {
             if (this.values[i].getBuildName() === buildName) {
+                return this.values[i];
+            }
+        }
+        return undefined;
+    }
+
+    /**
+     * Get a form value by the data name. This will use the name that will be used when the final object is created.
+     * @param dataName The build name for the form value to lookup
+     */
+    public getFormValueByDataName(dataName: string): formHelper.IFormValue {
+        for (var i = 0; i < this.values.length; ++i) {
+            if (this.values[i].getDataName() === dataName) {
                 return this.values[i];
             }
         }
@@ -750,9 +767,16 @@ export class SearchItemEditor implements formHelper.IFormValueWithOptions {
         this.popupToggle.on();
         var searchTerm = formHelper.readValue(this.element);
         this.lastSearchTerm = searchTerm;
+        var self = this;
         var results = await this.searchResultProvider.search({
             searchTerm: searchTerm,
-            getFormValue: (name: string) => this.formValues.getFormValue(name).getData()
+            getFormValue: (name: string) => {
+                var formValue = self.formValues.getFormValueByDataName(name);
+                if (formValue) {
+                    return formValue.getData()
+                }
+                return undefined;
+            }
         });
         if (this.lastSearchTerm === searchTerm) {
             this.resultsView.setData(results, (element, data) => new SearchResultRow(this, new BindingCollection(element.elements), data));
@@ -1237,7 +1261,12 @@ function createBindings(args: IFormValueBuilderArgs): formHelper.IFormValue {
     }
 
     if (args.item.buildType === "arrayEditor") {
-        var resolvedItems = resolveRef(<RefNode>args.item.items, args.schema);
+        var resolvedItems = Object.create(resolveRef(<RefNode>args.item.items, args.schema));
+        //This will treat the schema as a root schema, so need to copy the definitions
+        if (resolvedItems.definitions) {
+            resolvedItems.definitions = Object.create(resolvedItems.definitions);
+        }
+        mergeDefinitions(args.schema, resolvedItems, false);
         return new ArrayEditor(args, resolvedItems);
     }
     else if (args.item.buildType === "multicheckbox") {

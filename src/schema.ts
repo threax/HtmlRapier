@@ -14,6 +14,7 @@ export interface JsonSchema {
     type?: string;
     additionalProperties?: boolean;
     properties?: JsonPropertyMap;
+    definitions?: {};
 }
 
 export interface JsonProperty {
@@ -65,4 +66,18 @@ export function resolveRef(node: RefNode, schema: JsonSchema): any{
         return walker;
     }
     return node;
+}
+
+export function mergeDefinitions(source: JsonSchema, dest: JsonSchema, overwrite: boolean): void {
+    if (dest.definitions) {
+        //Merge definitions
+        for (var key in source) {
+            if (overwrite || dest.definitions[key] === undefined) {
+                dest.definitions[key] = source;
+            }
+        }
+    }
+    else {
+        dest.definitions = Object.create(source.definitions);
+    }
 }
