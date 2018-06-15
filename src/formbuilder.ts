@@ -9,7 +9,7 @@ import * as view from 'hr.view';
 import * as toggle from 'hr.toggles';
 import * as event from 'hr.eventdispatcher';
 import * as formHelper from 'hr.formhelper';
-import { JsonProperty, JsonLabel, JsonSchema, resolveRef, RefNode, isRefNode, mergeDefinitions } from 'hr.schema';
+import { JsonProperty, JsonLabel, JsonSchema, resolveRef, RefNode, isRefNode } from 'hr.schema';
 import { FormErrors } from 'hr.error';
 import * as typeIds from 'hr.typeidentifiers';
 import * as expression from 'hr.expressiontree';
@@ -1261,12 +1261,13 @@ function createBindings(args: IFormValueBuilderArgs): formHelper.IFormValue {
     }
 
     if (args.item.buildType === "arrayEditor") {
-        var resolvedItems = Object.create(resolveRef(<RefNode>args.item.items, args.schema));
-        //This will treat the schema as a root schema, so need to copy the definitions
-        if (resolvedItems.definitions) {
-            resolvedItems.definitions = Object.create(resolvedItems.definitions);
+        var resolvedItems: JsonSchema = resolveRef(<RefNode>args.item.items, args.schema);
+        //This will treat the schema as a root schema, so setup parent if needed
+        if (resolvedItems !== args.schema) { //Make sure we didnt just get the original schema back
+            //If so, set the parent 
+            resolvedItems = Object.create(resolvedItems);
+            resolvedItems.parent = args.schema;
         }
-        mergeDefinitions(args.schema, resolvedItems, false);
         return new ArrayEditor(args, resolvedItems);
     }
     else if (args.item.buildType === "multicheckbox") {

@@ -15,6 +15,7 @@ export interface JsonSchema {
     additionalProperties?: boolean;
     properties?: JsonPropertyMap;
     definitions?: {};
+    parent?: JsonSchema;
 }
 
 export interface JsonProperty {
@@ -58,7 +59,10 @@ export function resolveRef(node: RefNode, schema: JsonSchema): any{
         var refs = node.$ref.split('/');
         for(var i = 1; i < refs.length; ++i){
             walker = walker[refs[i]];
-            if(walker === undefined){
+            if (walker === undefined) {
+                if (schema.parent) {
+                    return resolveRef(node, schema.parent);
+                }
                 throw new Error("Cannot find ref '" + node.$ref + "' in schema.")
             }
         }
@@ -66,18 +70,4 @@ export function resolveRef(node: RefNode, schema: JsonSchema): any{
         return walker;
     }
     return node;
-}
-
-export function mergeDefinitions(source: JsonSchema, dest: JsonSchema, overwrite: boolean): void {
-    if (dest.definitions) {
-        //Merge definitions
-        for (var key in source) {
-            if (overwrite || dest.definitions[key] === undefined) {
-                dest.definitions[key] = source;
-            }
-        }
-    }
-    else {
-        dest.definitions = Object.create(source.definitions);
-    }
 }
