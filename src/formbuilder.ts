@@ -551,8 +551,13 @@ export class SearchResultRow {
     }
 }
 
+export interface ISearchArgs {
+    searchTerm: string;
+    getFormValue(name: string): any;
+}
+
 export interface ISearchResultProvider {
-    search(term: string): Promise<iterable.IterableInterface<SearchResult>>;
+    search(args: ISearchArgs): Promise<iterable.IterableInterface<SearchResult>>;
 }
 
 export type SearchResultProviderFactoryCb = () => ISearchResultProvider;
@@ -586,6 +591,7 @@ export class SearchItemEditor implements formHelper.IFormValueWithOptions {
     private searchFocusParent: HTMLElement;
     private typingTrigger = new TimedTrigger<SearchItemEditor>(400);
     private lastSearchTerm: string;
+    private formValues: FormValues;
     protected name: string;
     protected buildName: string;
     protected bindings: BindingCollection;
@@ -608,6 +614,7 @@ export class SearchItemEditor implements formHelper.IFormValueWithOptions {
         this.searchFocusParent = this.bindings.getHandle("searchFocusParent");
         this.typingTrigger.addListener(arg => this.runSearch(arg));
         this.searchResultProvider = args.searchResultProviderFactory.create(args.item["x-search"].provider);
+        this.formValues = args.formValues;
 
         if (args.item["x-ui-disabled"] === true || args.item.readOnly === true) {
             this.element.setAttribute("disabled", "");
@@ -743,7 +750,10 @@ export class SearchItemEditor implements formHelper.IFormValueWithOptions {
         this.popupToggle.on();
         var searchTerm = formHelper.readValue(this.element);
         this.lastSearchTerm = searchTerm;
-        var results = await this.searchResultProvider.search(searchTerm);
+        var results = await this.searchResultProvider.search({
+            searchTerm: searchTerm,
+            getFormValue: (name: string) => this.formValues.getFormValue(name).getData()
+        });
         if (this.lastSearchTerm === searchTerm) {
             this.resultsView.setData(results, (element, data) => new SearchResultRow(this, new BindingCollection(element.elements), data));
         }
@@ -1091,6 +1101,7 @@ export class IFormValueBuilderArgs {
     schema: JsonSchema;
     inputElement: HTMLElement;
     searchResultProviderFactory: SearchResultProviderFactory;
+    formValues: FormValues;
 }
 
 export interface IFormValueBuilder {
@@ -1202,7 +1213,8 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
                 item: item,
                 schema: schema,
                 inputElement: existing,
-                searchResultProviderFactory: SearchResultProvider
+                searchResultProviderFactory: SearchResultProvider,
+                formValues: formValues
             }));
         }
 
