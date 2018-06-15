@@ -763,23 +763,35 @@ export class SearchItemEditor implements formHelper.IFormValueWithOptions {
     }
 
     private async runSearch(arg: SearchItemEditor): Promise<void> {
-        this.resultsView.clear();
-        this.popupToggle.on();
-        var searchTerm = formHelper.readValue(this.element);
-        this.lastSearchTerm = searchTerm;
-        var self = this;
-        var results = await this.searchResultProvider.search({
-            searchTerm: searchTerm,
-            getFormValue: (name: string) => {
-                var formValue = self.formValues.getFormValueByDataName(name);
-                if (formValue) {
-                    return formValue.getData()
+        try {
+            this.resultsView.setData({
+                title: "Loading...",
+                value: null
+            }, null, () => "message");
+            this.popupToggle.on();
+            var searchTerm = formHelper.readValue(this.element);
+            this.lastSearchTerm = searchTerm;
+            var self = this;
+            var results = await this.searchResultProvider.search({
+                searchTerm: searchTerm,
+                getFormValue: (name: string) => {
+                    var formValue = self.formValues.getFormValueByDataName(name);
+                    if (formValue) {
+                        return formValue.getData()
+                    }
+                    return undefined;
                 }
-                return undefined;
+            });
+            if (this.lastSearchTerm === searchTerm) {
+                this.resultsView.setData(results, (element, data) => new SearchResultRow(this, new BindingCollection(element.elements), data));
             }
-        });
-        if (this.lastSearchTerm === searchTerm) {
-            this.resultsView.setData(results, (element, data) => new SearchResultRow(this, new BindingCollection(element.elements), data));
+        }
+        catch (err) {
+            this.resultsView.setData({
+                title: "An error occured searching for data. Please try again later.",
+                value: null
+            }, null, () => "message");
+            console.log(err.message || err);
         }
     }
 }

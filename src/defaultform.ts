@@ -86,9 +86,13 @@ if (!component.isDefined("hr.forms.default")) {
         '<div class="panel panel-default"><div class="panel-body"><button data-hr-on-click="remove" class="btn btn-default" data-hr-form-end>Remove</button></div></div>'
     ));
 
-    component.register("hr.forms.default-searchResult", new ComponentBuilder(
+    var searchResultBuilder = new ComponentBuilder(
         '<li><a href="#" data-hr-on-click="selectItem">{{title}}</a></li>'
+    );
+    searchResultBuilder.addVariant("message", new VariantBuilder(
+        '<li><a>{{title}}</a></li>'
     ));
+    component.register("hr.forms.default-searchResult", searchResultBuilder);
 }
 
 //Register horizontal form
@@ -154,8 +158,7 @@ if (!component.isDefined("hr.forms.horizontal")) {
                 <div class="col-sm-10" data-hr-on-focusout="stopSearch" data-hr-handle="searchFocusParent">
                     <input id="{{uniqueId}}" class="form-control" name="{{buildName}}" type="text" data-hr-on-input="updateSearch"/>
                     <div class="dropdown" data-hr-toggle="popup" data-hr-class-on="open">
-                        <ul class="dropdown-menu" data-hr-view="results" data-hr-view-component="hr.forms.horizontal-searchResult">
-                        </ul>
+                        <ul class="dropdown-menu" data-hr-view="results" data-hr-view-component="hr.forms.horizontal-searchResult"></ul>
                     </div>
                 </div>
             </div>
@@ -175,7 +178,12 @@ if (!component.isDefined("hr.forms.horizontal")) {
         '<div class="panel panel-default"><div class="panel-body"><button data-hr-on-click="remove" class="btn btn-default" data-hr-form-end>Remove</button></div></div>'
     ));
 
-    component.register("hr.forms.horizontal-searchResult", new ComponentBuilder(
+
+    var searchResultBuilder = new ComponentBuilder(
         '<li><a href="#" data-hr-on-click="selectItem">{{title}}</a></li>'
+    );
+    searchResultBuilder.addVariant("message", new VariantBuilder(
+        '<li><a>{{title}}</a></li>'
     ));
+    component.register("hr.forms.horizontal-searchResult", searchResultBuilder);
 }
