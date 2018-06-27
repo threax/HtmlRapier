@@ -52,6 +52,20 @@ class ThisVariableNode implements IStreamNode {
     }
 }
 
+class IfNode implements IStreamNode{
+    constructor(private condition: string){
+
+    }
+
+    writeObject(data: any) {
+        return '';// this.condition;
+    }
+
+    writeFunction(data: (variable: string) => any){
+        return '';// this.condition;
+    }
+}
+
 class EscapeVariableNode implements IStreamNode {
     constructor(private wrapped: IStreamNode){
 
@@ -146,10 +160,10 @@ export class TextStream {
                     ++bracketCount;
                 }
 
-                //Find closing bracket chain, ignore if mismatched or whitespace
+                //Find closing bracket chain, ignore if mismatched
                 bracketCheck = bracketCount;
                 while (++i < text.length) {
-                    if ((text[i] == close && --bracketCheck == 0) || /\s/.test(text[i])) {
+                    if ((text[i] == close && --bracketCheck == 0)) {
                         break;
                     }
                 }
@@ -170,17 +184,32 @@ export class TextStream {
                             this.streamNodes.push(new TextNode(skippedTextBuffer + leadingText));
                             skippedTextBuffer = ""; //This is reset every time we actually output something
                             variable = bracketVariable.substring(2, bracketVariable.length - 2);
-                            var variableNode;
-                            if (variable === "this") {
-                                variableNode = new ThisVariableNode();
+                            var variableNode = null;
+                            //See if this is an if node, if so recurse
+                            if (variable[0] === 'i' && variable[1] === 'f') {
+                                variableNode = new IfNode(variable);
                             }
+                            else if (variable === 'endif') {
+                                //break recursion here
+                            }
+                            //Normal Variable node
                             else {
-                                variableNode = new VariableNode(variable);
+                                if (variable === "this") {
+                                    variableNode = new ThisVariableNode();
+                                }
+                                else {
+                                    variableNode = new VariableNode(variable);
+                                }
+
+                                //If we are escaping decorate the variable node we created with the escape version.
+                                if (escape) {
+                                    variableNode = new EscapeVariableNode(variableNode);
+                                }
                             }
-                            if(escape){ //If we are escaping decorate the variable node we created with the escape version.
-                                variableNode = new EscapeVariableNode(variableNode);
+
+                            if (variableNode !== null) {
+                                this.streamNodes.push(variableNode);
                             }
-                            this.streamNodes.push(variableNode);
 
                             break;
                         default:
