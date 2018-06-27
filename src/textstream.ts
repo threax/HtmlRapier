@@ -4,6 +4,7 @@
 
 import {escape} from 'hr.escape';
 import * as typeId from 'hr.typeidentifiers';
+import * as jsep from 'hr.jsep';
 
 interface IStreamNode{
     writeFunction(data: (variable: string) => any);
@@ -56,8 +57,9 @@ class IfNode implements IStreamNode{
     private streamNodesPass: IStreamNode[] = [];
     private streamNodesFail: IStreamNode[] = [];
 
-    constructor(private condition: string){
-
+    constructor(private condition: string) {
+        var parsed = jsep.parse(condition);
+        console.log(parsed);
     }
 
     writeObject(data: any) {
