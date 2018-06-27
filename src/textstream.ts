@@ -53,16 +53,37 @@ class ThisVariableNode implements IStreamNode {
 }
 
 class IfNode implements IStreamNode{
+    private streamNodesPass: IStreamNode[] = [];
+    private streamNodesFail: IStreamNode[] = [];
+
     constructor(private condition: string){
 
     }
 
     writeObject(data: any) {
-        return '';// this.condition;
+        if (this.condition === "pass") {
+            return format(data, this.streamNodesPass);
+        }
+        else {
+            return format(data, this.streamNodesFail);
+        }
     }
 
     writeFunction(data: (variable: string) => any){
-        return '';// this.condition;
+        if (this.condition === "pass") {
+            return format(data, this.streamNodesPass);
+        }
+        else {
+            return format(data, this.streamNodesFail);
+        }
+    }
+
+    public getPassNodes() {
+        return this.streamNodesPass;
+    }
+
+    public getFailNodes() {
+        return this.streamNodesFail;
     }
 }
 
@@ -105,6 +126,53 @@ export interface ITextStreamOptions{
     open?: string;
     close?: string;
     escape?: boolean;
+}
+
+class NodeStackItem {
+    constructor(public node: IfNode) { }
+    elseMode: boolean = false;
+}
+
+class StreamNodeTracker {
+    private ifNodeStack: NodeStackItem[] = [];
+
+    constructor(private baseStreamNodes: IStreamNode[]) {
+
+    }
+
+    public pushIfNode(ifNode: IfNode) {
+        this.ifNodeStack.push(new NodeStackItem(ifNode));
+    }
+
+    public setElseMode() {
+        if (this.ifNodeStack.length === 0) {
+            throw new Error("Attempted to else with no if or elseif statement.");
+        }
+        var currentIf = this.getCurrentIf();
+        currentIf.elseMode = true;
+    }
+
+    public popIfNode() {
+        if (this.ifNodeStack.length === 0) {
+            throw new Error("Popped if node without any if statement present. Is there an extra endif or elseif statement?");
+        }
+        this.ifNodeStack.pop();
+    }
+
+    public getCurrentStreamNodes() {
+        if (this.ifNodeStack.length === 0) {
+            return this.baseStreamNodes;
+        }
+        var currentIf = this.getCurrentIf();
+        if (currentIf.elseMode) {
+            return currentIf.node.getFailNodes();
+        }
+        return currentIf.node.getPassNodes();
+    }
+
+    private getCurrentIf(): NodeStackItem {
+        return this.ifNodeStack[this.ifNodeStack.length - 1];
+    }
 }
 
 /**
@@ -150,6 +218,7 @@ export class TextStream {
         var bracketVariable;
         //This holds text we have not created a TextNode for as we parse, this way we can combine output variables with surrounding text for the stream itself
         var skippedTextBuffer = "";
+        var streamNodeTracker = new StreamNodeTracker(this.streamNodes);
         for (var i = 0; i < text.length; ++i) {
 
             if (text[i] == open) {
@@ -181,16 +250,31 @@ export class TextStream {
                             skippedTextBuffer += leadingText + bracketVariable;
                             break;
                         case 2:
-                            this.streamNodes.push(new TextNode(skippedTextBuffer + leadingText));
+                            let currentBracketStreamNodes = streamNodeTracker.getCurrentStreamNodes();
+                            currentBracketStreamNodes.push(new TextNode(skippedTextBuffer + leadingText));
                             skippedTextBuffer = ""; //This is reset every time we actually output something
                             variable = bracketVariable.substring(2, bracketVariable.length - 2);
                             var variableNode = null;
                             //See if this is an if node, if so recurse
-                            if (variable[0] === 'i' && variable[1] === 'f') {
-                                variableNode = new IfNode(variable);
+                            if (variable.length > 2 && variable[0] === 'i' && variable[1] === 'f' && /\s/.test(variable[2])) {
+                                variableNode = new IfNode(variable.substring(3));
+                                streamNodeTracker.pushIfNode(variableNode);
+                            }
+                            else if (variable.length > 6 && variable[0] === 'e' && variable[1] === 'l' && variable[2] === 's' && variable[3] === 'e' && variable[4] === 'i' && variable[5] === 'f' && /\s/.test(variable[6])) {
+                                //Set else mode and get the current stream nodes
+                                streamNodeTracker.setElseMode();
+                                var elseStreamNodes = streamNodeTracker.getCurrentStreamNodes();
+                                let ifNode = new IfNode(variable.substring(7));
+                                elseStreamNodes.push(ifNode);
+                                //Use the new if node as the current top level node in the tracker
+                                streamNodeTracker.popIfNode();
+                                streamNodeTracker.pushIfNode(ifNode);
+                            }
+                            else if (variable === 'else') {
+                                streamNodeTracker.setElseMode();
                             }
                             else if (variable === 'endif') {
-                                //break recursion here
+                                streamNodeTracker.popIfNode();
                             }
                             //Normal Variable node
                             else {
@@ -208,7 +292,7 @@ export class TextStream {
                             }
 
                             if (variableNode !== null) {
-                                this.streamNodes.push(variableNode);
+                                currentBracketStreamNodes.push(variableNode);
                             }
 
                             break;
