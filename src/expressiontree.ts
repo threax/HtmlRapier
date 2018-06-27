@@ -1,4 +1,5 @@
 ///<amd-module name="hr.expressiontree"/>
+import * as jsep from 'hr.jsep';
 
 export enum OperationType
 {
@@ -104,4 +105,104 @@ export class ExpressionTree {
         }
         return false;
     }
+}
+
+//Parse jsep trees to our runnable trees
+var opMap: { [key: string]: OperationType } = {
+    '||': OperationType.Or,
+    '&&': OperationType.And,
+    //'|'
+    //'^'
+    //'&'
+    '==': OperationType.Equal,
+    '!=': OperationType.NotEqual,
+    '===': OperationType.Equal,
+    '!==': OperationType.NotEqual,
+    '<': OperationType.LessThan,
+    '>': OperationType.GreaterThan,
+    '<=': OperationType.GreaterThanOrEqual,
+    '>=': OperationType.LessThanOrEqual,
+    //'<<'
+    //'>>'
+    //'>>>'
+    //'+'
+    //'-'
+    //'*'
+    //'/'
+    //'%'
+    '!': OperationType.Not
+}
+
+export function create(expr: string): ExpressionTree {
+    var jsepResult = jsep.parse(expr);
+    return new ExpressionTree(setupNode(jsepResult));
+}
+
+function setupNode(jsepNode: jsep.Parsed): ExpressionNode {
+    if (jsepNode === undefined) {
+        return undefined;
+    }
+    var result: ExpressionNode = {
+        operation: opMap[jsepNode.operator],
+        left: undefined,
+        right: undefined,
+        test: undefined
+    };
+    switch (jsepNode.type) {
+        case "LogicalExpression":
+            result.left = setupNode(jsepNode.left);
+            result.right = setupNode(jsepNode.right);
+            break;
+        case "BinaryExpression":
+            let literal = undefined;
+            let identifier = undefined;
+            switch (jsepNode.left.type) {
+                case "Identifier":
+                    identifier = jsepNode.left.name;
+                    break;
+                case "Literal":
+                    literal = jsepNode.left.value;
+                    break;
+            }
+            switch (jsepNode.right.type) {
+                case "Identifier":
+                    identifier = jsepNode.right.name;
+                    break;
+                case "Literal":
+                    literal = jsepNode.right.value;
+                    break;
+            }
+            if (literal === undefined || identifier === undefined) {
+                throw new Error("Cannot build valid expression from statement.");
+            }
+            result.test = {};
+            result.test[identifier] = literal;
+            break;
+        case "UnaryExpression":
+            identifier = jsepNode.argument.name;
+            if (identifier === undefined) {
+                throw new Error("Cannot build valid expression from statement.");
+            }
+            result.operation = OperationType.Not;
+            result.left = {
+                operation: OperationType.Equal,
+                left: undefined,
+                right: undefined,
+                test: undefined
+            };
+            result.left.test = {};
+            result.left.test[identifier] = true;
+            break;
+        case "Identifier":
+            identifier = jsepNode.name;
+            if (identifier === undefined) {
+                throw new Error("Cannot build valid expression from statement.");
+            }
+            result.operation = OperationType.Equal;
+            result.test = {};
+            result.test[identifier] = true;
+            //If we got a plain identifier, consider it to be a statement checking for true
+    }
+
+    return result;
 }

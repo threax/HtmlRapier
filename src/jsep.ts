@@ -9,116 +9,168 @@
 
 // This is the full set of types that any JSEP node can be.
 // Store them here to save space when minified
-var COMPOUND = 'Compound',
-    IDENTIFIER = 'Identifier',
-    MEMBER_EXP = 'MemberExpression',
-    LITERAL = 'Literal',
-    THIS_EXP = 'ThisExpression',
-    CALL_EXP = 'CallExpression',
-    UNARY_EXP = 'UnaryExpression',
-    BINARY_EXP = 'BinaryExpression',
-    LOGICAL_EXP = 'LogicalExpression',
-    CONDITIONAL_EXP = 'ConditionalExpression',
-    ARRAY_EXP = 'ArrayExpression',
+const COMPOUND = 'Compound';
+const IDENTIFIER = 'Identifier';
+const MEMBER_EXP = 'MemberExpression';
+const LITERAL = 'Literal';
+const THIS_EXP = 'ThisExpression';
+const CALL_EXP = 'CallExpression';
+const UNARY_EXP = 'UnaryExpression';
+const BINARY_EXP = 'BinaryExpression';
+const LOGICAL_EXP = 'LogicalExpression';
+const CONDITIONAL_EXP = 'ConditionalExpression';
+const ARRAY_EXP = 'ArrayExpression';
 
-    PERIOD_CODE = 46, // '.'
-    COMMA_CODE = 44, // ','
-    SQUOTE_CODE = 39, // single quote
-    DQUOTE_CODE = 34, // double quotes
-    OPAREN_CODE = 40, // (
-    CPAREN_CODE = 41, // )
-    OBRACK_CODE = 91, // [
-    CBRACK_CODE = 93, // ]
-    QUMARK_CODE = 63, // ?
-    SEMCOL_CODE = 59, // ;
-    COLON_CODE = 58, // :
+export type ParsedType =
+    'Compound' |
+    'Identifier' |
+    'MemberExpression' |
+    'Literal' |
+    'ThisExpression' |
+    'CallExpression' |
+    'UnaryExpression' |
+    'BinaryExpression' |
+    'LogicalExpression' |
+    'ConditionalExpression' |
+    'ArrayExpression';
 
-    throwError = function (message, index) {
-        var error: any = new Error(message + ' at character ' + index);
-        error.index = index;
-        error.description = message;
-        throw error;
-    },
+const PERIOD_CODE = 46; // '.'
+const COMMA_CODE = 44; // ','
+const SQUOTE_CODE = 39; // single quote
+const DQUOTE_CODE = 34; // double quotes
+const OPAREN_CODE = 40; // (
+const CPAREN_CODE = 41; // )
+const OBRACK_CODE = 91; // [
+const CBRACK_CODE = 93; // ]
+const QUMARK_CODE = 63; // ?
+const SEMCOL_CODE = 59; // ;
+const COLON_CODE = 58; // :
 
-    // Operations
-    // ----------
+function throwError(message, index) {
+    var error: any = new Error(message + ' at character ' + index);
+    error.index = index;
+    error.description = message;
+    throw error;
+};
 
-    // Set `t` to `true` to save space (when minified, not gzipped)
-    t = true,
-    // Use a quickly-accessible map to store all of the unary operators
-    // Values are set to `true` (it really doesn't matter)
-    unary_ops = { '-': t, '!': t, '~': t, '+': t },
-    // Also use a map for the binary operations but set their values to their
-    // binary precedence for quick reference:
-    // see [Order of operations](http://en.wikipedia.org/wiki/Order_of_operations#Programming_language)
-    binary_ops = {
-        '||': 1, '&&': 2, '|': 3, '^': 4, '&': 5,
-        '==': 6, '!=': 6, '===': 6, '!==': 6,
-        '<': 7, '>': 7, '<=': 7, '>=': 7,
-        '<<': 8, '>>': 8, '>>>': 8,
-        '+': 9, '-': 9,
-        '*': 10, '/': 10, '%': 10
-    },
-    // Get return the longest key length of any object
-    getMaxKeyLen = function (obj) {
-        var max_len = 0, len;
-        for (var key in obj) {
-            if ((len = key.length) > max_len && obj.hasOwnProperty(key)) {
-                max_len = len;
-            }
+// Operations
+// ----------
+
+var unary_ops = { '-': true, '!': true, '~': true, '+': true };
+
+// Also use a map for the binary operations but set their values to their
+// binary precedence for quick reference:
+// see [Order of operations](http://en.wikipedia.org/wiki/Order_of_operations#Programming_language)
+var binary_ops = {
+    '||': 1, '&&': 2, '|': 3, '^': 4, '&': 5,
+    '==': 6, '!=': 6, '===': 6, '!==': 6,
+    '<': 7, '>': 7, '<=': 7, '>=': 7,
+    '<<': 8, '>>': 8, '>>>': 8,
+    '+': 9, '-': 9,
+    '*': 10, '/': 10, '%': 10
+};
+export type OpTypes =
+    '||'
+  | '&&'
+  | '|'
+  | '^'
+  | '&'
+  | '=='
+  | '!='
+  | '==='
+  | '!=='
+  | '<'
+  | '>'
+  | '<='
+  | '>='
+  | '<<'
+  | '>>'
+  | '>>>'
+  | '+'
+  | '-'
+  | '*'
+  | '/'
+  | '%'
+  | '!';
+
+// Get return the longest key length of any object
+function getMaxKeyLen(obj) {
+    var max_len = 0, len;
+    for (var key in obj) {
+        if ((len = key.length) > max_len && obj.hasOwnProperty(key)) {
+            max_len = len;
         }
-        return max_len;
-    },
-    max_unop_len = getMaxKeyLen(unary_ops),
-    max_binop_len = getMaxKeyLen(binary_ops),
-    // Literals
-    // ----------
-    // Store the values to return for the various literals we may encounter
-    literals = {
-        'true': true,
-        'false': false,
-        'null': null
-    },
-    // Except for `this`, which is special. This could be changed to something like `'self'` as well
-    this_str = 'this',
-    // Returns the precedence of a binary operator or `0` if it isn't a binary operator
-    binaryPrecedence = function (op_val) {
-        return binary_ops[op_val] || 0;
-    },
-    // Utility function (gets called from multiple places)
-    // Also note that `a && b` and `a || b` are *logical* expressions, not binary expressions
-    createBinaryExpression = function (operator, left, right) {
-        var type = (operator === '||' || operator === '&&') ? LOGICAL_EXP : BINARY_EXP;
-        return {
-            type: type,
-            operator: operator,
-            left: left,
-            right: right
-        };
-    },
-    // `ch` is a character code in the next three functions
-    isDecimalDigit = function (ch) {
-        return (ch >= 48 && ch <= 57); // 0...9
-    },
-    isIdentifierStart = function (ch) {
-        return (ch === 36) || (ch === 95) || // `$` and `_`
-            (ch >= 65 && ch <= 90) || // A...Z
-            (ch >= 97 && ch <= 122) || // a...z
-            (ch >= 128 && !binary_ops[String.fromCharCode(ch)]); // any non-ASCII that is not an operator
-    },
-    isIdentifierPart = function (ch) {
-        return (ch === 36) || (ch === 95) || // `$` and `_`
-            (ch >= 65 && ch <= 90) || // A...Z
-            (ch >= 97 && ch <= 122) || // a...z
-            (ch >= 48 && ch <= 57) || // 0...9
-            (ch >= 128 && !binary_ops[String.fromCharCode(ch)]); // any non-ASCII that is not an operator
+    }
+    return max_len;
+};
+var max_unop_len = getMaxKeyLen(unary_ops);
+var max_binop_len = getMaxKeyLen(binary_ops);
+
+// Literals
+// ----------
+// Store the values to return for the various literals we may encounter
+var literals = {
+    'true': true,
+    'false': false,
+    'null': null
+};
+
+// Except for `this`, which is special. This could be changed to something like `'self'` as well
+var this_str = 'this';
+
+// Returns the precedence of a binary operator or `0` if it isn't a binary operator
+function binaryPrecedence(op_val) {
+    return binary_ops[op_val] || 0;
+};
+
+// Utility function (gets called from multiple places)
+// Also note that `a && b` and `a || b` are *logical* expressions, not binary expressions
+function createBinaryExpression(operator, left, right) {
+    var type = (operator === '||' || operator === '&&') ? LOGICAL_EXP : BINARY_EXP;
+    return {
+        type: type,
+        operator: operator,
+        left: left,
+        right: right
     };
+};
+
+// `ch` is a character code in the next three functions
+function isDecimalDigit(ch) {
+    return (ch >= 48 && ch <= 57); // 0...9
+};
+
+function isIdentifierStart(ch) {
+    return (ch === 36) || (ch === 95) || // `$` and `_`
+        (ch >= 65 && ch <= 90) || // A...Z
+        (ch >= 97 && ch <= 122) || // a...z
+        (ch >= 128 && !binary_ops[String.fromCharCode(ch)]); // any non-ASCII that is not an operator
+};
+
+function isIdentifierPart(ch) {
+    return (ch === 36) || (ch === 95) || // `$` and `_`
+        (ch >= 65 && ch <= 90) || // A...Z
+        (ch >= 97 && ch <= 122) || // a...z
+        (ch >= 48 && ch <= 57) || // 0...9
+        (ch >= 128 && !binary_ops[String.fromCharCode(ch)]); // any non-ASCII that is not an operator
+};
+
+export interface Parsed {
+    type: ParsedType;
+    value: any;
+    raw: string;
+    operator: OpTypes;
+    left: Parsed;
+    right: Parsed;
+    argument: Parsed;
+    name: string;
+}
 
 /**
  * Parse
  * @param expr a string with the passed in expression
  */
-export function parse(expr) {
+export function parse(expr: string) {
     // `index` stores the character number we are currently at while `length` is a constant
     // All of the gobbles below will modify `index` as we move along
     var index = 0,

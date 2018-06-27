@@ -4,7 +4,7 @@
 
 import {escape} from 'hr.escape';
 import * as typeId from 'hr.typeidentifiers';
-import * as jsep from 'hr.jsep';
+import * as exprTree from 'hr.expressiontree';
 
 interface IStreamNode{
     writeFunction(data: (variable: string) => any);
@@ -56,14 +56,14 @@ class ThisVariableNode implements IStreamNode {
 class IfNode implements IStreamNode{
     private streamNodesPass: IStreamNode[] = [];
     private streamNodesFail: IStreamNode[] = [];
+    private expressionTree: exprTree.ExpressionTree;
 
     constructor(private condition: string) {
-        var parsed = jsep.parse(condition);
-        console.log(parsed);
+        this.expressionTree = exprTree.create(condition);
     }
 
     writeObject(data: any) {
-        if (this.condition === "pass") {
+        if (this.expressionTree.isTrue({ getValue: n => data[n] })) {
             return format(data, this.streamNodesPass);
         }
         else {
@@ -72,7 +72,7 @@ class IfNode implements IStreamNode{
     }
 
     writeFunction(data: (variable: string) => any){
-        if (this.condition === "pass") {
+        if (this.expressionTree.isTrue({ getValue: n => data(n) })) {
             return format(data, this.streamNodesPass);
         }
         else {
