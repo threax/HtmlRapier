@@ -5,6 +5,8 @@
 import {escape} from 'hr.escape';
 import * as typeId from 'hr.typeidentifiers';
 import * as exprTree from 'hr.expressiontree';
+import * as jsep from 'hr.jsep';
+import { Iterable } from 'hr.iterable';
 
 interface IStreamNode{
     writeFunction(data: (variable: string) => any);
@@ -86,7 +88,11 @@ class ReadDataFunction {
     }
 }
 
-class IfNode implements IStreamNode{
+interface IBlockNode extends IStreamNode {
+    getStreamNodes();
+}
+
+class IfNode implements IBlockNode{
     private streamNodesPass: IStreamNode[] = [];
     private streamNodesFail: IStreamNode[] = [];
     private expressionTree: exprTree.ExpressionTree;
@@ -113,12 +119,85 @@ class IfNode implements IStreamNode{
         }
     }
 
-    public getPassNodes() {
+    public getStreamNodes() {
         return this.streamNodesPass;
     }
 
     public getFailNodes() {
         return this.streamNodesFail;
+    }
+}
+
+class ForInNode implements IBlockNode {
+    private streamNodes: IStreamNode[] = [];
+    private address: exprTree.AddressNode[] = [];
+    private scopeName: string;
+
+    constructor(private condition: string) {
+        var nodes = jsep.parse(condition);
+        if (nodes.type !== "Compound") {
+            var message = "Expression \"" + condition + "\" is not a valid for in node expression.";
+            console.log(message);
+            throw new Error(message);
+        }
+
+        if ((<jsep.Compound>nodes).body.length !== 4) {
+            var message = "Expression \"" + condition + "\" is not a valid for in node expression.";
+            console.log(message);
+            throw new Error(message);
+        }
+        this.scopeName = (<jsep.Identifier>(<jsep.Compound>nodes).body[1]).name;
+        var expressionTree = exprTree.createFromParsed((<jsep.Compound>nodes).body[3]);
+        this.address = expressionTree.getDataAddress();
+        if (this.address === null) {
+            var message = "Expression \"" + condition + "\" is not a valid for in node expression.";
+            console.log(message);
+            throw new Error(message);
+        }
+    }
+
+    writeObject(data: any) {
+        var text = "";
+        var iter = new Iterable(readAddress(this.address, data[this.address[0].key]));
+        iter.forEach(item => {
+            for (var i = 0; i < this.streamNodes.length; ++i) {
+                var processItem = l => {
+                    if (l === this.scopeName) {
+                        return item;
+                    }
+                    else {
+                        return data[l];
+                    }
+                };
+
+                text += this.streamNodes[i].writeFunction(processItem);
+            }
+        });
+        return text;
+    }
+
+    writeFunction(data: (variable: string) => any) {
+        var text = "";
+        var iter = new Iterable(readAddress(this.address, data(<string>this.address[0].key)));
+        iter.forEach(item => {
+            for (var i = 0; i < this.streamNodes.length; ++i) {
+                var processItem = l => {
+                    if (l === this.scopeName) {
+                        return item;
+                    }
+                    else {
+                        return data(l);
+                    }
+                };
+
+                text += this.streamNodes[i].writeFunction(processItem);
+            }
+        });
+        return text;
+    }
+
+    public getStreamNodes() {
+        return this.streamNodes;
     }
 }
 
@@ -164,49 +243,62 @@ export interface ITextStreamOptions{
 }
 
 class NodeStackItem {
-    constructor(public node: IfNode) { }
+    constructor(public node: IBlockNode, public allowElseMode: boolean) { }
     elseMode: boolean = false;
 }
 
 class StreamNodeTracker {
-    private ifNodeStack: NodeStackItem[] = [];
+    private blockNodeStack: NodeStackItem[] = [];
 
     constructor(private baseStreamNodes: IStreamNode[]) {
 
     }
 
     public pushIfNode(ifNode: IfNode) {
-        this.ifNodeStack.push(new NodeStackItem(ifNode));
+        this.blockNodeStack.push(new NodeStackItem(ifNode, true));
+    }
+
+    public pushBlockNode(ifNode: IBlockNode) {
+        this.blockNodeStack.push(new NodeStackItem(ifNode, false));
     }
 
     public setElseMode() {
-        if (this.ifNodeStack.length === 0) {
-            throw new Error("Attempted to else with no if or elseif statement.");
+        if (this.blockNodeStack.length === 0) {
+            var message = "Attempted to else with no if or elseif statement.";
+            console.log(message);
+            throw new Error(message);
         }
-        var currentIf = this.getCurrentIf();
+        var currentIf = this.getCurrentBlock();
+        if (!currentIf.allowElseMode) {
+            var message = "Attempted to else with no if or elseif statement.";
+            console.log(message);
+            throw new Error(message);
+        }
         currentIf.elseMode = true;
     }
 
-    public popIfNode() {
-        if (this.ifNodeStack.length === 0) {
-            throw new Error("Popped if node without any if statement present. Is there an extra endif or elseif statement?");
+    public popBlockNode() {
+        if (this.blockNodeStack.length === 0) {
+            var message = "Popped block node without any block statement present. Is there an extra endif, elseif or endfor statement?";
+            console.log(message);
+            throw new Error(message);
         }
-        this.ifNodeStack.pop();
+        this.blockNodeStack.pop();
     }
 
     public getCurrentStreamNodes() {
-        if (this.ifNodeStack.length === 0) {
+        if (this.blockNodeStack.length === 0) {
             return this.baseStreamNodes;
         }
-        var currentIf = this.getCurrentIf();
-        if (currentIf.elseMode) {
-            return currentIf.node.getFailNodes();
+        var block = this.getCurrentBlock();
+        if (block.elseMode) {
+            return (<IfNode>block.node).getFailNodes();
         }
-        return currentIf.node.getPassNodes();
+        return block.node.getStreamNodes();
     }
 
-    private getCurrentIf(): NodeStackItem {
-        return this.ifNodeStack[this.ifNodeStack.length - 1];
+    private getCurrentBlock(): NodeStackItem {
+        return this.blockNodeStack[this.blockNodeStack.length - 1];
     }
 }
 
@@ -302,14 +394,18 @@ export class TextStream {
                                 let ifNode = new IfNode(variable.substring(7));
                                 elseStreamNodes.push(ifNode);
                                 //Use the new if node as the current top level node in the tracker
-                                streamNodeTracker.popIfNode();
-                                streamNodeTracker.pushIfNode(ifNode);
+                                streamNodeTracker.popBlockNode();
+                                streamNodeTracker.pushBlockNode(ifNode);
                             }
                             else if (variable === 'else') {
                                 streamNodeTracker.setElseMode();
                             }
-                            else if (variable === 'endif') {
-                                streamNodeTracker.popIfNode();
+                            else if (variable.length > 4 && variable[0] === 'f' && variable[1] === 'o' && variable[2] === 'r' && /\s/.test(variable[3])) {
+                                variableNode = new ForInNode(variable);
+                                streamNodeTracker.pushBlockNode(variableNode);
+                            }
+                            else if (variable === 'endif' || variable === 'endfor') {
+                                streamNodeTracker.popBlockNode();
                             }
                             //Normal Variable node
                             else {

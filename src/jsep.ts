@@ -196,11 +196,15 @@ export interface LogicalExpression extends JsepNode {
     right?: JsepNode;
 }
 
+export interface Compound extends JsepNode {
+    body?: JsepNode[];
+}
+
 /**
  * Parse
  * @param expr a string with the passed in expression
  */
-export function parse(expr: string) {
+export function parse(expr: string): JsepNode {
     // `index` stores the character number we are currently at while `length` is a constant
     // All of the gobbles below will modify `index` as we move along
     var index = 0,
@@ -641,7 +645,7 @@ export function parse(expr: string) {
     if (nodes.length === 1) {
         return nodes[0];
     } else {
-        return {
+        return <any>{
             type: COMPOUND,
             body: nodes
         };

@@ -167,6 +167,10 @@ export function create(expr: string): ExpressionTree {
     return new ExpressionTree(setupNode(jsepResult));
 }
 
+export function createFromParsed(parsed: jsep.JsepNode): ExpressionTree {
+    return new ExpressionTree(setupNode(parsed));
+}
+
 function setupNode(jsepNode: jsep.JsepNode): ExpressionNode {
     if (jsepNode === undefined) {
         return undefined;
