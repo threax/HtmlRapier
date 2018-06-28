@@ -809,6 +809,7 @@ export class MultiCheckBoxEditor implements formHelper.IFormValueWithOptions {
     protected displayExpression: expression.ExpressionTree;
     protected checkboxElements: HTMLInputElement[] = [];
     protected nullCheckboxElement: HTMLInputElement = null;
+    protected selectAllElement: HTMLInputElement = null;
     private disabled: boolean;
 
     constructor(args: IFormValueBuilderArgs) {
@@ -816,6 +817,7 @@ export class MultiCheckBoxEditor implements formHelper.IFormValueWithOptions {
         this.name = args.item.name;
         this.buildName = args.item.buildName;
         this.bindings = args.bindings;
+        this.bindings.setListener(this);
         this.generated = args.generated;
         this.displayExpression = args.item.displayExpression;
         this.disabled = args.item["x-ui-disabled"] === true || args.item.readOnly === true;
@@ -828,6 +830,8 @@ export class MultiCheckBoxEditor implements formHelper.IFormValueWithOptions {
         this.errorToggle = this.bindings.getToggle(this.buildName + "Error");
         this.errorMessage = this.bindings.getView(this.buildName + "ErrorMessage");
         this.hideToggle = this.bindings.getToggle(this.buildName + "Hide");
+
+        this.selectAllElement = <HTMLInputElement>this.bindings.getHandle("selectAll");
     }
 
     public setError(err: FormErrors, baseName: string) {
@@ -891,6 +895,11 @@ export class MultiCheckBoxEditor implements formHelper.IFormValueWithOptions {
                 formHelper.setValue(<any>this.nullCheckboxElement, true);
             }
         }
+
+        //Always clear select all
+        if (this.selectAllElement !== null) {
+            formHelper.setValue(<any>this.selectAllElement, false);
+        }
     }
 
     public addOption(label: string, value: any) {
@@ -938,6 +947,16 @@ export class MultiCheckBoxEditor implements formHelper.IFormValueWithOptions {
         }
     }
 
+    public selectAll(evt: Event) {
+        for (var i = 0; i < this.checkboxElements.length; ++i) {
+            var check = this.checkboxElements[i];
+            formHelper.setValue(<any>check, true);
+        }
+        if (this.nullCheckboxElement !== null) {
+            formHelper.setValue(<any>this.nullCheckboxElement, false);
+        }
+    }
+
     private clearChecks(): void {
         for (var i = 0; i < this.checkboxElements.length; ++i) {
             var check = this.checkboxElements[i];
@@ -952,6 +971,9 @@ export class MultiCheckBoxEditor implements formHelper.IFormValueWithOptions {
             element.addEventListener("change", e => {
                 if (this.nullCheckboxElement !== null) {
                     formHelper.setValue(<any>this.nullCheckboxElement, false);
+                }
+                if (this.selectAllElement !== null) {
+                    formHelper.setValue(<any>this.selectAllElement, false);
                 }
                 this.changedEventHandler.fire(this);
             });

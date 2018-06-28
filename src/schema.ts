@@ -34,6 +34,7 @@ export interface JsonProperty {
     "x-display-if"?: expression.ExpressionNode;
     "x-lazy-load-values"?: boolean; //This will be true if the property will lazy load its values later, if this is true the property will be treated like it has values set
     "x-search"?: SearchInfo;
+    xSelectAll?: boolean;
 }
 
 export interface JsonLabel {
