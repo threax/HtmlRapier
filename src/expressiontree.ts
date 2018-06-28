@@ -1,8 +1,8 @@
 ///<amd-module name="hr.expressiontree"/>
 import * as jsep from 'hr.jsep';
+import { Address } from 'cluster';
 
-export enum OperationType
-{
+export enum OperationType {
     And = <any>"And",
     Or = <any>"Or",
     Not = <any>"Not",
@@ -17,59 +17,79 @@ export enum OperationType
 export interface ExpressionNode {
     left: ExpressionNode;
     right: ExpressionNode;
-    test: {[key: string]: any};
+    test: { [key: string]: any };
     operation: OperationType;
+    address?: AddressNode[];
 }
 
 export interface IValueSource {
-    getValue(name: string): any;
+    getValue(address: AddressNode[]): any;
 }
 
-export class ObjectValueSource implements IValueSource {
-    constructor(private source: any) {
+export enum AddressNodeType {
+    Object,
+    Array
+}
 
-    }
-
-    getValue(name: string): any{
-        return this.source[name];
-    }
+export interface AddressNode {
+    key: string | number;
+    type: AddressNodeType;
 }
 
 export class ExpressionTree {
-    constructor(private root: ExpressionNode){
+    constructor(private root: ExpressionNode) {
 
     }
 
-    public isTrue(test: IValueSource): boolean{
+    public isTrue(test: IValueSource): boolean {
         return this.evaluate(this.root, test);
     }
 
-    private evaluate(node: ExpressionNode, test: IValueSource): boolean {
+    private evaluate(node: ExpressionNode, test: IValueSource): any {
         switch (node.operation) {
             case OperationType.And:
                 return this.evaluate(node.left, test) && this.evaluate(node.right, test);
             case OperationType.Or:
                 return this.evaluate(node.left, test) || this.evaluate(node.right, test);
             case OperationType.Equal:
-                var testKey = Object.keys(node.test)[0];
-                return this.equals(test.getValue(testKey), node.test[testKey]);
+                var testKey = this.getTestKey(node);
+                return this.equals(test.getValue(testKey), this.getTestValue(node, testKey));
             case OperationType.NotEqual:
-                var testKey = Object.keys(node.test)[0];
-                return !this.equals(test.getValue(testKey), node.test[testKey]);
+                var testKey = this.getTestKey(node);
+                return !this.equals(test.getValue(testKey), this.getTestValue(node, testKey));
             case OperationType.Not:
                 return !this.evaluate(node.left, test);
             case OperationType.GreaterThan:
             case OperationType.GreaterThanOrEqual:
             case OperationType.LessThan:
             case OperationType.LessThanOrEqual:
-                var testKey = Object.keys(node.test)[0];
-                return this.compare(test.getValue(testKey), node.test[testKey], node.operation);
+                var testKey = this.getTestKey(node);
+                return this.compare(test.getValue(testKey), this.getTestValue(node, testKey), node.operation);
         }
 
         return false;
     }
 
-    private equals(current: any, test: any): boolean{
+    private getTestKey(node: ExpressionNode): AddressNode[] {
+        if (node.address !== undefined) {
+            return node.address;
+        }
+        var ret: AddressNode[] = [];
+        ret.push({
+            key: Object.keys(node.test)[0],
+            type: AddressNodeType.Object
+        });
+        return ret;
+    }
+
+    private getTestValue(node: ExpressionNode, address: AddressNode[]): any {
+        if (node.address !== undefined) {
+            return node.test['value'];
+        }
+        return node.test[address[0].key];
+    }
+
+    private equals(current: any, test: any): boolean {
         switch (typeof (test)) {
             case "boolean":
                 return Boolean(current) === test;
@@ -138,49 +158,52 @@ export function create(expr: string): ExpressionTree {
     return new ExpressionTree(setupNode(jsepResult));
 }
 
-function setupNode(jsepNode: jsep.Parsed): ExpressionNode {
+function setupNode(jsepNode: jsep.JsepNode): ExpressionNode {
     if (jsepNode === undefined) {
         return undefined;
     }
     var result: ExpressionNode = {
-        operation: opMap[jsepNode.operator],
+        operation: undefined,
         left: undefined,
         right: undefined,
         test: undefined
     };
+
+    var address: AddressNode[] = undefined;
+
     switch (jsepNode.type) {
         case "LogicalExpression":
-            result.left = setupNode(jsepNode.left);
-            result.right = setupNode(jsepNode.right);
+            result.operation = opMap[(<jsep.LogicalExpression>jsepNode).operator];
+            result.left = setupNode((<jsep.LogicalExpression>jsepNode).left);
+            result.right = setupNode((<jsep.LogicalExpression>jsepNode).right);
             break;
         case "BinaryExpression":
-            let literal = undefined;
-            let identifier = undefined;
-            switch (jsepNode.left.type) {
-                case "Identifier":
-                    identifier = jsepNode.left.name;
-                    break;
-                case "Literal":
-                    literal = jsepNode.left.value;
-                    break;
+            var literal: jsep.Literal = undefined;
+            address = getIdentifierAddress((<jsep.BinaryExpression>jsepNode).left);
+            if (address === undefined) {
+                if ((<jsep.BinaryExpression>jsepNode).left.type === "Literal") {
+                    literal = (<jsep.BinaryExpression>jsepNode).left;
+                }
             }
-            switch (jsepNode.right.type) {
-                case "Identifier":
-                    identifier = jsepNode.right.name;
-                    break;
-                case "Literal":
-                    literal = jsepNode.right.value;
-                    break;
+            else {
+                address = getIdentifierAddress((<jsep.BinaryExpression>jsepNode).right);
+                if ((<jsep.BinaryExpression>jsepNode).right.type === "Literal") {
+                    literal = (<jsep.BinaryExpression>jsepNode).left;
+                }
             }
-            if (literal === undefined || identifier === undefined) {
+            if (literal === undefined || address === undefined) {
                 throw new Error("Cannot build valid expression from statement.");
             }
             result.test = {};
-            result.test[identifier] = literal;
+            result.test['value'] = literal.value;
+            result.address = address;
             break;
         case "UnaryExpression":
-            identifier = jsepNode.argument.name;
-            if (identifier === undefined) {
+            if ((<jsep.UnaryExpression>jsepNode).operator !== '!') {
+                throw new Error("Cannot support unary operations that are not not (!).")
+            }
+            address = getIdentifierAddress((<jsep.UnaryExpression>jsepNode).argument);
+            if (address === undefined) {
                 throw new Error("Cannot build valid expression from statement.");
             }
             result.operation = OperationType.Not;
@@ -190,19 +213,72 @@ function setupNode(jsepNode: jsep.Parsed): ExpressionNode {
                 right: undefined,
                 test: undefined
             };
-            result.left.test = {};
-            result.left.test[identifier] = true;
+            result.test = {};
+            result.test['value'] = true;
+            result.address = address;
             break;
         case "Identifier":
-            identifier = jsepNode.name;
-            if (identifier === undefined) {
+        case "MemberExpression":
+            address = getIdentifierAddress(jsepNode);
+            if (address === undefined) {
                 throw new Error("Cannot build valid expression from statement.");
             }
             result.operation = OperationType.Equal;
             result.test = {};
-            result.test[identifier] = true;
-            //If we got a plain identifier, consider it to be a statement checking for true
+            result.test['value'] = true;
+            result.address = address;
+            break;
     }
 
     return result;
+}
+
+function getIdentifierAddress(node: jsep.JsepNode): AddressNode[] {
+    switch (node.type) {
+        case "Identifier":
+            return [{
+                key: (<jsep.Identifier>node).name,
+                type: AddressNodeType.Object
+            }];
+        case "MemberExpression":
+            return convertMemberExpressionToAddress(<jsep.MemberExpression>node);
+    }
+    return undefined;
+}
+
+function convertMemberExpressionToAddress(node: jsep.MemberExpression): AddressNode[] {
+
+    switch (node.object.type) {
+        case "Identifier":
+            var result: AddressNode[] = [{
+                key: node.object.name,
+                type: AddressNodeType.Object
+            }];
+            result.push(readMemberExpressionProperty(node));
+            return result;
+        case "MemberExpression":
+            var result = convertMemberExpressionToAddress(node);
+            result.push(readMemberExpressionProperty(node));
+            return result;
+    }
+}
+
+function readMemberExpressionProperty(node: jsep.MemberExpression): AddressNode {
+    var ret: AddressNode = {
+        type: AddressNodeType.Object,
+        key: undefined
+    }
+    if (node.computed) {
+        ret.type = AddressNodeType.Array;
+    }
+    switch (node.property.type) {
+        case "Literal":
+            ret.key = (<jsep.Literal>node.property).value;
+            break;
+        case "Identifier":
+            ret.key = (<jsep.Identifier>node.property).name;
+            break;
+    }
+
+    return ret;
 }

@@ -155,15 +155,45 @@ function isIdentifierPart(ch) {
         (ch >= 128 && !binary_ops[String.fromCharCode(ch)]); // any non-ASCII that is not an operator
 };
 
-export interface Parsed {
+export interface JsepNode {
     type: ParsedType;
-    value: any;
-    raw: string;
-    operator: OpTypes;
-    left: Parsed;
-    right: Parsed;
-    argument: Parsed;
-    name: string;
+}
+
+export interface MemberExpression extends JsepNode {
+    computed?: boolean;
+    object?: Identifier;
+    property?: Identifier;
+}
+
+export interface Identifier extends JsepNode {
+    name?: string;
+}
+
+export interface Literal extends JsepNode {
+    value?: any;
+    raw?: string;
+}
+
+export interface CallExpression extends JsepNode {
+    arguments: JsepNode[];
+    callee: JsepNode;
+}
+
+export interface UnaryExpression extends JsepNode {
+    operator?: OpTypes;
+    argument?: JsepNode;
+}
+
+export interface BinaryExpression extends JsepNode {
+    operator?: OpTypes;
+    left?: JsepNode;
+    right?: JsepNode;
+}
+
+export interface LogicalExpression extends JsepNode {
+    operator?: OpTypes;
+    left?: JsepNode;
+    right?: JsepNode;
 }
 
 /**

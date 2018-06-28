@@ -18,6 +18,11 @@ export interface JsonSchema {
     parent?: JsonSchema;
 }
 
+export interface JsonPropertyUiInfo{
+    type: string;
+    selectAll?: boolean;
+}
+
 export interface JsonProperty {
     title?: string;
     type?: string | string[];
@@ -27,6 +32,7 @@ export interface JsonProperty {
     "x-ui-disabled"?: boolean;
     readOnly?: boolean;
     "x-ui-type"?: string;
+    "xUi"?: JsonPropertyUiInfo;
     "x-values"?: JsonLabel[]; //The source values if there are multiple
     enum?: string[];
     "x-enumNames"?: string[]; //The enum names, will be combined with enum to make values
@@ -34,7 +40,6 @@ export interface JsonProperty {
     "x-display-if"?: expression.ExpressionNode;
     "x-lazy-load-values"?: boolean; //This will be true if the property will lazy load its values later, if this is true the property will be treated like it has values set
     "x-search"?: SearchInfo;
-    xSelectAll?: boolean;
 }
 
 export interface JsonLabel {

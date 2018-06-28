@@ -44,7 +44,7 @@ if (!component.isDefined("hr.forms.default")) {
             '<div class="form-group" data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error">' +
                 '<label class="control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label>' +
                 '<div class="panel panel-default" style="max-height:150px;overflow:auto;">' +
-                    '{{if xSelectAll}}' +
+                    '{{if xUi.selectAll}}' +
                         '<div class="panel-body" style="padding:0px;">' +
                             '<div class="checkbox"><label><input type="checkbox" value="true" data-hr-on-click="selectAll" />&nbsp;Select All</label></div>' +
                         '</div>' +
@@ -141,7 +141,7 @@ if (!component.isDefined("hr.forms.horizontal")) {
             '<div data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error">' +
                 '<label class="control-label col-sm-2">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label>' +
                 '<div class="col-sm-10 panel panel-default" style="max-height:150px;overflow:auto;">' +
-                    '{{if xSelectAll}}' +
+                    '{{if xUi.selectAll}}' +
                         '<div class="panel-body" style="padding:0px;">' +
                             '<div class="checkbox"><label><input type="checkbox" value="true" data-hr-on-click="selectAll" data-hr-handle="selectAll"/>&nbsp;Select All</label></div>' +
                         '</div>' +

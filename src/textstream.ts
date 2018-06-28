@@ -53,6 +53,31 @@ class ThisVariableNode implements IStreamNode {
     }
 }
 
+function readAddress(address: exprTree.AddressNode[], value: any): any {
+    for (var i = 1; i < address.length && value !== undefined; ++i) {
+        var item = address[i];
+        //arrays and objects can be read this way, which is all there is right now
+        value = value[item.key];
+    }
+    return value;
+}
+
+class ReadDataObject{
+    constructor(protected data: any) { }
+
+    public getValue(address: exprTree.AddressNode[]): any {
+        return readAddress(address, this.data[address[0].key]);
+    }
+}
+
+class ReadDataFunction {
+    constructor(protected data: (variable: string | number) => any) { }
+
+    public getValue(address: exprTree.AddressNode[]): any {
+        return readAddress(address, this.data(address[0].key));
+    }
+}
+
 class IfNode implements IStreamNode{
     private streamNodesPass: IStreamNode[] = [];
     private streamNodesFail: IStreamNode[] = [];
@@ -63,7 +88,7 @@ class IfNode implements IStreamNode{
     }
 
     writeObject(data: any) {
-        if (this.expressionTree.isTrue({ getValue: n => data[n] })) {
+        if (this.expressionTree.isTrue(new ReadDataObject(data))) {
             return format(data, this.streamNodesPass);
         }
         else {
@@ -71,8 +96,8 @@ class IfNode implements IStreamNode{
         }
     }
 
-    writeFunction(data: (variable: string) => any){
-        if (this.expressionTree.isTrue({ getValue: n => data(n) })) {
+    writeFunction(data: (variable: string) => any) {
+        if (this.expressionTree.isTrue(new ReadDataFunction(data))) {
             return format(data, this.streamNodesPass);
         }
         else {

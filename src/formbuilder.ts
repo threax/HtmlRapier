@@ -15,7 +15,6 @@ import * as typeIds from 'hr.typeidentifiers';
 import * as expression from 'hr.expressiontree';
 export { IFormValue, GetParentData } from 'hr.formhelper';
 import * as iterable from 'hr.iterable';
-import { GetParentData } from 'hr.formhelper';
 import { TimedTrigger } from 'hr.timedtrigger';
 
 interface ProcessedJsonProperty extends JsonProperty {
@@ -35,8 +34,8 @@ class FormValuesSource implements expression.IValueSource {
 
     }
 
-    getValue(name: string): any {
-        var value = this.formValues.getFormValue(name);
+    getValue(address: expression.AddressNode[]): any {
+        var value = this.formValues.getFormValue(<string>address[0].key); //for now assume strings, this only supports the current level object
         if (value !== undefined) {
             return value.getData();
         }
@@ -76,7 +75,7 @@ class FormValues implements formHelper.IFormValues {
 
     public setData(data: any): void {
         var dataType = formHelper.getDataType(data);
-        var parentRecovery: GetParentData;
+        var parentRecovery: formHelper.GetParentData;
 
         if (this.complexValues && data !== null) { //If this is complex values, lookup the data, also be sure the data isn't null or we will get an error
             switch (dataType) {
@@ -689,7 +688,7 @@ export class SearchItemEditor implements formHelper.IFormValueWithOptions {
         return this.currentData;
     }
 
-    public setData(data: any, parentDataAccess?: GetParentData) {
+    public setData(data: any, parentDataAccess?: formHelper.GetParentData) {
         this.currentData = data;
         if (this.currentValueProperty) {
             data = parentDataAccess(this.currentValueProperty);
