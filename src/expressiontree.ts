@@ -226,9 +226,9 @@ function setupNode(jsepNode: jsep.JsepNode): ExpressionNode {
                 right: undefined,
                 test: undefined
             };
-            result.test = {};
-            result.test['value'] = true;
-            result.address = address;
+            result.left.test = {};
+            result.left.test['value'] = true;
+            result.left.address = address;
             break;
         case "Identifier":
         case "MemberExpression":
