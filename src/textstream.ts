@@ -32,7 +32,9 @@ class VariableNode implements IStreamNode {
         var expressionTree = exprTree.create(variable);
         this.address = expressionTree.getDataAddress();
         if (this.address === null) {
-            throw new Error("Expression \"" + variable + "\" is not a valid variable node expression.");
+            var message = "Expression \"" + variable + "\" is not a valid variable node expression.";
+            console.log(message);
+            throw new Error(message);
         }
     }
 
