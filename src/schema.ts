@@ -32,7 +32,7 @@ export interface JsonProperty {
     "x-ui-disabled"?: boolean;
     readOnly?: boolean;
     "x-ui-type"?: string;
-    "xUi"?: JsonPropertyUiInfo;
+    xUi?: JsonPropertyUiInfo;
     "x-values"?: JsonLabel[]; //The source values if there are multiple
     enum?: string[];
     "x-enumNames"?: string[]; //The enum names, will be combined with enum to make values

@@ -1357,6 +1357,10 @@ function extractLabels(valuesProp: JsonProperty, originalProp: JsonProperty): Js
 var propertyUniqueIndex = new InfiniteIndex();
 
 function processProperty(prop: JsonProperty, name: string, buildName: string, schema: JsonSchema): ProcessedJsonProperty {
+    //Assign the xUi type to the x-ui-type for the prop, since that is what we expect to process.
+    if(prop.xUi && prop.xUi.type){
+        prop["x-ui-type"] = prop.xUi.type;
+    }
     var processed: ProcessedJsonProperty = Object.create(prop);
     processed.uniqueId = "hr-form-prop-" + propertyUniqueIndex.getNext();
     processed.buildName = buildName;
