@@ -26,16 +26,22 @@ class TextNode implements IStreamNode{
 }
 
 class VariableNode implements IStreamNode {
-    constructor(private variable: string){
+    private address: exprTree.AddressNode[] = [];
 
+    constructor(variable: string) {
+        var expressionTree = exprTree.create(variable);
+        this.address = expressionTree.getDataAddress();
+        if (this.address === null) {
+            throw new Error("Expression \"" + variable + "\" is not a valid variable node expression.");
+        }
     }
 
     writeObject(data: any) {
-        return data[this.variable];
+        return readAddress(this.address, data[this.address[0].key]);
     }
 
-    writeFunction(data: (variable: string) => any){
-        return data(this.variable);
+    writeFunction(data: (variable: string) => any) {
+        return readAddress(this.address, data(<string>this.address[0].key));
     }
 }
 

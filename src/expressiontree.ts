@@ -41,30 +41,39 @@ export class ExpressionTree {
 
     }
 
-    public isTrue(test: IValueSource): boolean {
-        return this.evaluate(this.root, test);
+    /**
+     * Get the root node's data address, can be used to lookup data. If this is undefined
+     * then there is no data address for this expression tree and it can't be used to directly
+     * look up data.
+     */
+    public getDataAddress(): AddressNode[] | null {
+        return this.root.address || null;
     }
 
-    private evaluate(node: ExpressionNode, test: IValueSource): any {
+    public isTrue(valueSource: IValueSource): boolean {
+        return this.evaluate(this.root, valueSource);
+    }
+
+    private evaluate(node: ExpressionNode, valueSource: IValueSource): boolean {
         switch (node.operation) {
             case OperationType.And:
-                return this.evaluate(node.left, test) && this.evaluate(node.right, test);
+                return this.evaluate(node.left, valueSource) && this.evaluate(node.right, valueSource);
             case OperationType.Or:
-                return this.evaluate(node.left, test) || this.evaluate(node.right, test);
+                return this.evaluate(node.left, valueSource) || this.evaluate(node.right, valueSource);
             case OperationType.Equal:
                 var testKey = this.getTestKey(node);
-                return this.equals(test.getValue(testKey), this.getTestValue(node, testKey));
+                return this.equals(valueSource.getValue(testKey), this.getTestValue(node, testKey));
             case OperationType.NotEqual:
                 var testKey = this.getTestKey(node);
-                return !this.equals(test.getValue(testKey), this.getTestValue(node, testKey));
+                return !this.equals(valueSource.getValue(testKey), this.getTestValue(node, testKey));
             case OperationType.Not:
-                return !this.evaluate(node.left, test);
+                return !this.evaluate(node.left, valueSource);
             case OperationType.GreaterThan:
             case OperationType.GreaterThanOrEqual:
             case OperationType.LessThan:
             case OperationType.LessThanOrEqual:
                 var testKey = this.getTestKey(node);
-                return this.compare(test.getValue(testKey), this.getTestValue(node, testKey), node.operation);
+                return this.compare(valueSource.getValue(testKey), this.getTestValue(node, testKey), node.operation);
         }
 
         return false;
