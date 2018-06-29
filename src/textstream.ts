@@ -90,6 +90,7 @@ class ReadDataFunction {
 
 interface IBlockNode extends IStreamNode {
     getStreamNodes();
+    checkPopStatement(variable: string);
 }
 
 class IfNode implements IBlockNode{
@@ -126,6 +127,36 @@ class IfNode implements IBlockNode{
     public getFailNodes() {
         return this.streamNodesFail;
     }
+
+    public checkPopStatement(variable: string) {
+        if (variable.length === 3 && variable[0] === '/' && variable[1] === 'i' && variable[2] === 'f') {
+            return;
+        }
+        if (variable.length === 1 && variable[0] === '/') {
+            return;
+        }
+        if (variable.length > 4 && variable[0] === '/' && variable[1] === 'i' && variable[2] === 'f' && /\s/.test(variable[3])) {
+            return;
+        }
+        if (isElseIf(variable)) {
+            return;
+        }
+        if (isElse(variable)) {
+            return;
+        }
+
+        var message = "Invalid closing if statement " + variable;
+        console.log(message);
+        throw new Error(message);
+    }
+}
+
+function isElseIf(variable: string): boolean {
+    return variable.length > 6 && variable[0] === 'e' && variable[1] === 'l' && variable[2] === 's' && variable[3] === 'e' && /\s/.test(variable[4]) && variable[5] === 'i' && variable[6] === 'f' && /\s/.test(variable[7]);
+}
+
+function isElse(variable: string): boolean {
+    return variable === 'else';
 }
 
 class ForInNode implements IBlockNode {
@@ -198,6 +229,22 @@ class ForInNode implements IBlockNode {
 
     public getStreamNodes() {
         return this.streamNodes;
+    }
+
+    public checkPopStatement(variable: string) {
+        if (variable.length === 4 && variable[0] === '/' && variable[1] === 'f' && variable[2] === 'o' && variable[3] === 'r') {
+            return;
+        }
+        if (variable.length === 1 && variable[0] === '/') {
+            return;
+        }
+        if (variable.length > 5 && variable[0] === '/' && variable[1] === 'f' && variable[2] === 'o' && variable[3] === 'r' && /\s/.test(variable[4])) {
+            return;
+        }
+
+        var message = "Invalid closing for statement " + variable;
+        console.log(message);
+        throw new Error(message);
     }
 }
 
@@ -277,12 +324,13 @@ class StreamNodeTracker {
         currentIf.elseMode = true;
     }
 
-    public popBlockNode() {
+    public popBlockNode(variable: string) {
         if (this.blockNodeStack.length === 0) {
             var message = "Popped block node without any block statement present. Is there an extra end block or elseif statement?";
             console.log(message);
             throw new Error(message);
         }
+        this.getCurrentBlock().node.checkPopStatement(variable);
         this.blockNodeStack.pop();
     }
 
@@ -395,17 +443,17 @@ export class TextStream {
                                 variableNode = new IfNode(variable.substring(3));
                                 streamNodeTracker.pushIfNode(variableNode);
                             }
-                            else if (variable.length > 6 && variable[0] === 'e' && variable[1] === 'l' && variable[2] === 's' && variable[3] === 'e' && variable[4] === 'i' && variable[5] === 'f' && /\s/.test(variable[6])) {
+                            else if (isElseIf(variable)) {
                                 //Set else mode and get the current stream nodes
                                 streamNodeTracker.setElseMode();
                                 var elseStreamNodes = streamNodeTracker.getCurrentStreamNodes();
                                 let ifNode = new IfNode(variable.substring(7));
                                 elseStreamNodes.push(ifNode);
                                 //Use the new if node as the current top level node in the tracker
-                                streamNodeTracker.popBlockNode();
+                                streamNodeTracker.popBlockNode(variable);
                                 streamNodeTracker.pushBlockNode(ifNode);
                             }
-                            else if (variable === 'else') {
+                            else if (isElse(variable)) {
                                 streamNodeTracker.setElseMode();
                             }
                             else if (variable.length > 4 && variable[0] === 'f' && variable[1] === 'o' && variable[2] === 'r' && /\s/.test(variable[3])) {
@@ -413,7 +461,7 @@ export class TextStream {
                                 streamNodeTracker.pushBlockNode(variableNode);
                             }
                             else if (variable.length > 0 && variable[0] === '/') {
-                                streamNodeTracker.popBlockNode();
+                                streamNodeTracker.popBlockNode(variable);
                             }
                             //Normal Variable node
                             else {
