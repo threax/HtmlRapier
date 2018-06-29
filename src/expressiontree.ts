@@ -118,7 +118,6 @@ export class ExpressionTree {
         switch (typeof (test)) {
             case "number":
                 var currentAsNum = Number(current);
-                console.log(currentAsNum);
                 if (!isNaN(currentAsNum)) {
                     switch (operation) {
                         case OperationType.GreaterThan:
@@ -149,8 +148,8 @@ var opMap: { [key: string]: OperationType } = {
     '!==': OperationType.NotEqual,
     '<': OperationType.LessThan,
     '>': OperationType.GreaterThan,
-    '<=': OperationType.GreaterThanOrEqual,
-    '>=': OperationType.LessThanOrEqual,
+    '<=': OperationType.LessThanOrEqual,
+    '>=': OperationType.GreaterThanOrEqual,
     //'<<'
     //'>>'
     //'>>>'
@@ -193,20 +192,21 @@ function setupNode(jsepNode: jsep.JsepNode): ExpressionNode {
         case "BinaryExpression":
             var literal: jsep.Literal = undefined;
             address = getIdentifierAddress((<jsep.BinaryExpression>jsepNode).left);
-            if (address === undefined) {
-                if ((<jsep.BinaryExpression>jsepNode).left.type === "Literal") {
-                    literal = (<jsep.BinaryExpression>jsepNode).left;
+            if (address !== undefined) {
+                if ((<jsep.BinaryExpression>jsepNode).right.type === "Literal") {
+                    literal = (<jsep.BinaryExpression>jsepNode).right;
                 }
             }
             else {
                 address = getIdentifierAddress((<jsep.BinaryExpression>jsepNode).right);
-                if ((<jsep.BinaryExpression>jsepNode).right.type === "Literal") {
+                if ((<jsep.BinaryExpression>jsepNode).left.type === "Literal") {
                     literal = (<jsep.BinaryExpression>jsepNode).left;
                 }
             }
             if (literal === undefined || address === undefined) {
                 throw new Error("Cannot build valid expression from statement.");
             }
+            result.operation = opMap[(<jsep.LogicalExpression>jsepNode).operator];
             result.test = {};
             result.test['value'] = literal.value;
             result.address = address;
