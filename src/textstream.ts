@@ -264,13 +264,13 @@ class StreamNodeTracker {
 
     public setElseMode() {
         if (this.blockNodeStack.length === 0) {
-            var message = "Attempted to else with no if or elseif statement.";
+            var message = "Attempted to else with no current block.";
             console.log(message);
             throw new Error(message);
         }
         var currentIf = this.getCurrentBlock();
         if (!currentIf.allowElseMode) {
-            var message = "Attempted to else with no if or elseif statement.";
+            var message = "Attempted to else when the current block does not support else statements.";
             console.log(message);
             throw new Error(message);
         }
@@ -279,7 +279,7 @@ class StreamNodeTracker {
 
     public popBlockNode() {
         if (this.blockNodeStack.length === 0) {
-            var message = "Popped block node without any block statement present. Is there an extra endif, elseif or endfor statement?";
+            var message = "Popped block node without any block statement present. Is there an extra end block or elseif statement?";
             console.log(message);
             throw new Error(message);
         }
@@ -295,6 +295,14 @@ class StreamNodeTracker {
             return (<IfNode>block.node).getFailNodes();
         }
         return block.node.getStreamNodes();
+    }
+
+    public checkError() {
+        if (this.blockNodeStack.length > 0) {
+            var message = "Blocks still on stack when stream processed. Did you forget a close block somewhere?";
+            console.log(message);
+            throw new Error(message);
+        }
     }
 
     private getCurrentBlock(): NodeStackItem {
@@ -404,7 +412,7 @@ export class TextStream {
                                 variableNode = new ForInNode(variable);
                                 streamNodeTracker.pushBlockNode(variableNode);
                             }
-                            else if (variable === 'endif' || variable === 'endfor') {
+                            else if (variable.length > 0 && variable[0] === '/') {
                                 streamNodeTracker.popBlockNode();
                             }
                             //Normal Variable node
@@ -438,6 +446,8 @@ export class TextStream {
                 }
             }
         }
+
+        streamNodeTracker.checkError();
 
         if (textStart < text.length) {
             this.streamNodes.push(new TextNode(skippedTextBuffer + text.substring(textStart, text.length)));

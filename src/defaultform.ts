@@ -48,7 +48,7 @@ if (!component.isDefined("hr.forms.default")) {
                         '<div class="panel-body" style="padding:0px;">' +
                             '<div class="checkbox"><label><input type="checkbox" value="true" data-hr-on-click="selectAll" />&nbsp;Select All</label></div>' +
                         '</div>' +
-                    '{{endif}}' +
+                    '{{/if}}' +
                     '<div data-hr-view="items" style="padding:0px;" data-hr-view-component="hr.forms.default-multicheckboxitem"></div>' +
                 '</div>' + 
                 '<div class="clearfix"></div>' +
@@ -145,7 +145,7 @@ if (!component.isDefined("hr.forms.horizontal")) {
                         '<div class="panel-body" style="padding:0px;">' +
                             '<div class="checkbox"><label><input type="checkbox" value="true" data-hr-on-click="selectAll" data-hr-handle="selectAll"/>&nbsp;Select All</label></div>' +
                         '</div>' +
-                    '{{endif}}' +
+                    '{{/if}}' +
                     '<div class="panel-body" style="padding:0px;" data-hr-view="items" data-hr-view-component="hr.forms.horizontal-multicheckboxitem"></div>' +
                 '</div>' + 
                 '<div class="clearfix"></div>' +
