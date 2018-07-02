@@ -9,7 +9,7 @@
   "devDependencies": {
     "jsns": ">=4.2.0"
   },
-  "files":[
+  "files": [
     "src/**/*",
     "tsimport.json",
     "artifacts.json"
