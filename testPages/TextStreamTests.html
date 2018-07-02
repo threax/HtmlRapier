@@ -1,0 +1,35 @@
+﻿<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Text Stream Tests</title>
+    </head>
+    <body data-hr-run="hr.test.RunTests">
+        <h1 data-hr-run="hr.test.textstream">Text Stream Tests</h1>
+        <div data-hr-controller="testResults">
+            <div data-hr-view="allResults">
+                <p>Passed: {{passed}}</p>
+                <p>Failed: {{failed}}</p>
+                <p>Total: {{total}}</p>
+            </div>
+            <h2>Failed Tests</h2>
+            <div data-hr-view="failures">
+                <template>
+                    <h3>{{testName}}</h3>
+                    <p>{{message}}</p>
+                </template>
+                <template data-hr-variant="title">
+                    <h3>{{this}}</h3>
+                </template>
+            </div>
+        </div>
+        <script type="text/javascript" src="/lib/jquery/dist/jquery.min.js"></script>
+        <script type="text/javascript" src="/lib/bootstrap/dist/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="/lib/moment/min/moment.min.js"></script>
+        <script type="text/javascript" src="/lib/eonasdan-bootstrap-datetimepicker/build/js/bootstrap-datetimepicker.min.js"></script>
+        <script type="text/javascript" src="/lib/polyfill.js"></script>
+        <script type="text/javascript" src="/lib/tslib.js"></script>
+        <script type="text/javascript" src="/lib/tsbin.js"></script>
+
+        <script type="text/javascript" src="/lib/hr-run.js"></script>
+    </body>
+</html>
