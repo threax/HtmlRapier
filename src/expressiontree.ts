@@ -1,6 +1,6 @@
 ///<amd-module name="hr.expressiontree"/>
 import * as jsep from 'hr.jsep';
-import { Address } from 'cluster';
+import * as typeId from 'hr.typeidentifiers';
 
 export enum OperationType {
     And = <any>"And",
@@ -19,11 +19,11 @@ export interface ExpressionNode {
     right: ExpressionNode;
     test: { [key: string]: any };
     operation: OperationType;
-    address?: AddressNode[];
+    address?: IDataAddress;
 }
 
 export interface IValueSource {
-    getValue(address: AddressNode[]): any;
+    getValue(address: IDataAddress): any;
 }
 
 export enum AddressNodeType {
@@ -36,6 +36,71 @@ export interface AddressNode {
     type: AddressNodeType;
 }
 
+//export type BaseDataType = (variable: string | number) => any | {};
+
+export interface AddressStack {
+    parent: AddressStack;
+    data: AddressStackLookup;
+    address: IDataAddress;
+}
+
+export type AddressStackLookup = (stack: AddressStack) => any;
+
+export interface IDataAddress {
+    address: AddressNode[];
+    read(data: AddressStackLookup | {}, startNode?: number);
+}
+
+export class DataAddress implements IDataAddress {
+    address: AddressNode[];
+    constructor(address: AddressNode[]) {
+        this.address = address;
+        //Remove any this from the address
+        if (address[0].key === "this") {
+            address.splice(0, 1);
+        }
+    }
+
+    read(data: AddressStackLookup | {}, startNode?: number) {
+        if (startNode === undefined) {
+            startNode = 0;
+        }
+
+        if (DataAddress.isAddressStackLookup(data)) {
+            return data({
+                parent: null,
+                data: data,
+                address: this
+            });
+        }
+        else {
+            return this.readAddress(data, startNode);
+        }
+    }
+
+    private readAddress(value: any, startNode: number): any {
+        for (var i = startNode; i < this.address.length && value !== undefined; ++i) {
+            var item = this.address[i];
+            //Arrays and objects can be read this way, which is all there is right now.
+            //Functions are only supported on the top level.
+            value = value[item.key];
+        }
+        return value;
+    }
+
+    /**
+     * Determine if a data item is an addres stack lookup or a generic object. The only test this does is to see
+     * if the incoming type is a function, not reliable otherwise, but helps the compiler.
+     * @param data
+     */
+    private static isAddressStackLookup(data: AddressStackLookup | {}): data is AddressStackLookup {
+        if (typeId.isFunction(data)) {
+            return true;
+        }
+        return false;
+    }
+}
+
 export class ExpressionTree {
     constructor(private root: ExpressionNode) {
 
@@ -46,7 +111,7 @@ export class ExpressionTree {
      * then there is no data address for this expression tree and it can't be used to directly
      * look up data.
      */
-    public getDataAddress(): AddressNode[] | null {
+    public getDataAddress(): IDataAddress | null {
         return this.root.address || null;
     }
 
@@ -79,7 +144,7 @@ export class ExpressionTree {
         return false;
     }
 
-    private getTestKey(node: ExpressionNode): AddressNode[] {
+    private getTestKey(node: ExpressionNode): IDataAddress {
         if (node.address !== undefined) {
             return node.address;
         }
@@ -88,14 +153,14 @@ export class ExpressionTree {
             key: Object.keys(node.test)[0],
             type: AddressNodeType.Object
         });
-        return ret;
+        return new DataAddress(ret);
     }
 
-    private getTestValue(node: ExpressionNode, address: AddressNode[]): any {
+    private getTestValue(node: ExpressionNode, address: IDataAddress): any {
         if (node.address !== undefined) {
             return node.test['value'];
         }
-        return node.test[address[0].key];
+        return node.test[address.address[0].key];
     }
 
     private equals(current: any, test: any): boolean {
@@ -181,7 +246,7 @@ function setupNode(jsepNode: jsep.JsepNode): ExpressionNode {
         test: undefined
     };
 
-    var address: AddressNode[] = undefined;
+    var address: IDataAddress = undefined;
 
     switch (jsepNode.type) {
         case "LogicalExpression":
@@ -246,15 +311,21 @@ function setupNode(jsepNode: jsep.JsepNode): ExpressionNode {
     return result;
 }
 
-function getIdentifierAddress(node: jsep.JsepNode): AddressNode[] {
+function getIdentifierAddress(node: jsep.JsepNode): IDataAddress {
+    var addrNodes: AddressNode[];
     switch (node.type) {
         case "Identifier":
-            return [{
+            addrNodes = [{
                 key: (<jsep.Identifier>node).name,
                 type: AddressNodeType.Object
             }];
+            break;
         case "MemberExpression":
-            return convertMemberExpressionToAddress(<jsep.MemberExpression>node);
+            addrNodes = convertMemberExpressionToAddress(<jsep.MemberExpression>node);
+            break;
+    }
+    if (addrNodes) {
+        return new DataAddress(addrNodes);
     }
     return undefined;
 }

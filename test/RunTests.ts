@@ -51,7 +51,7 @@ export class TestRunnerController implements TestRunner.ITestRunner {
             else {
                 result.message = JSON.stringify(err);
             }
-            this.failures.appendData(result);
+            //this.failures.appendData(result);
         }
     }
 }

@@ -7,10 +7,20 @@ import * as typeId from 'hr.typeidentifiers';
 import * as exprTree from 'hr.expressiontree';
 import * as jsep from 'hr.jsep';
 import { Iterable } from 'hr.iterable';
+import { IDataAddress, AddressStack } from 'hr.expressiontree';
+
+export class ThisDataAddress implements exprTree.IDataAddress {
+    address: exprTree.AddressNode[];
+
+    read(data: {} | exprTree.AddressStackLookup) {
+        
+    }
+}
+
+export type ReadDataAtAddressCb = (stack: exprTree.AddressStack) => any;
 
 interface IStreamNode{
-    writeFunction(data: (variable: string) => any);
-    writeObject(data: any);
+    writeFunction(data: ReadDataAtAddressCb);
 }
 
 class TextNode implements IStreamNode{
@@ -18,17 +28,13 @@ class TextNode implements IStreamNode{
 
     }
 
-    writeObject(data: any) {
+    writeFunction(data: ReadDataAtAddressCb){
         return this.str;
-    }
-
-    writeFunction(data: (variable: string) => any){
-        return this.writeObject(data);
     }
 }
 
 class VariableNode implements IStreamNode {
-    private address: exprTree.AddressNode[] = [];
+    private address: exprTree.IDataAddress;
 
     constructor(variable: string) {
         var expressionTree = exprTree.create(variable);
@@ -40,51 +46,24 @@ class VariableNode implements IStreamNode {
         }
     }
 
-    writeObject(data: any) {
-        return readAddress(this.address, data[this.address[0].key]);
-    }
-
-    writeFunction(data: (variable: string) => any) {
-        return readAddress(this.address, data(<string>this.address[0].key));
-    }
-}
-
-class ThisVariableNode implements IStreamNode {
-    constructor(){
-
-    }
-
-    writeObject(data: any) {
-        return data;
-    }
-
-    writeFunction(data: (variable: string) => any){
-        return data('this');
-    }
-}
-
-function readAddress(address: exprTree.AddressNode[], value: any): any {
-    for (var i = 1; i < address.length && value !== undefined; ++i) {
-        var item = address[i];
-        //arrays and objects can be read this way, which is all there is right now
-        value = value[item.key];
-    }
-    return value;
-}
-
-class ReadDataObject{
-    constructor(protected data: any) { }
-
-    public getValue(address: exprTree.AddressNode[]): any {
-        return readAddress(address, this.data[address[0].key]);
+    writeFunction(data: ReadDataAtAddressCb) {
+        return data({
+            parent: null,
+            address: this.address,
+            data: data
+        });
     }
 }
 
 class ReadDataFunction {
-    constructor(protected data: (variable: string | number) => any) { }
+    constructor(protected data: ReadDataAtAddressCb) { }
 
-    public getValue(address: exprTree.AddressNode[]): any {
-        return readAddress(address, this.data(address[0].key));
+    public getValue(address: IDataAddress): any {
+        return this.data({
+            parent: null,
+            address: address,
+            data: this.data
+        });
     }
 }
 
@@ -104,16 +83,7 @@ class IfNode implements IBlockNode{
         this.expressionTree = exprTree.create(condition);
     }
 
-    writeObject(data: any) {
-        if (this.expressionTree.isTrue(new ReadDataObject(data))) {
-            return format(data, this.streamNodesPass);
-        }
-        else {
-            return format(data, this.streamNodesFail);
-        }
-    }
-
-    writeFunction(data: (variable: string) => any) {
+    writeFunction(data: ReadDataAtAddressCb) {
         if (this.expressionTree.isTrue(new ReadDataFunction(data))) {
             return format(data, this.streamNodesPass);
         }
@@ -163,7 +133,7 @@ function isElse(variable: string): boolean {
 
 class ForInNode implements IBlockNode {
     private streamNodes: IStreamNode[] = [];
-    private address: exprTree.AddressNode[] = [];
+    private address: exprTree.IDataAddress;
     private scopeName: string;
 
     constructor(private condition: string) {
@@ -189,40 +159,21 @@ class ForInNode implements IBlockNode {
         }
     }
 
-    writeObject(data: any) {
+    writeFunction(data: ReadDataAtAddressCb) {
         var text = "";
-        var iter = new Iterable(readAddress(this.address, data[this.address[0].key]));
+        var iter = new Iterable(this.address.read(data));
+        var localScopeName = this.scopeName;
         iter.forEach(item => {
+            var processItem: ReadDataAtAddressCb = (a) => {
+                if (a.address.address[0].key === this.scopeName) {
+                    return a.address.read(item, 1);
+                }
+                else {
+                    return a.address.read(data);
+                }
+            };
+
             for (var i = 0; i < this.streamNodes.length; ++i) {
-                var processItem = l => {
-                    if (l === this.scopeName) {
-                        return item;
-                    }
-                    else {
-                        return data[l];
-                    }
-                };
-
-                text += this.streamNodes[i].writeFunction(processItem);
-            }
-        });
-        return text;
-    }
-
-    writeFunction(data: (variable: string) => any) {
-        var text = "";
-        var iter = new Iterable(readAddress(this.address, data(<string>this.address[0].key)));
-        iter.forEach(item => {
-            for (var i = 0; i < this.streamNodes.length; ++i) {
-                var processItem = l => {
-                    if (l === this.scopeName) {
-                        return item;
-                    }
-                    else {
-                        return data(l);
-                    }
-                };
-
                 text += this.streamNodes[i].writeFunction(processItem);
             }
         });
@@ -255,31 +206,24 @@ class EscapeVariableNode implements IStreamNode {
 
     }
 
-    writeObject(data: any) {
-        return escape(this.wrapped.writeObject(data));
-    }
-
-    writeFunction(data: (variable: string) => any){
+    writeFunction(data: ReadDataAtAddressCb) {
         return escape(this.wrapped.writeFunction(data));
     }
 }
 
-function format(data: any, streamNodes: IStreamNode[]) {
+function noData(a: AddressStack) {
+    return undefined;
+}
+
+function format(data: ReadDataAtAddressCb, streamNodes: IStreamNode[]) {
     if (data === null || data === undefined) {
-        data = {};
+        data = noData;
     }
 
     var text = "";
 
-    if (typeId.isFunction(data)) {
-        for (var i = 0; i < streamNodes.length; ++i) {
-            text += streamNodes[i].writeFunction(data);
-        }
-    }
-    else {
-        for (var i = 0; i < streamNodes.length; ++i) {
-            text += streamNodes[i].writeObject(data);
-        }
+    for (var i = 0; i < streamNodes.length; ++i) {
+        text += streamNodes[i].writeFunction(data);
     }
 
     return text;
@@ -453,7 +397,7 @@ export class TextStream {
                                 elseStreamNodes.push(ifNode);
                                 //Use the new if node as the current top level node in the tracker
                                 streamNodeTracker.popBlockNode(variable);
-                                streamNodeTracker.pushBlockNode(ifNode);
+                                streamNodeTracker.pushIfNode(ifNode);
                             }
                             else if (isElse(variable)) {
                                 streamNodeTracker.setElseMode();
@@ -467,12 +411,7 @@ export class TextStream {
                             }
                             //Normal Variable node
                             else {
-                                if (variable === "this") {
-                                    variableNode = new ThisVariableNode();
-                                }
-                                else {
-                                    variableNode = new VariableNode(variable);
-                                }
+                                variableNode = new VariableNode(variable);
 
                                 //If we are escaping decorate the variable node we created with the escape version.
                                 if (escape) {
@@ -504,7 +443,7 @@ export class TextStream {
         }
     }
 
-    public format(data) {
+    public format(data: ReadDataAtAddressCb) {
         return format(data, this.streamNodes);
     }
 
