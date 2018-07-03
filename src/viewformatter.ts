@@ -48,24 +48,18 @@ class SchemaViewExtractor<T> implements Extractor<T> {
     constructor(private dataFormatter: IViewDataFormatter<T>, public original: T, private schema: schema.JsonSchema) { }
 
     getRawData(address: exprTree.IDataAddress) {
-
+        return address.read(this.original);
     }
 
     getFormatted(data: any, address: exprTree.IDataAddress) {
-
+        return this.extract(data, address.address);
     }
 
     private extract(data: any, address: exprTree.AddressNode[]) {
         //Need to lookup info better than this
         var name = <string>address[address.length - 1].key; //Assume string for now
         var prop = this.getPropertyForAddress(this.schema, address);
-        var rawData;
-        if (typeId.isFunction(data)) {
-            rawData = data[name];
-        }
-        else {
-            rawData = data[name];
-        }
+        var rawData = data;
         if (rawData === undefined) {
             rawData = null; //Normalize to null
         }
