@@ -9,32 +9,54 @@ import * as jsep from 'hr.jsep';
 import { Iterable } from 'hr.iterable';
 import { IDataAddress, AddressStack } from 'hr.expressiontree';
 
-export class ThisDataAddress implements exprTree.IDataAddress {
-    address: exprTree.AddressNode[];
+export interface ITextStreamData {
+    getRawData(address: exprTree.IDataAddress): any;
+    getFormatted(data: any, address: exprTree.IDataAddress): any;
+}
 
-    read(data: {} | exprTree.AddressStackLookup) {
-        
+class NodeScope {
+    constructor(private parent: NodeScope, private scopeName: string, private data: ITextStreamData) {
+        parent = parent || null;
+    }
+
+    getRawData(address: exprTree.IDataAddress) {
+        if (address.isInScope(this.scopeName) || this.parent === null) {
+            return this.data.getRawData(address);
+        }
+        else {
+            return this.parent.getRawData(address);
+        }
+    }
+
+    getFormatted(data: any, address: exprTree.IDataAddress) {
+        //Get top parent
+        var parent: NodeScope = this;
+        while (parent.parent !== null) {
+            parent = parent.parent;
+        }
+        return parent.data.getFormatted(data, address);
     }
 }
 
-export type ReadDataAtAddressCb = (stack: exprTree.AddressStack) => any;
-
 interface IStreamNode{
-    writeFunction(data: ReadDataAtAddressCb);
+    writeFunction(data: NodeScope);
 }
 
 class TextNode implements IStreamNode{
+    private parent: IStreamNode;
+
     constructor(private str: string){
 
     }
 
-    writeFunction(data: ReadDataAtAddressCb){
+    writeFunction(data: NodeScope){
         return this.str;
     }
 }
 
 class VariableNode implements IStreamNode {
     private address: exprTree.IDataAddress;
+    private parent: IStreamNode;
 
     constructor(variable: string) {
         var expressionTree = exprTree.create(variable);
@@ -46,24 +68,17 @@ class VariableNode implements IStreamNode {
         }
     }
 
-    writeFunction(data: ReadDataAtAddressCb) {
-        return data({
-            parent: null,
-            address: this.address,
-            data: data
-        });
+    writeFunction(data: NodeScope) {
+        var lookedUp = data.getRawData(this.address);
+        return data.getFormatted(lookedUp, this.address);
     }
 }
 
-class ReadDataFunction {
-    constructor(protected data: ReadDataAtAddressCb) { }
+class ReadIfData {
+    constructor(protected data: ITextStreamData) { }
 
     public getValue(address: IDataAddress): any {
-        return this.data({
-            parent: null,
-            address: address,
-            data: this.data
-        });
+        return this.data.getRawData(address);
     }
 }
 
@@ -72,7 +87,8 @@ interface IBlockNode extends IStreamNode {
     checkPopStatement(variable: string);
 }
 
-class IfNode implements IBlockNode{
+class IfNode implements IBlockNode {
+    private parent: IStreamNode;
     private streamNodesPass: IStreamNode[] = [];
     private streamNodesFail: IStreamNode[] = [];
     private expressionTree: exprTree.ExpressionTree;
@@ -83,8 +99,8 @@ class IfNode implements IBlockNode{
         this.expressionTree = exprTree.create(condition);
     }
 
-    writeFunction(data: ReadDataAtAddressCb) {
-        if (this.expressionTree.isTrue(new ReadDataFunction(data))) {
+    writeFunction(data: NodeScope) {
+        if (this.expressionTree.isTrue(new ReadIfData(data))) {
             return format(data, this.streamNodesPass);
         }
         else {
@@ -132,6 +148,7 @@ function isElse(variable: string): boolean {
 }
 
 class ForInNode implements IBlockNode {
+    private parent: IStreamNode;
     private streamNodes: IStreamNode[] = [];
     private address: exprTree.IDataAddress;
     private scopeName: string;
@@ -159,22 +176,18 @@ class ForInNode implements IBlockNode {
         }
     }
 
-    writeFunction(data: ReadDataAtAddressCb) {
+    writeFunction(data: NodeScope) {
         var text = "";
-        var iter = new Iterable(this.address.read(data));
+        var iter = new Iterable(data.getRawData(this.address));
         var localScopeName = this.scopeName;
         iter.forEach(item => {
-            var processItem: ReadDataAtAddressCb = (a) => {
-                if (a.address.address[0].key === this.scopeName) {
-                    return a.address.read(item, 1);
-                }
-                else {
-                    return a.address.read(data);
-                }
-            };
+            var itemScope = new NodeScope(data, this.scopeName, {
+                getRawData: a => a.readScoped(item),
+                getFormatted: (d, a) => d //Doesn't really do anything, won't get called
+            });
 
             for (var i = 0; i < this.streamNodes.length; ++i) {
-                text += this.streamNodes[i].writeFunction(processItem);
+                text += this.streamNodes[i].writeFunction(itemScope);
             }
         });
         return text;
@@ -202,28 +215,32 @@ class ForInNode implements IBlockNode {
 }
 
 class EscapeVariableNode implements IStreamNode {
+    private parent: IStreamNode;
+
     constructor(private wrapped: IStreamNode){
 
     }
 
-    writeFunction(data: ReadDataAtAddressCb) {
+    writeFunction(data: NodeScope) {
         return escape(this.wrapped.writeFunction(data));
     }
 }
 
-function noData(a: AddressStack) {
-    return undefined;
-}
+var noData: ITextStreamData = {
+    getFormatted(val, address) { return val; },
+    getRawData(address) { return undefined; }
+};
 
-function format(data: ReadDataAtAddressCb, streamNodes: IStreamNode[]) {
+function format(data: ITextStreamData, streamNodes: IStreamNode[]) {
     if (data === null || data === undefined) {
         data = noData;
     }
 
     var text = "";
 
+    var nodeScope = new NodeScope(null, null, data);
     for (var i = 0; i < streamNodes.length; ++i) {
-        text += streamNodes[i].writeFunction(data);
+        text += streamNodes[i].writeFunction(nodeScope);
     }
 
     return text;
@@ -251,8 +268,8 @@ class StreamNodeTracker {
         this.blockNodeStack.push(new NodeStackItem(ifNode, true));
     }
 
-    public pushBlockNode(ifNode: IBlockNode) {
-        this.blockNodeStack.push(new NodeStackItem(ifNode, false));
+    public pushBlockNode(blockNode: IBlockNode) {
+        this.blockNodeStack.push(new NodeStackItem(blockNode, false));
     }
 
     public setElseMode() {
@@ -443,7 +460,7 @@ export class TextStream {
         }
     }
 
-    public format(data: ReadDataAtAddressCb) {
+    public format(data: ITextStreamData) {
         return format(data, this.streamNodes);
     }
 

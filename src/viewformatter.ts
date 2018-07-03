@@ -1,12 +1,14 @@
 import * as schema from 'hr.schema';
 import * as typeId from 'hr.typeidentifiers';
+import * as exprTree from 'hr.expressiontree';
+import { JsonSchema, JsonProperty } from 'hr.schema';
+import { ITextStreamData } from 'hr.textstream';
 
 export interface IViewDataFormatter<T> {
     convert(data: T): Extractor<T>;
 }
 
-export interface Extractor<T> {
-    (name: string): any;
+export interface Extractor<T> extends ITextStreamData {
     original: T;
 };
 
@@ -37,18 +39,26 @@ export class SchemaViewFormatter<T> implements IViewDataFormatter<T> {
 
     }
 
-    public convert(data:T): Extractor<T> {
-        var extractor: any = (name: string) => {
-            return this.extract(name, data);
-        };
+    public convert(data: T): Extractor<T> {
+        return new SchemaViewExtractor(this, data, this.schema);
+    }
+}
 
-        extractor.original = data;
+class SchemaViewExtractor<T> implements Extractor<T> {
+    constructor(private dataFormatter: IViewDataFormatter<T>, public original: T, private schema: schema.JsonSchema) { }
 
-        return extractor;
+    getRawData(address: exprTree.IDataAddress) {
+
     }
 
-    private extract(name: string, data: any) {
-        var prop = this.schema.properties[name];
+    getFormatted(data: any, address: exprTree.IDataAddress) {
+
+    }
+
+    private extract(data: any, address: exprTree.AddressNode[]) {
+        //Need to lookup info better than this
+        var name = <string>address[address.length - 1].key; //Assume string for now
+        var prop = this.getPropertyForAddress(this.schema, address);
         var rawData;
         if (typeId.isFunction(data)) {
             rawData = data[name];
@@ -89,8 +99,7 @@ export class SchemaViewFormatter<T> implements IViewDataFormatter<T> {
                 var enumValues = prop['enum'];
                 if (enumNames !== undefined && Array.isArray(enumNames) &&
                     enumValues !== undefined && Array.isArray(enumValues) &&
-                    enumNames.length === enumValues.length)
-                {
+                    enumNames.length === enumValues.length) {
                     for (var i = 0; i < enumValues.length; ++i) {
                         if (enumValues[i] == rawData) {
                             return enumNames[i];
@@ -105,7 +114,7 @@ export class SchemaViewFormatter<T> implements IViewDataFormatter<T> {
             }
 
             //Check for dates, come in a couple ways
-            if(rawData !== null) {
+            if (rawData !== null) {
                 switch (format) {
                     case 'date':
                         var date = new Date(rawData);
@@ -133,5 +142,40 @@ export class SchemaViewFormatter<T> implements IViewDataFormatter<T> {
         }
 
         return rawData;
+    }
+
+    private findSchemaProperty(rootSchema: schema.JsonSchema, prop: schema.JsonProperty, name: string | number): JsonProperty {
+        //Find ref node
+        var ref;
+        if (prop.oneOf) {
+            for (var i = 0; i < prop.oneOf.length; ++i) {
+                var type = prop.oneOf[i];
+                if (schema.isRefNode(type)) {
+                    ref = type;
+                    break;
+                }
+            }
+        }
+        if (!ref) {
+            throw new Error("Cannot find ref in schema properties.");
+        }
+
+        var ref = schema.resolveRef(ref, rootSchema);
+        return ref.properties[name];
+    }
+
+    private getPropertyForAddress(rootSchema: JsonSchema, address: exprTree.AddressNode[]): JsonProperty {
+        var prop = rootSchema.properties[address[0].key];
+        if (prop === undefined) {
+            return undefined;
+        }
+        for (var i = 1; i < address.length; ++i) {
+            var item = address[i];
+            prop = this.findSchemaProperty(rootSchema, prop, item.key); //Assuming strings for now
+            if (prop === undefined) {
+                return undefined;
+            }
+        }
+        return prop;
     }
 }

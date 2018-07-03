@@ -1,11 +1,12 @@
 ///<amd-module name="hr.view"/>
 
-import { TextStream } from 'hr.textstream';
+import { TextStream, ITextStreamData } from 'hr.textstream';
 import * as components from 'hr.components';
 import * as typeId from 'hr.typeidentifiers';
 import * as domQuery from 'hr.domquery';
 import * as iter from 'hr.iterable';
 import { Extractor, IViewDataFormatter } from 'hr.viewformatter';
+import { IDataAddress } from 'hr.expressiontree';
 export { SchemaViewFormatter as SchemaViewDataFormatter, Extractor, IViewDataFormatter } from 'hr.viewformatter';
 
 /**
@@ -61,33 +62,55 @@ class ComponentView<T> implements IView<T> {
     public insertData(data: T | T[] | iter.IterableInterface<T>, insertBeforeSibling: Node, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): void {
         if (Array.isArray(data) || typeId.isForEachable(data)) {
             if(this.formatter !== undefined){
-                var dataExtractors = new iter.Iterable(<T[]>data).select<Extractor<T>>(i => {
+                var dataExtractors = new iter.Iterable(<T[]>data).select<ITextStreamData>(i => {
                     return this.formatter.convert(i);
                 });
-                components.many<Extractor<T>>(this.component, dataExtractors, this.element, insertBeforeSibling,
+                components.many(this.component, dataExtractors, this.element, insertBeforeSibling,
                     createdCallback === undefined ? undefined : (b, e) => {
-                        return createdCallback(b, e.original);
+                        return createdCallback(b, (<Extractor<T>>e).original);
                     }, 
                     variantFinderCallback === undefined ? undefined : (i) => {
-                        return variantFinderCallback(i.original);
+                        return variantFinderCallback((<Extractor<T>>i).original);
                     });
             }
-            else{
-                components.many<T>(this.component, data, this.element, insertBeforeSibling, createdCallback, variantFinderCallback);
+            else {
+                var dataExtractors = new iter.Iterable(<T[]>data).select<ITextStreamData>(i => {
+                    return new ObjectTextStreamData(i);
+                });
+                components.many(this.component, dataExtractors, this.element, insertBeforeSibling, 
+                    createdCallback === undefined ? undefined : (b, e) => {
+                        return createdCallback(b, (<IViewTextStreamData>e).getDataObject());
+                    }, 
+                    variantFinderCallback === undefined ? undefined : (i) => {
+                        return variantFinderCallback((<IViewTextStreamData>i).getDataObject());
+                    });
             }
         }
         else if (data !== undefined && data !== null) {
             if(this.formatter !== undefined){
-                components.one(this.component, this.formatter.convert(<T>data), this.element, insertBeforeSibling, 
+                components.one(this.component, this.formatter.convert(data), this.element, insertBeforeSibling, 
                     createdCallback === undefined ? undefined : (b, e) => {
-                        return createdCallback(b, e.original);
+                        return createdCallback(b, (<Extractor<T>>e).original);
                     }, 
                     variantFinderCallback === undefined ? undefined : (i) => {
-                        return variantFinderCallback(i.original);
+                        return variantFinderCallback((<Extractor<T>>i).original);
                     });
             }
-            else{
-                components.one(this.component, data, this.element, insertBeforeSibling, createdCallback, variantFinderCallback);
+            else {
+                var dataStream: IViewTextStreamData;
+                if (typeId.isFunction(data)) {
+                    dataStream = new FuncTextStreamData(<any>data);
+                }
+                else {
+                    dataStream = new ObjectTextStreamData(data);
+                }
+                components.one(this.component, dataStream, this.element, insertBeforeSibling,
+                    createdCallback === undefined ? undefined : (b, e) => {
+                        return createdCallback(b, (<IViewTextStreamData>e).getDataObject());
+                    },
+                    variantFinderCallback === undefined ? undefined : (i) => {
+                        return variantFinderCallback((<IViewTextStreamData>i).getDataObject());
+                    });
             }
         }
     }
@@ -137,9 +160,16 @@ class TextNodeView<T> implements IView<T> {
 
     private bindData(data: any): void {
         this.ensureDataTextElements();
+        var callback: ITextStreamData;
+        if (typeId.isFunction(data)) {
+            callback = new FuncTextStreamData(data);
+        }
+        else {
+            callback = new ObjectTextStreamData(data);
+        }
         for (var i = 0; i < this.dataTextElements.length; ++i) {
             var node = this.dataTextElements[i];
-            node.node.textContent = node.stream.format(data);
+            node.node.textContent = node.stream.format(callback);
         }
     }
 
@@ -216,6 +246,44 @@ interface DataTextElement{
     stream: TextStream
 }
 
-function sharedClearer(i: number) {
+function sharedClearer(i) {
     return "";
+}
+
+interface IViewTextStreamData extends ITextStreamData {
+    getDataObject(): any;
+}
+
+class ObjectTextStreamData implements ITextStreamData {
+    constructor(private data: any) {
+
+    }
+
+    getDataObject(): any {
+        return this.data;
+    }
+
+    getRawData(address: IDataAddress) {
+        return address.read(this.data);
+    }
+    getFormatted(data: any, address: IDataAddress) {
+        return data;
+    }
+}
+
+class FuncTextStreamData implements ITextStreamData {
+    constructor(private data: (name: string) => any) {
+
+    }
+
+    getDataObject(): (name: string) => any {
+        return this.data;
+    }
+
+    getRawData(address: IDataAddress) {
+        return address.readScoped(this.data(<string>address.address[0].key));
+    }
+    getFormatted(data: any, address: IDataAddress) {
+        return data;
+    }
 }

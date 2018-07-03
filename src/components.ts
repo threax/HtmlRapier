@@ -5,9 +5,10 @@
 import * as typeId from 'hr.typeidentifiers';
 import * as domquery from 'hr.domquery';
 import { BindingCollection } from 'hr.bindingcollection';
+import * as textstream from 'hr.textstream';
 
 export interface IComponentBuilder {
-    create(data, parentComponent, insertBeforeSibling, variant): BindingCollection;
+    create(data: textstream.ITextStreamData, parentComponent: Node, insertBeforeSibling: Node, variant: string): BindingCollection;
 }
 
 interface ComponentFactory {
@@ -25,16 +26,16 @@ export function register(name: string, builder: IComponentBuilder): void {
     factory[name] = builder;
 }
 
-export function isDefined(name: string): boolean{
+export function isDefined(name: string): boolean {
     return factory[name] !== undefined;
 }
 
-export function getComponent(name: string): IComponentBuilder{
+export function getComponent(name: string): IComponentBuilder {
     return factory[name];
 }
 
 export interface VariantFinderCallback<T> {
-    (item: T) : string
+    (item: T): string
 }
 
 export interface CreatedCallback<T> {
@@ -45,14 +46,14 @@ export interface CreatedCallback<T> {
  * Get the default vaule if variant is undefined.
  * @returns variant default value (null)
  */
-function getDefaultVariant(item:any) {
+function getDefaultVariant(item: any) {
     return null;
 }
 
 /**
  * Create a single component.
  */
-export function one<T>(name: string, data: T, parentComponent: Node | string, insertBeforeSibling: Node, createdCallback?: CreatedCallback<T>, variantFinder?: VariantFinderCallback<T>) {
+export function one(name: string, data: textstream.ITextStreamData, parentComponent: Node | string, insertBeforeSibling: Node, createdCallback?: CreatedCallback<textstream.ITextStreamData>, variantFinder?: VariantFinderCallback<textstream.ITextStreamData>) {
     var variant: string;
     if (variantFinder === undefined) {
         variantFinder = getDefaultVariant(data);
@@ -71,7 +72,7 @@ export function one<T>(name: string, data: T, parentComponent: Node | string, in
  * If it is a function return the data and then return null to stop iteration.
  * @param {exports.createComponent~callback} createdCallback
  */
-export function many<T>(name: string, data: T[] | typeId.ForEachable<T>, parentComponent: HTMLElement, insertBeforeSibling: Node, createdCallback: CreatedCallback<T>, variantFinder?: VariantFinderCallback<T>) {
+export function many(name: string, data: textstream.ITextStreamData[] | typeId.ForEachable<textstream.ITextStreamData>, parentComponent: HTMLElement, insertBeforeSibling: Node, createdCallback: CreatedCallback<textstream.ITextStreamData>, variantFinder?: VariantFinderCallback<textstream.ITextStreamData>) {
     if (variantFinder === undefined) {
         variantFinder = getDefaultVariant;
     }
@@ -83,19 +84,19 @@ export function many<T>(name: string, data: T[] | typeId.ForEachable<T>, parentC
     }
 
     var fragmentParent = document.createDocumentFragment();
-    
+
     //Output
     if (typeId.isArray(data)) {
         //An array, read it as fast as possible
-        var arrData = <any>data;
+        var arrData = <textstream.ITextStreamData[]>data;
         for (var i = 0; i < arrData.length; ++i) {
             variant = variantFinder(arrData[i]);
             doCreateComponent(name, arrData[i], fragmentParent, null, variant, createdCallback);
         }
     }
-    else if (typeId.isForEachable<T>(data)) {
+    else if (typeId.isForEachable<textstream.ITextStreamData>(data)) {
         //Data supports a 'foreach' method, use this to iterate it
-        (<any>data).forEach(function (item) {
+        (<any>data).forEach(function (item: textstream.ITextStreamData) {
             variant = variantFinder(item);
             doCreateComponent(name, item, fragmentParent, null, variant, createdCallback);
         });
@@ -123,7 +124,7 @@ export function empty(parentComponent: Node | string) {
     }
 }
 
-function doCreateComponent<T>(name: string, data: T, parentComponent: Node | string, insertBeforeSibling: Node, variant: string, createdCallback: CreatedCallback<T>) {
+function doCreateComponent(name: string, data: textstream.ITextStreamData, parentComponent: Node | string, insertBeforeSibling: Node, variant: string, createdCallback: CreatedCallback<textstream.ITextStreamData>) {
     parentComponent = domquery.first(parentComponent);
     if (factory.hasOwnProperty(name)) {
         var created = factory[name].create(data, parentComponent, insertBeforeSibling, variant);

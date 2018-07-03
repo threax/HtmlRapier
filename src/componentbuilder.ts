@@ -3,6 +3,7 @@
 import { BindingCollection } from 'hr.bindingcollection';
 import { TextStream } from 'hr.textstream';
 import { IComponentBuilder } from 'hr.components';
+import * as textstream from 'hr.textstream';
 
 export class VariantBuilder{
     private tokenizedString: TextStream = null;
@@ -32,7 +33,7 @@ export class ComponentBuilder implements IComponentBuilder {
     constructor(private componentString: string){
     }
 
-    public create(data, parentComponent, insertBeforeSibling, variant) {
+    public create(data: textstream.ITextStreamData, parentComponent: Node, insertBeforeSibling: Node, variant: string) {
         if (variant !== null && this.variants.hasOwnProperty(variant)) {
             return this.variants[variant].create(data, parentComponent, insertBeforeSibling);
         }
@@ -53,7 +54,7 @@ export class ComponentBuilder implements IComponentBuilder {
 }
 
 //Component creation function
-function createItem(data, componentStringStream, parentComponent, insertBeforeSibling) {
+function createItem(data: textstream.ITextStreamData, componentStringStream: textstream.TextStream, parentComponent: Node, insertBeforeSibling: Node) {
     var itemMarkup = componentStringStream.format(data);
     var newItems = str2DOMElement(itemMarkup);
     var arrayedItems = [];

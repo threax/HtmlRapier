@@ -1,6 +1,6 @@
 ///<amd-module name="hr.test.UnitTests"/>
 
-import * as TestRunner from 'hr.test.TestRunner';
+import { ITestRunner, TestContext, TestFunc } from 'hr.test.TestRunner';
 import * as controller from 'hr.controller';
 
 function isError(e): e is Error {
@@ -27,12 +27,12 @@ export interface ITestDisplay {
 
 type ResultsDisplay = ITestResults | ITestDisplay | string;
 
-export class TestRunnerController implements TestRunner.ITestRunner {
+export class TestRunnerController implements ITestRunner {
     public static get InjectorArgs(): controller.DiFunction<any>[] {
         return [controller.BindingCollection];
     }
 
-    private context: TestRunner.TestContext = new TestRunner.TestContext();
+    private context: TestContext = new TestContext();
     private results: controller.IView<ResultsDisplay>;
     private totals: controller.IView<ITestResults>;
     private currentResults: TestResults = null;
@@ -50,7 +50,7 @@ export class TestRunnerController implements TestRunner.ITestRunner {
         this.currentResults = new TestResults();
     }
 
-    runTest(title: string, test: TestRunner.TestFunc): void {
+    runTest(title: string, test: TestFunc): void {
         ++this.currentResults.total;
         ++this.allResults.total;
 
@@ -110,10 +110,16 @@ export class TestRunnerController implements TestRunner.ITestRunner {
     }
 }
 
-var builder = new controller.InjectedControllerBuilder();
-builder.Services.addShared(TestRunnerController, TestRunnerController);
-var built = builder.create("testResults", TestRunnerController)[0];
-TestRunner.setTestRunner(built);
+var runner: ITestRunner = null;
+
+export function setupTests(): ITestRunner {
+    if (runner === null) {
+        var builder = new controller.InjectedControllerBuilder();
+        builder.Services.addShared(TestRunnerController, TestRunnerController);
+        runner = builder.create("testResults", TestRunnerController)[0];
+    }
+    return runner;
+}
 
 //built.beginTestSection("Unit Tests for Tests");
 

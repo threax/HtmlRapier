@@ -49,6 +49,8 @@ export type AddressStackLookup = (stack: AddressStack) => any;
 export interface IDataAddress {
     address: AddressNode[];
     read(data: AddressStackLookup | {}, startNode?: number);
+    isInScope(scope: string | null): boolean;
+    readScoped(data: {}): any;
 }
 
 export class DataAddress implements IDataAddress {
@@ -56,16 +58,12 @@ export class DataAddress implements IDataAddress {
     constructor(address: AddressNode[]) {
         this.address = address;
         //Remove any this from the address
-        if (address[0].key === "this") {
+        if (address.length > 0 && address[0].key === "this") {
             address.splice(0, 1);
         }
     }
 
-    read(data: AddressStackLookup | {}, startNode?: number) {
-        if (startNode === undefined) {
-            startNode = 0;
-        }
-
+    read(data: AddressStackLookup | {}) {
         if (DataAddress.isAddressStackLookup(data)) {
             return data({
                 parent: null,
@@ -74,8 +72,24 @@ export class DataAddress implements IDataAddress {
             });
         }
         else {
-            return this.readAddress(data, startNode);
+            return this.readAddress(data, 0);
         }
+    }
+
+    public isInScope(scope: string | null): boolean {
+        return this.address.length > 0 && this.address[0].key === scope;
+    }
+
+    /**
+     * Read scoped data, this will skip the first item of the address and will read the reminaing data out
+     * of the passed in data. This makes it easy read data that another address looked up in scoped addresses.
+     * @param data
+     */
+    public readScoped(data: {}) {
+        if (DataAddress.isAddressStackLookup(data)) {
+            throw new Error("Cannot read scoped data from AddressStackLookups");
+        }
+        return this.readAddress(data, 1);
     }
 
     private readAddress(value: any, startNode: number): any {
@@ -297,6 +311,7 @@ function setupNode(jsepNode: jsep.JsepNode): ExpressionNode {
             break;
         case "Identifier":
         case "MemberExpression":
+        case "ThisExpression":
             address = getIdentifierAddress(jsepNode);
             if (address === undefined) {
                 throw new Error("Cannot build valid expression from statement.");
@@ -312,8 +327,11 @@ function setupNode(jsepNode: jsep.JsepNode): ExpressionNode {
 }
 
 function getIdentifierAddress(node: jsep.JsepNode): IDataAddress {
-    var addrNodes: AddressNode[];
+    var addrNodes: AddressNode[] = null;
     switch (node.type) {
+        case "ThisExpression":
+            addrNodes = [];
+            break;
         case "Identifier":
             addrNodes = [{
                 key: (<jsep.Identifier>node).name,
@@ -324,7 +342,7 @@ function getIdentifierAddress(node: jsep.JsepNode): IDataAddress {
             addrNodes = convertMemberExpressionToAddress(<jsep.MemberExpression>node);
             break;
     }
-    if (addrNodes) {
+    if (addrNodes !== null) {
         return new DataAddress(addrNodes);
     }
     return undefined;

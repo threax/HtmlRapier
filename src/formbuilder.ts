@@ -16,6 +16,7 @@ import * as expression from 'hr.expressiontree';
 export { IFormValue, GetParentData } from 'hr.formhelper';
 import * as iterable from 'hr.iterable';
 import { TimedTrigger } from 'hr.timedtrigger';
+import { ITextStreamData } from 'hr.textstream';
 
 interface ProcessedJsonProperty extends JsonProperty {
     name: string;
@@ -34,8 +35,8 @@ class FormValuesSource implements expression.IValueSource {
 
     }
 
-    getValue(address: expression.AddressNode[]): any {
-        var value = this.formValues.getFormValue(<string>address[0].key); //for now assume strings, this only supports the current level object
+    getValue(address: expression.IDataAddress): any {
+        var value = this.formValues.getFormValue(<string>address.address[0].key); //for now assume strings, this only supports the current level object
         if (value !== undefined) {
             return value.getData();
         }
@@ -1225,8 +1226,8 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
             }
 
             //Create component if it is null
-            bindings = component.one(componentName, item, insertParent, insertElement, undefined, (i) => {
-                return i.buildType;
+            bindings = component.one(componentName, new FormComponentTextStream(item), insertParent, insertElement, undefined, (i) => {
+                return (<FormComponentTextStream>i).getDataObject().buildType;
             });
 
             //Refresh existing, should be found now, when doing this always grab the last match.
@@ -1522,3 +1523,19 @@ export function registerFormValueBuilder(builder: IFormValueBuilder) {
 
 //Register form build function
 formHelper.setBuildFormFunc(buildForm);
+
+class FormComponentTextStream implements ITextStreamData {
+    constructor(public data: ProcessedJsonProperty) {
+    }
+
+    getDataObject(): ProcessedJsonProperty {
+        return this.data;
+    }
+
+    getRawData(address: expression.IDataAddress) {
+        return address.read(this.data);
+    }
+    getFormatted(data: any, address: expression.IDataAddress) {
+        return data;
+    }
+}

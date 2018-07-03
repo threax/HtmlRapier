@@ -23,6 +23,11 @@ export interface JsonPropertyUiInfo{
     selectAll?: boolean;
 }
 
+export interface JsonType {
+    type?: string;
+    $ref?: string;
+}
+
 export interface JsonProperty {
     title?: string;
     type?: string | string[];
@@ -40,6 +45,7 @@ export interface JsonProperty {
     "x-display-if"?: expression.ExpressionNode;
     "x-lazy-load-values"?: boolean; //This will be true if the property will lazy load its values later, if this is true the property will be treated like it has values set
     "x-search"?: SearchInfo;
+    oneOf?: JsonType[];
 }
 
 export interface JsonLabel {
