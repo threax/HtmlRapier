@@ -2,113 +2,131 @@
 <head>
     <meta charset="utf-8">
     <title>Text Stream Tests</title>
+    <!--Css helps with form display-->
+    <link rel="stylesheet" href="/lib/bootstrap/dist/css/SpcBootstrap.css" />
+    <link rel="stylesheet" href="/lib/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css" />
 </head>
 <body>
-    <h1 data-hr-run="hr.test.textstream">HtmlRapier Unit Tests</h1>
-    <div data-hr-controller="testResults">
-        <h2>Totals</h2>
-        <div data-hr-view="totals">
-            <p>Passed: {{passed}}</p>
-            <p>Failed: {{failed}}</p>
-            <p>Total: {{total}}</p>
-        </div>
-        <h2>Results</h2>
-        <div data-hr-view="results">
-            <template>
-                <h4>{{testName}}</h4>
-                <p>{{message}}</p>
-            </template>
-            <template data-hr-variant="title">
-                <h3>{{this}}</h3>
-            </template>
-            <template data-hr-variant="breakdown">
-                <div>
+    <div class="container">
+        <div class="row">
+            <h1 data-hr-run="hr.test.textstream">HtmlRapier Unit Tests</h1>
+            <div data-hr-controller="testResults">
+                <h2>Totals</h2>
+                <div data-hr-view="totals">
                     <p>Passed: {{passed}}</p>
                     <p>Failed: {{failed}}</p>
                     <p>Total: {{total}}</p>
                 </div>
-                <hr />
-            </template>
-        </div>
-    </div>
-    <div data-hr-run="hr.test.view">
-        <h1>View Tests</h1>
-        <h2>Not Found View</h2>
-        <div data-hr-controller="notFoundView">
-            
-        </div>
-        <h2>Text View</h2>
-        <div data-hr-controller="textView">
-            <div data-hr-view="view">
-                {{message}}
+                <h2>Results</h2>
+                <div data-hr-view="results">
+                    <template>
+                        <h4>{{testName}}</h4>
+                        <p>{{message}}</p>
+                    </template>
+                    <template data-hr-variant="title">
+                        <h3>{{this}}</h3>
+                    </template>
+                    <template data-hr-variant="breakdown">
+                        <div>
+                            <p>Passed: {{passed}}</p>
+                            <p>Failed: {{failed}}</p>
+                            <p>Total: {{total}}</p>
+                        </div>
+                        <hr />
+                    </template>
+                </div>
             </div>
-        </div>
-        <h2>Component View Single</h2>
-        <div data-hr-controller="componentViewSingle">
-            <div data-hr-view="view">
-                <template>
-                    {{message}}
-                </template>
+            <hr />
+            <div data-hr-run="hr.test.view">
+                <h1>View Tests</h1>
+                <h2>Not Found View</h2>
+                <div data-hr-controller="notFoundView">
+
+                </div>
+                <h2>Text View</h2>
+                <div data-hr-controller="textView">
+                    <div data-hr-view="view">
+                        {{message}}
+                    </div>
+                </div>
+                <h2>Component View Single</h2>
+                <div data-hr-controller="componentViewSingle">
+                    <div data-hr-view="view">
+                        <template>
+                            {{message}}
+                        </template>
+                    </div>
+                </div>
+                <h2>Component View Multiple Append</h2>
+                <div data-hr-controller="componentViewMultipleAppend">
+                    <ul data-hr-view="view">
+                        <template>
+                            <li>{{message}}</li>
+                        </template>
+                    </ul>
+                </div>
+                <h2>Component View Multiple At Once</h2>
+                <div data-hr-controller="componentViewMultipleAtOnce">
+                    <ul data-hr-view="view">
+                        <template>
+                            <li>{{message}}</li>
+                        </template>
+                    </ul>
+                </div>
+                <h2>Component View Multiple Clear</h2>
+                <div data-hr-controller="componentViewMultipleClear">
+                    <ul data-hr-view="view">
+                        <template>
+                            <li>{{message}}</li>
+                        </template>
+                    </ul>
+                </div>
+                <h2>Component View Variant</h2>
+                <div data-hr-controller="componentViewVariant">
+                    <div data-hr-view="view">
+                        <template>
+                            {{message}}
+                        </template>
+                        <template data-hr-variant="variant">
+                            From Variant: {{message}}
+                        </template>
+                    </div>
+                </div>
+                <h2>Component View Callback</h2>
+                <div data-hr-controller="componentViewCallback">
+                    <ul data-hr-view="view">
+                        <template>
+                            <li>{{message}}</li>
+                        </template>
+                    </ul>
+                </div>
+                <h2>View From Function</h2>
+                <div data-hr-controller="viewFromFunction">
+                    <ul data-hr-view="view">
+                        <template>
+                            <li>{{message}}</li>
+                        </template>
+                    </ul>
+                </div>
+                <h2>Formatted View</h2>
+                <div data-hr-controller="formattedView">
+                    <ul data-hr-view="view">
+                        <template>
+                            <li>{{message}}</li>
+                        </template>
+                    </ul>
+                </div>
             </div>
-        </div>
-        <h2>Component View Multiple Append</h2>
-        <div data-hr-controller="componentViewMultipleAppend">
-            <ul data-hr-view="view">
-                <template>
-                    <li>{{message}}</li>
-                </template>
-            </ul>
-        </div>
-        <h2>Component View Multiple At Once</h2>
-        <div data-hr-controller="componentViewMultipleAtOnce">
-            <ul data-hr-view="view">
-                <template>
-                    <li>{{message}}</li>
-                </template>
-            </ul>
-        </div>
-        <h2>Component View Multiple Clear</h2>
-        <div data-hr-controller="componentViewMultipleClear">
-            <ul data-hr-view="view">
-                <template>
-                    <li>{{message}}</li>
-                </template>
-            </ul>
-        </div>
-        <h2>Component View Variant</h2>
-        <div data-hr-controller="componentViewVariant">
-            <div data-hr-view="view">
-                <template>
-                    {{message}}
-                </template>
-                <template data-hr-variant="variant">
-                    From Variant: {{message}}
-                </template>
+            <hr />
+            <div data-hr-run="hr.test.form">
+                <h1>Form Tests</h1>
+                <h2>Simple Form</h2>
+                <div data-hr-controller="simpleForm">
+                    <form data-hr-form="form" class="col-sm-5" data-hr-on-submit="submit">
+                        <button type="submit" data-hr-form-end>Submit</button>
+                    </form>
+                </div>
             </div>
-        </div>
-        <h2>Component View Callback</h2>
-        <div data-hr-controller="componentViewCallback">
-            <ul data-hr-view="view">
-                <template>
-                    <li>{{message}}</li>
-                </template>
-            </ul>
-        </div>
-        <h2>View From Function</h2>
-        <div data-hr-controller="viewFromFunction">
-            <ul data-hr-view="view">
-                <template>
-                    <li>{{message}}</li>
-                </template>
-            </ul>
-        </div>
-        <h2>Formatted View</h2>
-        <div data-hr-controller="formattedView">
-            <ul data-hr-view="view">
-                <template>
-                    <li>{{message}}</li>
-                </template>
-            </ul>
         </div>
     </div>
     <script type="text/javascript" src="/lib/jquery/dist/jquery.min.js"></script>
