@@ -2,10 +2,9 @@
 
 import * as exprTree from 'hr.expressionTree';
 import * as textstream from 'hr.textstream';
-import { TestContext } from 'hr.test.TestRunner';
-import * as unitTests from 'hr.test.UnitTests';
+import { TestContext, setupTests } from 'hr.test.UnitTests';
 
-var runner = unitTests.setupTests();
+var runner = setupTests();
 runner.beginTestSection("Text Stream");
 
 class TestTextStreamData implements textstream.ITextStreamData {

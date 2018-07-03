@@ -1,7 +1,21 @@
 ///<amd-module name="hr.test.UnitTests"/>
-
-import { ITestRunner, TestContext, TestFunc } from 'hr.test.TestRunner';
 import * as controller from 'hr.controller';
+
+export type TestFunc = (ctx: TestContext) => void;
+
+export interface ITestRunner {
+    beginTestSection(title: string): void;
+    runTest(title: string, test: TestFunc): void;
+    endTestSection(): void;
+}
+
+export class TestContext {
+    assert(result: boolean, errorString: string): void {
+        if (!result) {
+            throw new Error(errorString);
+        }
+    }
+}
 
 function isError(e): e is Error {
     return e && e.stack && e.message;

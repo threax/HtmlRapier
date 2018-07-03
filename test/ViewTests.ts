@@ -2,12 +2,11 @@
 
 import * as exprTree from 'hr.expressionTree';
 import * as textstream from 'hr.textstream';
-import { TestContext } from 'hr.test.TestRunner';
-import * as unitTests from 'hr.test.UnitTests';
+import { TestContext, setupTests } from 'hr.test.UnitTests';
 import * as controller from 'hr.controller';
-import { IViewDataFormatter, Extractor } from 'htmlrapier/src/view';
+import { IViewDataFormatter, Extractor } from 'hr.view';
 
-var runner = unitTests.setupTests();
+var runner = setupTests();
 runner.beginTestSection("View");
 
 runner.runTest("Not Found View", c => {
