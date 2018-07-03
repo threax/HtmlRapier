@@ -3,22 +3,31 @@
         <meta charset="utf-8">
         <title>Text Stream Tests</title>
     </head>
-    <body data-hr-run="hr.test.RunTests">
-        <h1 data-hr-run="hr.test.textstream">Text Stream Tests</h1>
+    <body data-hr-run="hr.test.UnitTests">
+        <h1 data-hr-run="hr.test.textstream">HtmlRapier Unit Tests</h1>
         <div data-hr-controller="testResults">
-            <div data-hr-view="allResults">
+            <h2>Totals</h2>
+            <div data-hr-view="totals">
                 <p>Passed: {{passed}}</p>
                 <p>Failed: {{failed}}</p>
                 <p>Total: {{total}}</p>
             </div>
-            <h2>Failed Tests</h2>
-            <div data-hr-view="failures">
+            <h2>Results</h2>
+            <div data-hr-view="results">
                 <template>
-                    <h3>{{testName}}</h3>
+                    <h4>{{testName}}</h4>
                     <p>{{message}}</p>
                 </template>
                 <template data-hr-variant="title">
                     <h3>{{this}}</h3>
+                </template>
+                <template data-hr-variant="breakdown">
+                    <div>
+                        <p>Passed: {{passed}}</p>
+                        <p>Failed: {{failed}}</p>
+                        <p>Total: {{total}}</p>
+                    </div>
+                    <hr />
                 </template>
             </div>
         </div>
