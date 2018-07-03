@@ -15,7 +15,7 @@ export interface ITextStreamData {
 }
 
 class NodeScope {
-    constructor(private parent: NodeScope, private scopeName: string, private data: ITextStreamData) {
+    constructor(private parent: NodeScope, private scopeName: string, private data: ITextStreamData, private address: IDataAddress | null) {
         parent = parent || null;
     }
 
@@ -36,6 +36,30 @@ class NodeScope {
         }
         return parent.data.getFormatted(data, address);
     }
+
+    getFullAddress(childAddress?: exprTree.IDataAddress): exprTree.AddressNode[] {
+        var address: exprTree.AddressNode[];
+        var first = 0;
+        if (this.parent !== null) {
+            address = this.parent.getFullAddress(this.address);
+            first = 1; //In scopes skip the first variable
+        }
+        else {
+            address = [];
+        }
+
+        if (childAddress) {
+            var childAddrArray = childAddress.address;
+            for (var i = first; i < childAddrArray.length; ++i) { 
+                address.push(childAddrArray[i]);
+            }
+        }
+        return address;
+    }
+
+    public get isTopLevel(): boolean {
+        return this.parent === null;
+    }
 }
 
 interface IStreamNode{
@@ -51,6 +75,30 @@ class TextNode implements IStreamNode{
 
     writeFunction(data: NodeScope){
         return this.str;
+    }
+}
+
+export class ScopedFullDataAddress implements IDataAddress {
+    constructor(private scope: NodeScope, private varAddress: IDataAddress) {
+
+    }
+
+    get address(): exprTree.AddressNode[] {
+        //Build complete address, slow for now
+        var address = this.scope.getFullAddress(this.varAddress);
+        return address;
+    }
+
+    read(data: {} | exprTree.AddressStackLookup, startNode?: number) {
+        throw new Error("Method not supported.");
+    }
+
+    isInScope(scope: string): boolean {
+        throw new Error("Method not supported.");
+    }
+
+    readScoped(data: {}) {
+        throw new Error("Method not supported.");
     }
 }
 
@@ -70,7 +118,12 @@ class VariableNode implements IStreamNode {
 
     writeFunction(data: NodeScope) {
         var lookedUp = data.getRawData(this.address);
-        return data.getFormatted(lookedUp, this.address);
+        var finalAddress = this.address;
+        if (!data.isTopLevel) {
+            finalAddress = new ScopedFullDataAddress(data, this.address);
+        }
+
+        return data.getFormatted(lookedUp, finalAddress);
     }
 }
 
@@ -184,7 +237,7 @@ class ForInNode implements IBlockNode {
             var itemScope = new NodeScope(data, this.scopeName, {
                 getRawData: a => a.readScoped(item),
                 getFormatted: (d, a) => d //Doesn't really do anything, won't get called
-            });
+            }, this.address);
 
             for (var i = 0; i < this.streamNodes.length; ++i) {
                 text += this.streamNodes[i].writeFunction(itemScope);
@@ -238,7 +291,7 @@ function format(data: ITextStreamData, streamNodes: IStreamNode[]) {
 
     var text = "";
 
-    var nodeScope = new NodeScope(null, null, data);
+    var nodeScope = new NodeScope(null, null, data, null);
     for (var i = 0; i < streamNodes.length; ++i) {
         text += streamNodes[i].writeFunction(nodeScope);
     }

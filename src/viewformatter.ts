@@ -150,6 +150,12 @@ class SchemaViewExtractor<T> implements Extractor<T> {
                 }
             }
         }
+        else if (prop.items) {
+            if (schema.isRefNode(prop.items)) {
+                ref = prop.items;
+            }
+        }
+
         if (!ref) {
             throw new Error("Cannot find ref in schema properties.");
         }
