@@ -281,8 +281,16 @@ class FuncTextStreamData implements ITextStreamData {
     }
 
     getRawData(address: IDataAddress) {
-        return address.readScoped(this.data(<string>address.address[0].key));
+        var lookup;
+        if (address.address.length > 0) {
+            lookup = <string>address.address[0].key;
+        }
+        else {
+            lookup = "this";
+        }
+        return address.readScoped(this.data(lookup));
     }
+
     getFormatted(data: any, address: IDataAddress) {
         return data;
     }
