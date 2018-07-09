@@ -5,6 +5,7 @@ import * as textstream from 'hr.textstream';
 import { TestContext, setupTests } from 'hr.test.UnitTests';
 import * as controller from 'hr.controller';
 import { IViewDataFormatter, Extractor } from 'hr.view';
+import { Iterable } from 'hr.iterable';
 
 var runner = setupTests();
 runner.beginTestSection("View");
@@ -281,6 +282,95 @@ runner.runTest("Formatted View", c => {
     builder.Services.addShared(TestContext, s => c);
     builder.Services.addShared(ViewTestController, ViewTestController);
     var result = builder.create("formattedView", ViewTestController);
+    c.assert(result.length > 0, "No Controller Created");
+});
+
+runner.runTest("View From Iterator", c => {
+    class ViewTestController {
+        public static get InjectorArgs(): controller.DiFunction<any>[] {
+            return [controller.BindingCollection];
+        }
+
+        constructor(bindings: controller.BindingCollection) {
+            var calledSelect = false;
+            var data = [{ message: "one" }, { message: "two" }, { message: "three" }];
+            var iter = new Iterable(data).select(i => {
+                i.message += " selected";
+                calledSelect = true;
+                return i;
+            });
+            var view = bindings.getView("view");
+            view.setData(iter);
+            c.assert(calledSelect, "Did not call iterator select function, which means iter was not used.");
+        }
+    }
+
+    var builder = new controller.InjectedControllerBuilder();
+    builder.Services.addShared(ViewTestController, ViewTestController);
+    var result = builder.create("viewFromIterator", ViewTestController);
+    c.assert(result.length > 0, "No Controller Created");
+});
+
+runner.runTest("View From Iterator with Formatter", c => {
+    class SimpleFormatter<T> implements IViewDataFormatter<T> {
+        constructor(private status: TestStatus) {
+
+        }
+
+        convert(data: T): Extractor<T> {
+            this.status.calledConvert = true;
+            return new SimpleExtractor(data, this.status);
+        }
+    }
+
+    class SimpleExtractor<T> implements Extractor<T>{
+        constructor(public original: T, private status: TestStatus) {
+
+        }
+
+        getRawData(address: exprTree.IDataAddress) {
+            this.status.calledGetRawData = true;
+            return address.read(this.original);
+        }
+        getFormatted(data: any, address: exprTree.IDataAddress) {
+            this.status.calledGetFormatted = true;
+            return "Formatted: " + data;
+        }
+    }
+
+    class TestStatus {
+        calledGetFormatted = false;
+        calledGetRawData = false;
+        calledConvert = false;
+    }
+
+    class ViewTestController {
+        public static get InjectorArgs(): controller.DiFunction<any>[] {
+            return [controller.BindingCollection];
+        }
+
+        constructor(bindings: controller.BindingCollection) {
+            var calledSelect = false;
+            var data = [{ message: "one" }, { message: "two" }, { message: "three" }];
+            var iter = new Iterable(data).select(i => {
+                i.message += " selected";
+                calledSelect = true;
+                return i;
+            });
+            var view = bindings.getView("view");
+            var status = new TestStatus();
+            view.setFormatter(new SimpleFormatter<any>(status));
+            view.setData(iter);
+            c.assert(status.calledConvert, "Did not call IViewDataFormatter.convert");
+            c.assert(status.calledGetRawData, "Did not call Extractor.calledGetRawData");
+            c.assert(status.calledGetFormatted, "Did not call Extractor.calledGetFormatted");
+            c.assert(calledSelect, "Did not call iterator select function, which means iter was not used.");
+        }
+    }
+
+    var builder = new controller.InjectedControllerBuilder();
+    builder.Services.addShared(ViewTestController, ViewTestController);
+    var result = builder.create("viewFromIteratorWithFormatter", ViewTestController);
     c.assert(result.length > 0, "No Controller Created");
 });
 

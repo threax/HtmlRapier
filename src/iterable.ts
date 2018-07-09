@@ -119,6 +119,14 @@ function _forEach(items, query, cb) {
             item = items();
         }
     }
+    else if (typeId.isForEachable(items)) {
+        items.forEach(item => {
+            item = query.derive(item);
+            if(item !== undefined){
+                cb(item);
+            }
+        });
+    }
 }
 
 abstract class IteratorBase<T> implements IterableInterface<T>{
@@ -173,7 +181,7 @@ class Conditional<T> extends IteratorBase<T> {
 export type IteratorSource<T> = () => T;
 
 export class Iterable<T> extends IteratorBase<T> {
-    constructor(private items: T[] | IteratorSource<T>) {
+    constructor(private items: T[] | IteratorSource<T> | IteratorBase<T>) {
         super();
     }
 

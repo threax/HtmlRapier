@@ -1,7 +1,7 @@
 ﻿<html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Text Stream Tests</title>
+    <title>HtmlRapier Tests</title>
     <!--Css helps with form display-->
     <link rel="stylesheet" href="/lib/bootstrap/dist/css/SpcBootstrap.css" />
     <link rel="stylesheet" href="/lib/eonasdan-bootstrap-datetimepicker/build/css/bootstrap-datetimepicker.min.css" />
@@ -110,6 +110,22 @@
                 </div>
                 <h2>Formatted View</h2>
                 <div data-hr-controller="formattedView">
+                    <ul data-hr-view="view">
+                        <template>
+                            <li>{{message}}</li>
+                        </template>
+                    </ul>
+                </div>
+                <h2>View From Iterator</h2>
+                <div data-hr-controller="viewFromIterator">
+                    <ul data-hr-view="view">
+                        <template>
+                            <li>{{message}}</li>
+                        </template>
+                    </ul>
+                </div>
+                <h2>View From Iterator with Formatter</h2>
+                <div data-hr-controller="viewFromIteratorWithFormatter">
                     <ul data-hr-view="view">
                         <template>
                             <li>{{message}}</li>
