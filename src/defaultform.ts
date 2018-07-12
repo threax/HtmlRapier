@@ -35,7 +35,7 @@ if (!component.isDefined("hr.forms.default")) {
             +'<label class="control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label>'
             +'<div class="panel panel-default"><div class="panel-body">'
                 +'<div data-hr-view="items" data-hr-view-component="hr.forms.default-arrayEditorItem"></div>'
-                +'<button class="btn btn-default" data-hr-on-click="add">Add</button>'
+                +'<button type="button" class="btn btn-default" data-hr-on-click="add">Add</button>'
             +'</div></div>'
         +'</div></div>'
     ));
@@ -88,7 +88,7 @@ if (!component.isDefined("hr.forms.default")) {
     ));
 
     component.register("hr.forms.default-arrayEditorItem", new ComponentBuilder(
-        '<div class="panel panel-default"><div class="panel-body"><button data-hr-on-click="remove" class="btn btn-default" data-hr-form-end>Remove</button></div></div>'
+        '<div class="panel panel-default"><div class="panel-body"><button type="button" data-hr-on-click="remove" class="btn btn-default" data-hr-form-end>Remove</button></div></div>'
     ));
 
     var searchResultBuilder = new ComponentBuilder(
@@ -132,7 +132,7 @@ if (!component.isDefined("hr.forms.horizontal")) {
                 +'<label class="control-label col-sm-2">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label>'
                 +'<div class="col-sm-10 panel panel-default"><div class="panel-body">'
                     +'<div data-hr-view="items" data-hr-view-component="hr.forms.horizontal-arrayEditorItem"></div>'
-                    +'<button class="btn btn-default" data-hr-on-click="add">Add</button>'
+                    +'<button type="button" class="btn btn-default" data-hr-on-click="add">Add</button>'
                 +'</div></div>'
         +'</div></div>'
     ));
@@ -185,7 +185,7 @@ if (!component.isDefined("hr.forms.horizontal")) {
     ));
 
     component.register("hr.forms.horizontal-arrayEditorItem", new ComponentBuilder(
-        '<div class="panel panel-default"><div class="panel-body"><button data-hr-on-click="remove" class="btn btn-default" data-hr-form-end>Remove</button></div></div>'
+        '<div class="panel panel-default"><div class="panel-body"><button type="button" data-hr-on-click="remove" class="btn btn-default" data-hr-form-end>Remove</button></div></div>'
     ));
 
 
