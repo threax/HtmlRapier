@@ -437,7 +437,7 @@ export class BasicItemEditor implements formHelper.IFormValueWithOptions {
         this.element = args.inputElement;
         this.displayExpression = args.item.displayExpression;
 
-        if (args.item["x-ui-disabled"] === true || args.item.readOnly === true) {
+        if (args.item["x-ui-disabled"] === true || args.item.readOnly === true || args.item["x-readOnly"] === true) {
             this.element.setAttribute("disabled", "");
         }
 
