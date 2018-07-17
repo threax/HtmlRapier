@@ -23,6 +23,9 @@ if (!component.isDefined("hr.forms.default")) {
     builder.addVariant("hidden", new VariantBuilder(
         '<input id="{{uniqueId}}" type="hidden" name="{{buildName}}" />'
     ));
+    builder.addVariant("number", new VariantBuilder(
+        '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;"><div class="form-group" data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error"><label for="{{uniqueId}}" class="control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label><input id="{{uniqueId}}" class="form-control" name="{{buildName}}" type="number" step="any" /></div></div>'
+    ));
     builder.addVariant("select", new VariantBuilder(
         '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;"><div class="form-group" data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error"><label for="{{uniqueId}}" class="control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label><select id="{{uniqueId}}" class="form-control" name="{{buildName}}"/></div></div>'
     ));
@@ -119,6 +122,9 @@ if (!component.isDefined("hr.forms.horizontal")) {
     ));
     builder.addVariant("hidden", new VariantBuilder(
         '<input type="hidden" name="{{buildName}}" />'
+    ));
+    builder.addVariant("number", new VariantBuilder(
+        '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;"><div class="form-group" data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error"><label for="{{uniqueId}}" class="col-sm-2 control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label><div class="col-sm-10"><input id="{{uniqueId}}" class="form-control" name="{{buildName}}" type="number" step="any" /></div></div></div>'
     ));
     builder.addVariant("select", new VariantBuilder(
         '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;"><div class="form-group" data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error"><label for="{{uniqueId}}" class="col-sm-2 control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label><div class="col-sm-10"><select id="{{uniqueId}}" class="form-control" name="{{buildName}}"/></div></div></div>'
