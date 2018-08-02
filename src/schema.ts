@@ -21,6 +21,7 @@ export interface JsonSchema {
 export interface JsonPropertyUiInfo{
     type: string;
     selectAll?: boolean;
+    overrideComponent?: string;
 }
 
 export interface JsonType {

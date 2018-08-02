@@ -1226,7 +1226,8 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
             }
 
             //Create component if it is null
-            bindings = component.one(componentName, new FormComponentTextStream(item), insertParent, insertElement, undefined, (i) => {
+            var actualComponentName = (item.xUi && item.xUi.overrideComponent) || componentName;
+            bindings = component.one(actualComponentName, new FormComponentTextStream(item), insertParent, insertElement, undefined, (i) => {
                 return (<FormComponentTextStream>i).getDataObject().buildType;
             });
 
