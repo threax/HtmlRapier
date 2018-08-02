@@ -1227,6 +1227,10 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
 
             //Create component if it is null
             var actualComponentName = (item.xUi && item.xUi.overrideComponent) || componentName;
+            if (!component.isDefined(actualComponentName)) {
+                //If the component is not defined, fall back to the original
+                actualComponentName = componentName;
+            }
             bindings = component.one(actualComponentName, new FormComponentTextStream(item), insertParent, insertElement, undefined, (i) => {
                 return (<FormComponentTextStream>i).getDataObject().buildType;
             });
