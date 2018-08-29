@@ -60,16 +60,18 @@ class ComponentView<T> implements IView<T> {
     }
 
     public insertData(data: T | T[] | iter.IterableInterface<T>, insertBeforeSibling: Node, createdCallback?: components.CreatedCallback<T>, variantFinderCallback?: components.VariantFinderCallback<T>): void {
+        var wrapCreatedCallback = createdCallback !== undefined && createdCallback !== null;
+        var wrapVariantFinderCallback = variantFinderCallback !== undefined && variantFinderCallback !== null;
         if (Array.isArray(data) || typeId.isForEachable(data)) {
             if(this.formatter !== undefined){
                 var dataExtractors = new iter.Iterable(<T[]>data).select<ITextStreamData>(i => {
                     return this.formatter.convert(i);
                 });
                 components.many(this.component, dataExtractors, this.element, insertBeforeSibling,
-                    createdCallback === undefined ? undefined : (b, e) => {
+                    wrapCreatedCallback === false ? undefined : (b, e) => {
                         return createdCallback(b, (<Extractor<T>>e).original);
                     }, 
-                    variantFinderCallback === undefined ? undefined : (i) => {
+                    wrapVariantFinderCallback === false ? undefined : (i) => {
                         return variantFinderCallback((<Extractor<T>>i).original);
                     });
             }
@@ -78,10 +80,10 @@ class ComponentView<T> implements IView<T> {
                     return new ObjectTextStreamData(i);
                 });
                 components.many(this.component, dataExtractors, this.element, insertBeforeSibling, 
-                    createdCallback === undefined ? undefined : (b, e) => {
+                    wrapCreatedCallback === false ? undefined : (b, e) => {
                         return createdCallback(b, (<IViewTextStreamData>e).getDataObject());
                     }, 
-                    variantFinderCallback === undefined ? undefined : (i) => {
+                    wrapVariantFinderCallback === false ? undefined : (i) => {
                         return variantFinderCallback((<IViewTextStreamData>i).getDataObject());
                     });
             }
@@ -89,10 +91,10 @@ class ComponentView<T> implements IView<T> {
         else if (data !== undefined && data !== null) {
             if(this.formatter !== undefined){
                 components.one(this.component, this.formatter.convert(data), this.element, insertBeforeSibling, 
-                    createdCallback === undefined ? undefined : (b, e) => {
+                    wrapCreatedCallback === false ? undefined : (b, e) => {
                         return createdCallback(b, (<Extractor<T>>e).original);
                     }, 
-                    variantFinderCallback === undefined ? undefined : (i) => {
+                    wrapVariantFinderCallback === false ? undefined : (i) => {
                         return variantFinderCallback((<Extractor<T>>i).original);
                     });
             }
@@ -105,10 +107,10 @@ class ComponentView<T> implements IView<T> {
                     dataStream = new ObjectTextStreamData(data);
                 }
                 components.one(this.component, dataStream, this.element, insertBeforeSibling,
-                    createdCallback === undefined ? undefined : (b, e) => {
+                    wrapCreatedCallback === false ? undefined : (b, e) => {
                         return createdCallback(b, (<IViewTextStreamData>e).getDataObject());
                     },
-                    variantFinderCallback === undefined ? undefined : (i) => {
+                    wrapVariantFinderCallback === false ? undefined : (i) => {
                         return variantFinderCallback((<IViewTextStreamData>i).getDataObject());
                     });
             }
