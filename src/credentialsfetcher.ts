@@ -1,6 +1,6 @@
 ///<amd-module name="hr.credentialsfetcher"/>
 
-import { Fetcher, RequestInfo, RequestInit, Response } from 'hr.Fetcher';
+import { Fetcher, RequestInfo, RequestInit, Response } from 'hr.fetcher';
 import {IWhitelist} from 'hr.whitelist';
 
 /**
