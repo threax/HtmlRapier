@@ -145,7 +145,7 @@ class TextNodeView<T> implements IView<T> {
     public insertData(data: T | T[] | iter.IterableInterface<T>): void{
         if(this.formatter !== undefined){
             var extractor = this.formatter.convert(<T>data);
-            this.bindData(extractor);
+            this.writeTextStream(extractor);
         }
         else{
             this.bindData(data);
@@ -161,7 +161,6 @@ class TextNodeView<T> implements IView<T> {
     }
 
     private bindData(data: any): void {
-        this.ensureDataTextElements();
         var callback: ITextStreamData;
         if (typeId.isFunction(data)) {
             callback = new FuncTextStreamData(data);
@@ -169,9 +168,14 @@ class TextNodeView<T> implements IView<T> {
         else {
             callback = new ObjectTextStreamData(data);
         }
+        this.writeTextStream(callback);
+    }
+
+    private writeTextStream(textStream: ITextStreamData): void {
+        this.ensureDataTextElements();
         for (var i = 0; i < this.dataTextElements.length; ++i) {
             var node = this.dataTextElements[i];
-            node.node.textContent = node.stream.format(callback);
+            node.node.textContent = node.stream.format(textStream);
         }
     }
 
