@@ -16,10 +16,16 @@ Add the following to artifacts.json:
     ]
   }
 
-  And the following to tsconfig.json:
+And the following to tsconfig.json:
+
+under "paths"
 
 "hr.test.*": [
     "node_modules\\htmlrapier\\test\\*"
 ],
 
+under "include"
+
 "node_modules\\htmlrapier\\test\\**\\*.ts",
+
+visit https://projecturl/test/htmlrapier/unittests.html to test.
