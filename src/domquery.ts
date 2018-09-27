@@ -112,6 +112,20 @@ function alwaysTrue(node) {
     return true;
 }
 
+//createNodeIterator is tricky, this will make sure it can be called on ie and modern browsers
+var createNodeIteratorShim = function (root: Node, whatToShow?: number) {
+    return document.createNodeIterator(root, whatToShow);
+}
+try {
+    //See if the default version works, no error should occur during the following call.
+    const iter = createNodeIteratorShim(document, NodeFilter.SHOW_ELEMENT);
+} catch (_) {
+    //If we get an error here the default version does not work, so use the shimmed version for ie.
+    createNodeIteratorShim = function (root: Node, whatToShow?: number) {
+        return (<any>document).createNodeIterator(root, whatToShow, alwaysTrue, false);
+    }
+}
+
 /**
  * Iterate a node collection using createNodeIterator. There is no query for this version
  * as it iterates everything and allows you to extract what is needed.
@@ -120,7 +134,7 @@ function alwaysTrue(node) {
  * @param  cb - The function called for each item iterated
  */
 export function iterateNodes(node: Node, whatToShow?: number, cb?: NodeIteratorCallback) {
-    var iter = document.createNodeIterator(node, whatToShow, <any>alwaysTrue, false);
+    var iter = createNodeIteratorShim(node, whatToShow);
     var resultNode;
     while (resultNode = iter.nextNode()) {
         cb(resultNode);
@@ -135,7 +149,7 @@ export function iterateNodes(node: Node, whatToShow?: number, cb?: NodeIteratorC
  * @param  cb - The function called for each item iterated
  */
 export function iterateElementNodes(node: Node, cb?: ElementIteratorCallback) {
-    var iter = document.createNodeIterator(node, NodeFilter.SHOW_ELEMENT, <any>alwaysTrue, false);
+    var iter = createNodeIteratorShim(node, NodeFilter.SHOW_ELEMENT);
     var resultNode: any;
     while (resultNode = iter.nextNode()) {
         cb(resultNode);
