@@ -180,6 +180,11 @@ export class ExpressionTree {
     private equals(current: any, test: any): boolean {
         switch (typeof (test)) {
             case "boolean":
+                if (typeof (current === "string")) {
+                    //Special type conversion for string
+                    //Boolean('false') is true, so this looks for true for real
+                    current = current.toLowerCase() === 'true';
+                }
                 return Boolean(current) === test;
             case "number":
                 return Number(current) === test;
