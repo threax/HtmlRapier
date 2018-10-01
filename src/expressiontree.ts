@@ -180,7 +180,7 @@ export class ExpressionTree {
     private equals(current: any, test: any): boolean {
         switch (typeof (test)) {
             case "boolean":
-                if (typeof (current) === "string") {
+                if (typeof (current) === "string" && current.toLowerCase !== undefined) { //The toLowerCase check is for chrome, not good enough to just check the types.
                     //Special type conversion for string
                     //Boolean('false') is true, so this looks for true for real
                     current = current.toLowerCase() === 'true';
