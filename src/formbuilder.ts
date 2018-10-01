@@ -288,6 +288,8 @@ class ArrayEditor implements formHelper.IFormValue {
     private buildName: string;
     private bindings: BindingCollection;
     private generated: boolean;
+    protected displayExpression: expression.ExpressionTree;
+    private hideToggle: toggle.OnOffToggle;
 
     constructor(args: IFormValueBuilderArgs, private schema: JsonSchema) {
         var baseTitle: string = args.item.title;
@@ -296,6 +298,7 @@ class ArrayEditor implements formHelper.IFormValue {
         this.buildName = args.item.buildName;
         this.bindings = args.bindings;
         this.generated = args.generated;
+        this.displayExpression = args.item.displayExpression;
 
         this.itemsView = bindings.getView<JsonSchema>("items");
         bindings.setListener(this);
@@ -312,6 +315,7 @@ class ArrayEditor implements formHelper.IFormValue {
 
         this.errorToggle = this.bindings.getToggle(this.buildName + "Error");
         this.errorMessage = this.bindings.getView(this.buildName + "ErrorMessage");
+        this.hideToggle = this.bindings.getToggle(this.buildName + "Hide");
     }
 
     public setError(err: FormErrors, baseName: string) {
@@ -409,11 +413,18 @@ class ArrayEditor implements formHelper.IFormValue {
     }
 
     public get respondsToChanges() {
-        return false;
+        return this.displayExpression !== undefined;
     }
 
     public handleChange(values: expression.IValueSource): void {
-
+        if (this.displayExpression) {
+            if (this.displayExpression.isTrue(values)) {
+                this.hideToggle.off();
+            }
+            else {
+                this.hideToggle.on();
+            }
+        }
     }
 }
 
