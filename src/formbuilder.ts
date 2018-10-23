@@ -439,6 +439,7 @@ export class BasicItemEditor implements formHelper.IFormValueWithOptions {
     protected generated: boolean;
     protected element: HTMLElement;
     protected displayExpression: expression.ExpressionTree;
+    protected datalistValues?: JsonLabel[];
 
     constructor(args: IFormValueBuilderArgs) {
         this.name = args.item.name;
@@ -465,11 +466,14 @@ export class BasicItemEditor implements formHelper.IFormValueWithOptions {
         //If there are values defined for the element, put them on the page, this works for both
         //predefined and generated elements, which allows you to have predefined selects that can have dynamic values
         if (args.item.buildValues !== undefined) {
-            if (IsSelectElement(args.inputElement)) {
+            if (IsSelectElement(args.inputElement) || HasDatalist(args.inputElement)) {
                 for (var q = 0; q < args.item.buildValues.length; ++q) {
                     var current = args.item.buildValues[q];
                     this.addOption(current.label, current.value);
                 }
+            }
+            if (HasDatalist(args.inputElement)) {
+                this.datalistValues = args.item.buildValues;
             }
         }
     }
@@ -484,7 +488,14 @@ export class BasicItemEditor implements formHelper.IFormValueWithOptions {
             else {
                 option.value = ""; //Make sure this stays as empty string, which will be null for these forms
             }
+
             this.element.options.add(option);
+        }
+        else if (HasDatalist(this.element)) {
+            //Dataset options are different, we just handle the option value
+            var option = document.createElement("option");
+            option.value = label;
+            this.element.list.appendChild(option);
         }
     }
 
@@ -501,10 +512,32 @@ export class BasicItemEditor implements formHelper.IFormValueWithOptions {
     }
 
     public getData(): any {
-        return formHelper.readValue(this.element);
+        var value = formHelper.readValue(this.element);
+        if (this.datalistValues !== undefined) {
+            //Reverse lookup value from the datalist values
+            for (var q = 0; q < this.datalistValues.length; ++q) {
+                var current = this.datalistValues[q];
+                if (current.label == value) {
+                    value = current.value;
+                    break;
+                }
+            }
+        }
+        return value;
     }
 
     public setData(data: any) {
+        if (this.datalistValues !== undefined) {
+            //See if there is a datalist value to display instead
+            for (var q = 0; q < this.datalistValues.length; ++q) {
+                var current = this.datalistValues[q];
+                if (current.value == data) {
+                    data = current.label;
+                    break;
+                }
+            }
+        }
+
         this.doSetValue(data);
         this.setError(formHelper.getSharedClearingValidator(), "");
     }
@@ -1340,6 +1373,10 @@ function IsElement(element: Node): element is HTMLElement {
 
 function IsSelectElement(element: Node): element is HTMLSelectElement {
     return element && (element.nodeName === 'SELECT');
+}
+
+function HasDatalist(element: Node): element is HTMLInputElement {
+    return element && (element.nodeName === 'INPUT' && (<HTMLInputElement>element).list !== null && (<HTMLInputElement>element).list !== undefined);
 }
 
 function extractLabels(valuesProp: JsonProperty, originalProp: JsonProperty): JsonLabel[] {
