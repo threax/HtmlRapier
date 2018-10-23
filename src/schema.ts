@@ -22,6 +22,7 @@ export interface JsonPropertyUiInfo{
     type: string;
     selectAll?: boolean;
     overrideComponent?: string;
+    autocomplete?: boolean;
 }
 
 export interface JsonType {

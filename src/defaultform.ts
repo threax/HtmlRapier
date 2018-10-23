@@ -6,7 +6,13 @@ import {ComponentBuilder, VariantBuilder} from 'hr.componentbuilder';
 //Register default components
 if (!component.isDefined("hr.forms.default")) {
     var builder = new ComponentBuilder(
-        '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;"><div class="form-group" data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error"><label for="{{uniqueId}}" class="control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label><input id="{{uniqueId}}" class="form-control" name="{{buildName}}" type="{{buildType}}" /></div></div>'
+        '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;">'
+       +    '<div class="form-group" data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error">'
+       +        '<label for="{{uniqueId}}" class="control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label>'
+       +        '<input id="{{uniqueId}}" class="form-control" name="{{buildName}}" type="{{buildType}}"{{if xUi.autocomplete}} list="{{uniqueId}}-datalist"{{/if}} />'
+       +        '{{if xUi.autocomplete}}<datalist id="{{uniqueId}}-datalist"></datalist>{{/if}}'
+       +    '</div>'
+       +'</div>'
     );
     builder.addVariant("date-time", new VariantBuilder(
         '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;"><div class="form-group" data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error"><label for="{{uniqueId}}" class="control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label><input id="{{uniqueId}}" class="form-control" name="{{buildName}}" type="text" /></div></div>'
@@ -106,7 +112,13 @@ if (!component.isDefined("hr.forms.default")) {
 //Register horizontal form
 if (!component.isDefined("hr.forms.horizontal")) {
     var builder = new ComponentBuilder(
-        '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;"><div class="form-group" data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error"><label for="{{uniqueId}}" class="col-sm-2 control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label><div class="col-sm-10"><input id="{{uniqueId}}" class="form-control" name="{{buildName}}" type="{{buildType}}" /></div></div></div>'
+        '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;">'
+       +    '<div class="form-group" data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error">'
+       +        '<label for="{{uniqueId}}" class="col-sm-2 control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label><div class="col-sm-10">'
+       +        '<input id="{{uniqueId}}" class="form-control" name="{{buildName}}" type="{{buildType}}"{{if xUi.autocomplete}} list="{{uniqueId}}-datalist"{{/if}} /></div>'
+       +        '{{if xUi.autocomplete}}<datalist id="{{uniqueId}}-datalist"></datalist>{{/if}}'
+       +    '</div>'
+       +'</div>'
     );
     builder.addVariant("date-time", new VariantBuilder(
         '<div data-hr-toggle="{{buildName}}Hide" data-hr-style-on="display:none;"><div class="form-group" data-hr-toggle="{{buildName}}Error" data-hr-class-on="has-error"><label for="{{uniqueId}}" class="col-sm-2 control-label">{{title}}<span data-hr-view="{{buildName}}ErrorMessage" data-hr-toggle="{{buildName}}Error" data-hr-style-on="display:inline" style="display:none"> - {{{this}}}</span></label><div class="col-sm-10"><input id="{{uniqueId}}" class="form-control" name="{{buildName}}" type="text" /></div></div></div>'
