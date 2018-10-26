@@ -48,7 +48,7 @@ class FormValues implements formHelper.IFormValues {
     private values: formHelper.IFormValue[] = [];
     private valueSource: FormValuesSource;
     private fireChangesToValues: boolean = false;
-    private changedEventHandler: event.ActionEventDispatcher<formHelper.IFormValues> = new event.ActionEventDispatcher<formHelper.IFormValues>();
+    private changedEventHandler: event.ActionEventDispatcher<formHelper.IFormValuesArgs> = new event.ActionEventDispatcher<formHelper.IFormValuesArgs>();
     private complexValues: boolean = true; //If this is true, the values passed in are complex, which means they are functions or objects with multiple values, otherwise they are simple and the values should be used directly.
 
     constructor() {
@@ -58,7 +58,7 @@ class FormValues implements formHelper.IFormValues {
     public add(value: formHelper.IFormValue): void {
         this.values.push(value);
         if (value.isChangeTrigger) {
-            value.onChanged.add(a => this.fireDataChanged());
+            value.onChanged.add(a => this.fireChangedEventHandler(a.getDataName()));
         }
         if (value.respondsToChanges) {
             this.fireChangesToValues = true;
@@ -178,12 +178,19 @@ class FormValues implements formHelper.IFormValues {
     }
 
     public fireDataChanged() {
+        this.fireChangedEventHandler(null);
+    }
+
+    private fireChangedEventHandler(propName: string) {
         if (this.fireChangesToValues) {
             for (var i = 0; i < this.values.length; ++i) {
                 this.values[i].handleChange(this.valueSource);
             }
         }
-        this.changedEventHandler.fire(this);
+        this.changedEventHandler.fire({
+            formValues: this,
+            propertyName: propName
+        });
     }
 
     /**

@@ -244,6 +244,11 @@ export function setValue(element: HTMLInputElement | HTMLSelectElement, itemData
     }
 }
 
+export interface IFormValuesArgs {
+    formValues: IFormValues;
+    propertyName: string | null;
+}
+
 export interface IFormValues{
     setError(err: FormErrors): void;
 
@@ -255,7 +260,7 @@ export interface IFormValues{
 
     changeSchema(componentName: string, schema: JsonSchema, parentElement: HTMLElement): void;
 
-    onChanged: event.EventModifier<event.ActionEventListener<IFormValues>>;
+    onChanged: event.EventModifier<event.ActionEventListener<IFormValuesArgs>>;
 
     /**
      * If the data is changed externally to the form values call this function to fire off the

@@ -18,6 +18,7 @@ export interface IFormGetArgs<T> {
 
 export interface IFormChangedArgs<T> {
     source: IForm<T>;
+    propertyName: string | null;
 }
 
 export interface IForm<T> {
@@ -198,7 +199,7 @@ export class NeedsSchemaForm<T> implements IForm<T> {
     }
 }
 
-class Form<T> {
+class Form<T> implements IForm<T> {
     private proto: T;
     private baseLevel: string = undefined;
     private formValues: formHelper.IFormValues;
@@ -314,7 +315,7 @@ class Form<T> {
             this.formValues = formHelper.buildForm(componentName, schema, this.form);
             this.baseLevel = "";
             this.formValues.onChanged.add(a =>
-                this.onChangedEvent.fire({ source: this }));
+                this.onChangedEvent.fire({ source: this, propertyName: a.propertyName }));
         }
 
         this.formValues.fireDataChanged();
@@ -336,7 +337,7 @@ class Form<T> {
         return this.afterGetDataEvent.modifier;
     }
 
-    public get onChanged(): events.EventModifier<events.ActionEventListener<IFormArgs<T>>> {
+    public get onChanged(): events.EventModifier<events.ActionEventListener<IFormChangedArgs<T>>> {
         return this.onChangedEvent.modifier;
     }
 }
@@ -400,7 +401,7 @@ class NullForm<T> implements IForm<T> {
         return this.afterGetDataEvent.modifier;
     }
 
-    public get onChanged(): events.EventModifier<events.ActionEventListener<IFormArgs<T>>> {
+    public get onChanged(): events.EventModifier<events.ActionEventListener<IFormChangedArgs<T>>> {
         return this.onChangedEvent.modifier;
     }
 }
