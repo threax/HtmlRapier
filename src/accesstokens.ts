@@ -191,6 +191,8 @@ export class AccessTokenFetcher extends Fetcher {
     private tokenManager: TokenManager;
     private needLoginEvent: events.PromiseEventDispatcher<boolean, AccessTokenFetcher> = new events.PromiseEventDispatcher<boolean, AccessTokenFetcher>();
     private _alwaysRefreshToken: boolean = false;
+    private _useToken: boolean = true;
+    private _disableOnNoToken: boolean = true;
 
     constructor(tokenPath: string, accessWhitelist: IWhitelist, next: Fetcher) {
         super();
@@ -201,16 +203,24 @@ export class AccessTokenFetcher extends Fetcher {
     }
 
     public async fetch(url: RequestInfo, init?: RequestInit): Promise<Response> {
-        //Make sure the request is allowed to send an access token
-        var whitelisted: boolean = this.accessWhitelist.isWhitelisted(url);
+        if (this._useToken) {
+            //Make sure the request is allowed to send an access token
+            var whitelisted: boolean = this.accessWhitelist.isWhitelisted(url);
 
-        //Sometimes we always refresh the token even if the item is not on the whitelist
-        //This is configured by the user
-        if (whitelisted || this._alwaysRefreshToken) {
-            var token: string = await this.tokenManager.getToken();
-            var headerName: string = this.tokenManager.headerName;
-            if (whitelisted && headerName && token) {
-                init.headers[headerName] = token;
+            //Sometimes we always refresh the token even if the item is not on the whitelist
+            //This is configured by the user
+            if (whitelisted || this._alwaysRefreshToken) {
+                var token: string = await this.tokenManager.getToken();
+                if (token) {
+                    var headerName: string = this.tokenManager.headerName;
+                    if (whitelisted && headerName) {
+                        init.headers[headerName] = token;
+                    }
+                }
+                else {
+                    //No token, stop trying to use it
+                    this._useToken = !this._disableOnNoToken;
+                }
             }
         }
 
@@ -231,6 +241,22 @@ export class AccessTokenFetcher extends Fetcher {
 
     public set alwaysRefreshToken(value: boolean) {
         this._alwaysRefreshToken = value;
+    }
+
+    public get useToken(): boolean {
+        return this._useToken;
+    }
+
+    public set useToken(value: boolean) {
+        this._useToken = value;
+    }
+
+    public get disableOnNoToken(): boolean {
+        return this._disableOnNoToken;
+    }
+
+    public set disableOnNoToken(value: boolean) {
+        this._disableOnNoToken = value;
     }
 
     private async fireNeedLogin(): Promise<boolean> {
