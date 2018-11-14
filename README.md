@@ -32,3 +32,10 @@ visit https://projecturl/test/htmlrapier/unittests.html to test.
 
 # Building Components from HTML
 You can use the htmlrapier-compile project to build typescript component definitions from html files.
+
+Once you compile the html template to typescript compile it with the typescript compiler to produce a js file. Include a runner typescript file that will run the form
+module so it gets registered.
+
+The artifacts will contain the default form.
+
+Inside your application be sure to include a form before calling the hr-run.js file.

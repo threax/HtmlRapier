@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": false,
+    "removeComments": false,
+    "sourceMap": true,
+    "noEmitHelpers": true,
+    "allowJs": true,
+    "target": "es5",
+    "module": "amd",
+    "baseUrl": ".",
+    "moduleResolution": "node",
+    "outFile": "defaultform.js",
+    "noResolve": true,
+    "paths": {
+      "hr.*": [
+        "../src/*"
+      ]
+    }
+  },
+  "include": [
+    "defaultform.ts",
+    "defaultformrunner.ts"
+  ],
+  "exclude": [
+    "../src"
+  ],
+  "compileOnSave": true
+}
