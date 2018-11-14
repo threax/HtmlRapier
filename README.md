@@ -29,3 +29,6 @@ under "include"
 "node_modules\\htmlrapier\\test\\**\\*.ts",
 
 visit https://projecturl/test/htmlrapier/unittests.html to test.
+
+# Building Components from HTML
+You can use the htmlrapier-compile project to build typescript component definitions from html files.
