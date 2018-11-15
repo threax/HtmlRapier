@@ -8,13 +8,6 @@
     ]
   },
   {
-    "pathBase": "formTemplates",
-    "outDir": "lib",
-    "copy": [
-      "formTemplates/defaultform.js"
-    ]
-  },
-  {
     "pathBase": "../tslib",
     "outDir": "lib",
     "copy": [
