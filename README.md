@@ -33,6 +33,18 @@ visit https://projecturl/test/htmlrapier/unittests.html to test.
 # Building Components from HTML
 You can use the htmlrapier-compile project to build typescript component definitions from html files.
 
+`yarn global add htmlrapier-compile`
+
+To build the templates from the root directory run:
+
+`htmlrapier-compile .\formTemplates\DefaultForm.html .\formTemplates\defaultform.ts hr.defaultform`
+
+Then compile the files in formTemplates.
+
+`tsc -p ./formTemplates`
+
+You will get errors that modules cannot be found, but everything will still work.
+
 Once you compile the html template to typescript compile it with the typescript compiler to produce a js file. Include a runner typescript file that will run the form
 module so it gets registered.
 
