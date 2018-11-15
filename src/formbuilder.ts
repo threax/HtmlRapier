@@ -875,7 +875,13 @@ export class MultiCheckBoxEditor implements formHelper.IFormValueWithOptions {
         this.changedEventHandler = new event.ActionEventDispatcher<formHelper.IFormValue>();
 
         if (args.item.buildValues !== undefined) {
-            this.itemsView.setData(args.item.buildValues, (created, item) => this.checkElementCreated(created, item));
+            var uidCount = 0;
+            var iter = new iterable.Iterable<JsonLabel>(args.item.buildValues).select<JsonLabel>(i => {
+                var r = Object.create(i);
+                r.uniqueId = args.item.uniqueId + "-hr-item-id-" + uidCount++;
+                return r;
+            });
+            this.itemsView.setData(iter, (created, item) => this.checkElementCreated(created, item));
         }
 
         this.errorToggle = this.bindings.getToggle(this.buildName + "Error");
@@ -1076,9 +1082,11 @@ export class RadioButtonEditor implements formHelper.IFormValueWithOptions {
         this.disabled = args.item["x-ui-disabled"] === true || args.item.readOnly === true;
         this.changedEventHandler = new event.ActionEventDispatcher<formHelper.IFormValue>();
 
+        var uidCount = 0;
         var iter = new iterable.Iterable(args.item.buildValues).select(i => {
             var shadow = Object.create(i);
             shadow.name = this.buildName;
+            shadow.uniqueId = args.item.uniqueId + "-hr-item-id-" + uidCount++;
             return shadow;
         });
         this.itemsView.setData(iter, (created, item) => this.radioElementCreated(created, item));
