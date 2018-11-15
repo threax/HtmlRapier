@@ -34,6 +34,5 @@ visit https://projecturl/test/htmlrapier/unittests.html to test.
 Versions of HtmlRapier before version 19 had a built in default form that used styles from bootstrap 3. Newer versions
 remove this default form, since we don't actually have any dependency on bootstrap 3 other than the form. There is no 
 simplified default form included, so if you are trying this library out please include htmlrapier.form.bootstrap3 or
-htmlrapier.form.bootstrap4 in your dependencies. This will copy a file named defaultform.js to `/lib/htmlrapier.form/defaultform.js`
-in your project. Be sure to include that file on your page before you include hr-run.js to make sure the form is loaded before
-you try to use it.
+htmlrapier.form.bootstrap4 in your dependencies. Once you do this run `threax-npm-tk tsconfig` to import the tsconfig
+for the form. This will make it build with the rest of your typescript.
