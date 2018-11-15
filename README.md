@@ -30,24 +30,10 @@ under "include"
 
 visit https://projecturl/test/htmlrapier/unittests.html to test.
 
-# Building Components from HTML
-You can use the htmlrapier-compile project to build typescript component definitions from html files.
-
-`yarn global add htmlrapier-compile`
-
-To build the templates from the root directory run:
-
-`htmlrapier-compile .\formTemplates\DefaultForm.html .\formTemplates\defaultform.ts hr.defaultform`
-
-Then compile the files in formTemplates.
-
-`tsc -p ./formTemplates`
-
-You will get errors that modules cannot be found, but everything will still work.
-
-Once you compile the html template to typescript compile it with the typescript compiler to produce a js file. Include a runner typescript file that will run the form
-module so it gets registered.
-
-The artifacts will contain the default form.
-
-Inside your application be sure to include a form before calling the hr-run.js file.
+# Using the Form Builder
+Versions of HtmlRapier before version 19 had a built in default form that used styles from bootstrap 3. Newer versions
+remove this default form, since we don't actually have any dependency on bootstrap 3 other than the form. There is no 
+simplified default form included, so if you are trying this library out please include htmlrapier.form.bootstrap3 or
+htmlrapier.form.bootstrap4 in your dependencies. This will copy a file named defaultform.js to `/lib/htmlrapier.form/defaultform.js`
+in your project. Be sure to include that file on your page before you include hr-run.js to make sure the form is loaded before
+you try to use it.
