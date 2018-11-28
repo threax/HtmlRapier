@@ -103,6 +103,9 @@ class SchemaViewExtractor<T> implements Extractor<T> {
             }
 
             var format = prop['x-ui-type'];
+            if(format === undefined && prop.xUi){
+                format = prop.xUi.type
+            }
             if (format === undefined) { //If no x-ui-type also consider the format the json schema gives us
                 format = prop.format;
             }
