@@ -795,6 +795,11 @@ export class SearchItemEditor implements formHelper.IFormValueWithOptions {
         evt.preventDefault();
         if (!this.searchFocusParent.contains(<HTMLElement>evt.relatedTarget)) {
             this.typingTrigger.cancel();
+            //If the current value is null, undefined or empty clear the input.
+            if ((<any>this.element).value === "" || (<any>this.element).value === null || (<any>this.element).value === undefined) {
+                this.currentDisplay = "";
+                this.currentData = null;
+            }
             formHelper.setValue(<any>this.element, this.currentDisplay);
             this.popupToggle.off();
         }
