@@ -36,6 +36,51 @@ export interface AddressNode {
     type: AddressNodeType;
 }
 
+/**
+ * Get the address as a string. Array indicies will be included, so foo.bar[5] will returned for an address with object: foo, object: bar array: 5.
+ * @param address
+ */
+export function getAddressString(address: AddressNode[]): string {
+    var sep = "";
+    var name = "";
+    for (var i = 0; i < address.length; ++i) {
+        var node = address[i];
+        switch (node.type) {
+            case AddressNodeType.Object:
+                name += sep + address[i].key;
+                break;
+            case AddressNodeType.Array:
+                name += '[' + address[i].key + ']';
+                break;
+        }
+        sep = ".";
+    }
+    return name;
+}
+
+/**
+ * Get an address string, but do not include any indicies in arrays, so foo[4] is returned as foo[].
+ * This is better if you want to use addresses to lookup cached properties.
+ * @param address
+ */
+export function getAddressStringNoIndicies(address: AddressNode[]): string {
+    var sep = "";
+    var name = "";
+    for (var i = 0; i < address.length; ++i) {
+        var node = address[i];
+        switch (node.type) {
+            case AddressNodeType.Object:
+                name += sep + address[i].key;
+                break;
+            case AddressNodeType.Array:
+                name += '[]';
+                break;
+        }
+        sep = ".";
+    }
+    return name;
+}
+
 //export type BaseDataType = (variable: string | number) => any | {};
 
 export interface AddressStack {

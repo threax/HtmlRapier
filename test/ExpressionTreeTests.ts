@@ -218,4 +218,172 @@ runner.runTest("val(false) || val2(true)", c => {
     c.assert(tree.isTrue(data), "Should be true.");
 });
 
+runner.runTest("get address string test.nested.address", c => {
+    var address: exprTree.AddressNode[] = [
+        {
+            key: "test",
+            type: exprTree.AddressNodeType.Object
+        },
+        {
+            key: "nested",
+            type: exprTree.AddressNodeType.Object
+        },
+        {
+            key: "address",
+            type: exprTree.AddressNodeType.Object
+        }
+    ]
+    var addr = exprTree.getAddressString(address);
+    c.assert(addr === "test.nested.address", "Should be true.");
+});
+
+runner.runTest("get address string test.nested[5].address", c => {
+    var address: exprTree.AddressNode[] = [
+        {
+            key: "test",
+            type: exprTree.AddressNodeType.Object
+        },
+        {
+            key: "nested",
+            type: exprTree.AddressNodeType.Object
+        },
+        {
+            key: "5",
+            type: exprTree.AddressNodeType.Array
+        },
+        {
+            key: "address",
+            type: exprTree.AddressNodeType.Object
+        }
+    ]
+    var addr = exprTree.getAddressString(address);
+    c.assert(addr === "test.nested[5].address", "Should be true.");
+});
+
+runner.runTest("get address string test", c => {
+    var address: exprTree.AddressNode[] = [
+        {
+            key: "test",
+            type: exprTree.AddressNodeType.Object
+        }
+    ]
+    var addr = exprTree.getAddressString(address);
+    c.assert(addr === "test", "Should be true.");
+});
+
+runner.runTest("get address string test.nested", c => {
+    var address: exprTree.AddressNode[] = [
+        {
+            key: "test",
+            type: exprTree.AddressNodeType.Object
+        },
+        {
+            key: "nested",
+            type: exprTree.AddressNodeType.Object
+        }
+    ]
+    var addr = exprTree.getAddressString(address);
+    c.assert(addr === "test.nested", "Should be true.");
+});
+
+runner.runTest("get address string test[5]", c => {
+    var address: exprTree.AddressNode[] = [
+        {
+            key: "test",
+            type: exprTree.AddressNodeType.Object
+        },
+        {
+            key: "5",
+            type: exprTree.AddressNodeType.Array
+        }
+    ]
+    var addr = exprTree.getAddressString(address);
+    c.assert(addr === "test[5]", "Should be true.");
+});
+
+//No indices
+
+runner.runTest("get address string no indices test.nested.address", c => {
+    var address: exprTree.AddressNode[] = [
+        {
+            key: "test",
+            type: exprTree.AddressNodeType.Object
+        },
+        {
+            key: "nested",
+            type: exprTree.AddressNodeType.Object
+        },
+        {
+            key: "address",
+            type: exprTree.AddressNodeType.Object
+        }
+    ]
+    var addr = exprTree.getAddressStringNoIndicies(address);
+    c.assert(addr === "test.nested.address", "Should be true.");
+});
+
+runner.runTest("get address string no indices test.nested[5].address", c => {
+    var address: exprTree.AddressNode[] = [
+        {
+            key: "test",
+            type: exprTree.AddressNodeType.Object
+        },
+        {
+            key: "nested",
+            type: exprTree.AddressNodeType.Object
+        },
+        {
+            key: "5",
+            type: exprTree.AddressNodeType.Array
+        },
+        {
+            key: "address",
+            type: exprTree.AddressNodeType.Object
+        }
+    ]
+    var addr = exprTree.getAddressStringNoIndicies(address);
+    c.assert(addr === "test.nested[].address", "Should be true.");
+});
+
+runner.runTest("get address string no indices test", c => {
+    var address: exprTree.AddressNode[] = [
+        {
+            key: "test",
+            type: exprTree.AddressNodeType.Object
+        }
+    ]
+    var addr = exprTree.getAddressStringNoIndicies(address);
+    c.assert(addr === "test", "Should be true.");
+});
+
+runner.runTest("get address string no indices test.nested", c => {
+    var address: exprTree.AddressNode[] = [
+        {
+            key: "test",
+            type: exprTree.AddressNodeType.Object
+        },
+        {
+            key: "nested",
+            type: exprTree.AddressNodeType.Object
+        }
+    ]
+    var addr = exprTree.getAddressStringNoIndicies(address);
+    c.assert(addr === "test.nested", "Should be true.");
+});
+
+runner.runTest("get address string no indices test[5]", c => {
+    var address: exprTree.AddressNode[] = [
+        {
+            key: "test",
+            type: exprTree.AddressNodeType.Object
+        },
+        {
+            key: "5",
+            type: exprTree.AddressNodeType.Array
+        }
+    ]
+    var addr = exprTree.getAddressStringNoIndicies(address);
+    c.assert(addr === "test[]", "Should be true.");
+});
+
 runner.endTestSection();

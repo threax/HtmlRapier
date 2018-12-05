@@ -36,17 +36,19 @@ export function registerSchemaViewFormatterExtension(builder: ISchemaViewFormatt
 }
 
 export class SchemaViewFormatter<T> implements IViewDataFormatter<T> {
-     constructor(private schema: schema.JsonSchema) {
+    private cachedProperties = {};
+
+    constructor(private schema: schema.JsonSchema) {
 
     }
 
     public convert(data: T): Extractor<T> {
-        return new SchemaViewExtractor(this, data, this.schema);
+        return new SchemaViewExtractor(this, data, this.schema, this.cachedProperties);
     }
 }
 
 class SchemaViewExtractor<T> implements Extractor<T> {
-    constructor(private dataFormatter: IViewDataFormatter<T>, public original: T, private schema: schema.JsonSchema) { }
+    constructor(private dataFormatter: IViewDataFormatter<T>, public original: T, private schema: schema.JsonSchema, private cachedProperties) { }
 
     getRawData(address: exprTree.IDataAddress) {
         return address.read(this.original);
@@ -147,18 +149,23 @@ class SchemaViewExtractor<T> implements Extractor<T> {
     }
 
     private getPropertyForAddress(rootSchema: schema.JsonSchema, address: exprTree.AddressNode[]): schemaprocessor.ProcessedJsonProperty {
-        var prop = rootSchema.properties[address[0].key];
-        if (prop === undefined) {
-            return undefined;
-        }
-        for (var i = 1; i < address.length; ++i) {
-            var item = address[i];
-            prop = this.findSchemaProperty(rootSchema, prop, item.key); //Assuming strings for now
+        var addressName = exprTree.getAddressStringNoIndicies(address);
+        var retProp: schemaprocessor.ProcessedJsonProperty = this.cachedProperties[addressName];
+        if (retProp === undefined) {
+            var prop: schema.JsonProperty = rootSchema.properties[address[0].key];
             if (prop === undefined) {
                 return undefined;
             }
+            for (var i = 1; i < address.length; ++i) {
+                var item = address[i];
+                prop = this.findSchemaProperty(rootSchema, prop, item.key); //Assuming strings for now
+                if (prop === undefined) {
+                    return undefined;
+                }
+            }
+            retProp = schemaprocessor.processProperty(prop, rootSchema, null, null, null);
+            this.cachedProperties[addressName] = retProp;
         }
-        //return prop;
-        return schemaprocessor.processProperty(prop, rootSchema, null, null, null);
+        return retProp;
     }
 }
