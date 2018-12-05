@@ -1,8 +1,9 @@
+///<amd-module name="hr.viewformatter"/>
 import * as schema from 'hr.schema';
 import * as typeId from 'hr.typeidentifiers';
 import * as exprTree from 'hr.expressiontree';
-import { JsonSchema, JsonProperty } from 'hr.schema';
 import { ITextStreamData } from 'hr.textstream';
+import * as schemaprocessor from 'hr.schemaprocessor';
 
 export interface IViewDataFormatter<T> {
     convert(data: T): Extractor<T>;
@@ -79,7 +80,7 @@ class SchemaViewExtractor<T> implements Extractor<T> {
                 }
             }
 
-            var values = prop['x-values'];
+            var values = prop.buildValues;
             if (values !== undefined && Array.isArray(values)) {
                 for (var i = 0; i < values.length; ++i) {
                     if (values[i].value == rawData) {
@@ -87,32 +88,10 @@ class SchemaViewExtractor<T> implements Extractor<T> {
                     }
                 }
             }
-            else {
-                //Enums are separate arrays
-                var enumNames = prop['x-enumNames'];
-                var enumValues = prop['enum'];
-                if (enumNames !== undefined && Array.isArray(enumNames) &&
-                    enumValues !== undefined && Array.isArray(enumValues) &&
-                    enumNames.length === enumValues.length) {
-                    for (var i = 0; i < enumValues.length; ++i) {
-                        if (enumValues[i] == rawData) {
-                            return enumNames[i];
-                        }
-                    }
-                }
-            }
-
-            var format = prop['x-ui-type'];
-            if(format === undefined && prop.xUi){
-                format = prop.xUi.type
-            }
-            if (format === undefined) { //If no x-ui-type also consider the format the json schema gives us
-                format = prop.format;
-            }
 
             //Check for dates, come in a couple ways
             if (rawData !== null) {
-                switch (format) {
+                switch (prop.buildType) {
                     case 'date':
                         var date = new Date(rawData);
                         return date.toLocaleDateString();
@@ -141,7 +120,7 @@ class SchemaViewExtractor<T> implements Extractor<T> {
         return rawData;
     }
 
-    private findSchemaProperty(rootSchema: schema.JsonSchema, prop: schema.JsonProperty, name: string | number): JsonProperty {
+    private findSchemaProperty(rootSchema: schema.JsonSchema, prop: schema.JsonProperty, name: string | number): schema.JsonProperty {
         //Find ref node
         var ref;
         if (prop.oneOf) {
@@ -167,7 +146,7 @@ class SchemaViewExtractor<T> implements Extractor<T> {
         return ref.properties[name];
     }
 
-    private getPropertyForAddress(rootSchema: JsonSchema, address: exprTree.AddressNode[]): JsonProperty {
+    private getPropertyForAddress(rootSchema: schema.JsonSchema, address: exprTree.AddressNode[]): schemaprocessor.ProcessedJsonProperty {
         var prop = rootSchema.properties[address[0].key];
         if (prop === undefined) {
             return undefined;
@@ -179,6 +158,7 @@ class SchemaViewExtractor<T> implements Extractor<T> {
                 return undefined;
             }
         }
-        return prop;
+        //return prop;
+        return schemaprocessor.processProperty(prop, rootSchema, null, null, null);
     }
 }
