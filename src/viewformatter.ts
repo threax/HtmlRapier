@@ -5,6 +5,8 @@ import * as exprTree from 'hr.expressiontree';
 import { ITextStreamData } from 'hr.textstream';
 import * as schemaprocessor from 'hr.schemaprocessor';
 
+declare var moment;
+
 export interface IViewDataFormatter<T> {
     convert(data: T): Extractor<T>;
 }
@@ -98,6 +100,33 @@ class SchemaViewExtractor<T> implements Extractor<T> {
                         var date = new Date(rawData);
                         return date.toLocaleDateString();
                     case 'date-time':
+                        var xUi = <any>prop.xUi;
+                        if (xUi && xUi.dataTimezone) {
+                            if (moment && moment.tz) {
+                                //Schema provided a display timezone
+                                if (xUi.displayTimezone) {
+                                    moment.tz.setDefault(xUi.dataTimezone);
+                                    rawData = moment(rawData).tz(xUi.displayTimezone).format();
+                                    moment.tz.setDefault();
+                                }
+                                //Schema did not provide a timezone, guess the browser's time.
+                                else {
+                                    var displayTimezone = moment.tz.guess();
+                                    if (displayTimezone) {
+                                        moment.tz.setDefault(xUi.dataTimezone);
+                                        rawData = moment(rawData).tz(displayTimezone).format();
+                                        moment.tz.setDefault();
+                                    }
+                                    else {
+                                        console.warn("Cannot determine browser's timezone. Times will not be localized.");
+                                    }
+                                }
+                            }
+                            else {
+                                console.warn("The date element specified a timezone, but moment-timezone.js is not loaded. Times will not be localized.");
+                            }
+                        }
+
                         var date = new Date(rawData);
                         return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
                 }
