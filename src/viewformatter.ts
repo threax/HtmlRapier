@@ -106,7 +106,7 @@ class SchemaViewExtractor<T> implements Extractor<T> {
                                 //Schema provided a display timezone
                                 if (xUi.displayTimezone) {
                                     moment.tz.setDefault(xUi.dataTimezone);
-                                    rawData = moment(rawData).tz(xUi.displayTimezone).format();
+                                    rawData = moment(rawData).tz(xUi.displayTimezone).format('YYYY-MM-DD[T]HH:mm:ss');
                                     moment.tz.setDefault();
                                 }
                                 //Schema did not provide a timezone, guess the browser's time.
@@ -114,7 +114,7 @@ class SchemaViewExtractor<T> implements Extractor<T> {
                                     var displayTimezone = moment.tz.guess();
                                     if (displayTimezone) {
                                         moment.tz.setDefault(xUi.dataTimezone);
-                                        rawData = moment(rawData).tz(displayTimezone).format();
+                                        rawData = moment(rawData).tz(displayTimezone).format('YYYY-MM-DD[T]HH:mm:ss');
                                         moment.tz.setDefault();
                                     }
                                     else {
