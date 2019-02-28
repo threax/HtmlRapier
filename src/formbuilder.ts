@@ -27,7 +27,11 @@ class FormValuesSource implements expression.IValueSource {
     getValue(address: expression.IDataAddress): any {
         var value = this.formValues.getFormValue(<string>address.address[0].key); //for now assume strings, this only supports the current level object
         if (value !== undefined) {
-            return value.getData();
+            var data = value.getData();
+            //Only return the data if it would be included in the form data
+            if (formHelper.shouldAddValue(data)) {
+                return data;
+            }
         }
         return undefined;
     }

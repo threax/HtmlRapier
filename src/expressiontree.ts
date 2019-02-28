@@ -223,6 +223,17 @@ export class ExpressionTree {
     }
 
     private equals(current: any, test: any): boolean {
+        //Normalize undefined to null, only javascript has the undefined concept and we are consuming generic expressions.
+        if (current === undefined) {
+            current = null;
+        }
+
+        if (current === null) {
+            //If current is null, just check it against the test value, there is no need to try to convert test is null or it isn't
+            return current === test;
+        }
+
+        //This makes sure we are checking current as the same type as test
         switch (typeof (test)) {
             case "boolean":
                 if (typeof (current) === "string" && current.toLowerCase !== undefined) { //The toLowerCase check is for chrome, not good enough to just check the types.
