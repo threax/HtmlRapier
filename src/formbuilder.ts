@@ -1226,6 +1226,18 @@ export interface IFormValueBuilder {
     create(args: IFormValueBuilderArgs): formHelper.IFormValue | null;
 }
 
+export interface ProcessedFormJsonProperty extends schemaprocessor.ProcessedJsonProperty {
+    formItemClass?: string;
+}
+
+function processFormProperty(prop: JsonProperty, schema: JsonSchema, uniqueId: string, name: string, buildName: string, formItemClass: string): ProcessedFormJsonProperty {
+    var result: ProcessedFormJsonProperty = schemaprocessor.processProperty(prop, schema, uniqueId, name, buildName);
+    if (formItemClass !== null) {
+        result.formItemClass = formItemClass; //Don't include this if the attribute came back null
+    }
+    return result;
+}
+
 var propertyUniqueIndex = new InfiniteIndex();
 function getNextIndex(){
     return "hr-form-prop-" + propertyUniqueIndex.getNext();
@@ -1244,17 +1256,19 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
         formValues = new FormValues();
     }
 
+    var formItemClass = parentElement.getAttribute("data-hr-form-item-class");
+
     var dynamicInsertParent = parentElement;
     var dynamicInsertElement = domquery.first("[data-hr-form-end]", parentElement);
     if (dynamicInsertElement !== null) {
         //Adjust parent to end element if one was found
         dynamicInsertParent = dynamicInsertElement.parentElement;
     }
-    var propArray: schemaprocessor.ProcessedJsonProperty[] = [];
+    var propArray: ProcessedFormJsonProperty[] = [];
     var props = schema.properties;
     if (props === undefined) {
         //No props, add the schema itself as a property, this also means our formValues are simple values
-        propArray.push(schemaprocessor.processProperty(schema, schema, getNextIndex(), baseName, baseName));
+        propArray.push(processFormProperty(schema, schema, getNextIndex(), baseName, baseName, formItemClass));
         formValues.setComplex(false);
     }
     else {
@@ -1267,7 +1281,7 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
         }
 
         for (var key in props) {
-            propArray.push(schemaprocessor.processProperty(props[key], schema, getNextIndex(), key, baseNameWithSep + key));
+            propArray.push(processFormProperty(props[key], schema, getNextIndex(), key, baseNameWithSep + key, formItemClass));
         }
 
         propArray.sort((a, b) => {
@@ -1421,6 +1435,9 @@ class FormComponentTextStream implements ITextStreamData {
         return address.read(this.data);
     }
     getFormatted(data: any, address: expression.IDataAddress) {
-        return data;
+        if (data !== undefined) { //Don't return undefined, return empty string instead
+            return data;
+        }
+        return "";
     }
 }
