@@ -1114,6 +1114,9 @@ export class RadioButtonEditor implements formHelper.IFormValueWithOptions {
         for (var i = 0; i < this.elements.length; ++i) {
             var radio = this.elements[i];
             if (radio.checked) {
+                if (radio === this.nullElement) {
+                    return null;
+                }
                 return formHelper.readValue(radio);
             }
         }
