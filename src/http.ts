@@ -27,7 +27,7 @@ export function get<T>(url: string, fetcher?:Fetcher) : Promise<T> {
         },
         credentials: "include"
     }).then((response) => {
-        return processResult(response);
+        return processResult<T>(response);
     });
 }
 
@@ -56,7 +56,7 @@ export function post<T>(url: string, data?:any, fetcher?:Fetcher) : Promise<T> {
         body: body,
         credentials: "include"
     }).then((response) => {
-        return processResult(response);
+        return processResult<T>(response);
     });
 }
 
