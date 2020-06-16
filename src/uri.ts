@@ -20,6 +20,8 @@ var parseUriOptions = {
     }
 };
 
+var jsonPrefix = "_json_";
+
 export class Uri {
     source: string;
     protocol: string;
@@ -103,18 +105,22 @@ export class Uri {
         }
         for (var key in data) {
             if (data[key] !== undefined && data[key] !== null) {
-                if(Array.isArray(data[key])){
+                if (Array.isArray(data[key])) {
                     var arr: any[] = data[key];
-                    for(var i = 0; i < arr.length; ++i){
-                        queryString += key + '=' + encodeURIComponent(arr[i]) + '&';
+                    //Determine what kind of array we have
+                    if (arr.length > 0 && (typeof arr[0] === 'object' || Array.isArray(arr[0]))) {
+                        //Array of objects or arrays, write as json
+                        queryString += key + '=' + this.getEncoded(arr) + '&';
+                    }
+                    else {
+                        //Array of primitives (or empty). Write as multiple key entries
+                        for (var i = 0; i < arr.length; ++i) {
+                            queryString += key + '=' + this.getEncoded(arr[i]) + '&';
+                        }
                     }
                 }
-                else if (data[key] instanceof Date) {
-                    var parsedDate = data[key].toISOString();
-                    queryString += queryString += key + '=' + encodeURIComponent(parsedDate) + '&';
-                }
-                else{
-                    queryString += key + '=' + encodeURIComponent(data[key]) + '&';
+                else {
+                    queryString += key + '=' + this.getEncoded(data[key]) + '&';
                 }
             }
         }
@@ -122,6 +128,19 @@ export class Uri {
             queryString = queryString.substr(0, queryString.length - 1);
         }
         this.query = queryString;
+    }
+
+    private getEncoded(v: any): string {
+        if (v instanceof Date) {
+            var parsedDate = v.toISOString();
+            return encodeURIComponent(parsedDate);
+        }
+        else if (Array.isArray(v) || typeof v === 'object') {
+            return jsonPrefix + encodeURIComponent(JSON.stringify(v));
+        }
+        else {
+            return encodeURIComponent(v);
+        }
     }
 
     /**
@@ -144,7 +163,14 @@ export class Uri {
                 var name = pair[0].toLowerCase();
                 var pairValue = "";
                 if (pair.length > 1) {
-                    pairValue = decodeURIComponent(pair[1].replace(/\+/g, ' '));
+                    var raw = pair[1].replace(/\+/g, ' ');
+                    if ((<any>raw).startsWith(jsonPrefix)) {
+                        raw = raw.substr(jsonPrefix.length);
+                        pairValue = JSON.parse(decodeURIComponent(raw));
+                    }
+                    else {
+                        pairValue = decodeURIComponent(raw);
+                    }
                 }
                 if(val[name] === undefined){
                     //Undefined, set value directly
