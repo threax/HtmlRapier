@@ -4,7 +4,7 @@ A tiny mvc library for building web apps using rest apis.
 Visit https://threax.github.io/HtmlRapierDocs/ for more information.
 
 # Testing
-To run the tests yarn link this library into a hypermedia project.
+To run the tests npm link this library into a hypermedia project.
 
 Add the following to artifacts.json:
 
@@ -29,6 +29,9 @@ under "include"
 "node_modules\\htmlrapier\\test\\**\\*.ts",
 
 visit https://projecturl/test/htmlrapier/unittests.html to test.
+
+## Removing Tests
+To remove the tests you can fix your tsconfig by running import-tsconfig again and removing the lines from artifacts.json.
 
 # Using the Form Builder
 Versions of HtmlRapier before version 19 had a built in default form that used styles from bootstrap 3. Newer versions
