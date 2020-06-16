@@ -218,6 +218,22 @@ runner.runTest("val(false) || val2(true)", c => {
     c.assert(tree.isTrue(data), "Should be true.");
 });
 
+runner.runTest("val != null && val != 'woot'", c => {
+    var data = new SimpleValueSource({
+        val: 'different',
+    });
+    var tree = exprTree.create("val != null && val != 'woot'");
+    c.assert(tree.isTrue(data), "Should be true.");
+});
+
+runner.runTest("val != null && val != \"woot\"", c => {
+    var data = new SimpleValueSource({
+        val: 'different',
+    });
+    var tree = exprTree.create("val != null && val != \"woot\"");
+    c.assert(tree.isTrue(data), "Should be true.");
+});
+
 runner.runTest("get address string test.nested.address", c => {
     var address: exprTree.AddressNode[] = [
         {

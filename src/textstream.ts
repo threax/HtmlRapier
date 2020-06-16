@@ -147,8 +147,9 @@ class IfNode implements IBlockNode {
     private expressionTree: exprTree.ExpressionTree;
 
     constructor(private condition: string) {
-        condition = condition.replace("&gt;", ">");
-        condition = condition.replace("&lt;", "<");
+        condition = condition.replace(/&gt;/g, ">");
+        condition = condition.replace(/&lt;/g, "<");
+        condition = condition.replace(/&amp;/g, "&");
         this.expressionTree = exprTree.create(condition);
     }
 
