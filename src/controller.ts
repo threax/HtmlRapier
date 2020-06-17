@@ -210,8 +210,6 @@ export class InjectedControllerBuilder {
             private controller: any;
 
             connectedCallback() {
-                console.log("Connected " + elementName);
-
                 const services = new di.ServiceCollection();
                 const scope = self.baseScope.createChildScope(services);
                 const bindings = new BindingCollection(this);
@@ -224,21 +222,18 @@ export class InjectedControllerBuilder {
             }
 
             disconnectedCallback() {
-                console.log("Disconnected " + elementName);
                 if (this.controller.disconnectedCallback) {
                     this.controller.disconnectedCallback();
                 }
             }
 
             adoptedCallback() {
-                console.log("Adopted " + elementName);
                 if (this.controller.adoptedCallback) {
                     this.controller.adoptedCallback();
                 }
             }
 
             attributeChangedCallback() {
-                console.log("Attribute changed " + elementName);
                 if (this.controller.attributeChangedCallback) {
                     this.controller.attributeChangedCallback();
                 }
