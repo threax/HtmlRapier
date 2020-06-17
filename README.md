@@ -39,3 +39,7 @@ remove this default form, since we don't actually have any dependency on bootstr
 simplified default form included, so if you are trying this library out please include htmlrapier.form.bootstrap3 or
 htmlrapier.form.bootstrap4 in your dependencies. Once you do this run `threax-npm-tk tsconfig` to import the tsconfig
 for the form. This will make it build with the rest of your typescript.
+
+# Documentation
+The docs source is stored in this repo. To work on them run Edity McEditface in the docs folder. You can publish directly 
+from there the output folder is ignored.
