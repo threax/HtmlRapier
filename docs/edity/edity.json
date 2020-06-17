@@ -26,5 +26,26 @@
       "extension": ".html",
       "pathBase": "/HtmlRapierDocs"
     }
+  ],
+  "preBuildTasks": [
+    {
+      "name": "GetPublishRepo",
+      "settings": {
+        "url": "https://github.com/threax/HtmlRapierDocs.git"
+      }
+    }
+  ],
+  "postBuildTasks": [
+    {
+      "name": "PublishMenu",
+      "settings": {
+        "menuFile": "menus/mainMenu.json"
+      }
+    }
+  ],
+  "postPublishTasks": [
+    {
+      "name" : "PublishToGitRepo"
+    }
   ]
 }
