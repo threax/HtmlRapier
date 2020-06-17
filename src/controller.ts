@@ -210,12 +210,14 @@ export class InjectedControllerBuilder {
             private controller: any;
 
             connectedCallback() {
-                const services = new di.ServiceCollection();
-                const scope = self.baseScope.createChildScope(services);
-                const bindings = new BindingCollection(this);
-                services.addTransient(BindingCollection, s => bindings);
-                this.removeAttribute('data-hr-controller');
-                this.controller = self.createController(id, controllerConstructor, services, scope, bindings);
+                if(!this.controller) {
+                    const services = new di.ServiceCollection();
+                    const scope = self.baseScope.createChildScope(services);
+                    const bindings = new BindingCollection(this);
+                    services.addTransient(BindingCollection, s => bindings);
+                    this.removeAttribute('data-hr-controller');
+                    this.controller = self.createController(id, controllerConstructor, services, scope, bindings);
+                }
                 if (this.controller.connectedCallback) {
                     this.controller.connectedCallback();
                 }
