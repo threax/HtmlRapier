@@ -9,7 +9,7 @@ import * as view from 'hr.view';
 import * as toggle from 'hr.toggles';
 import * as event from 'hr.eventdispatcher';
 import * as formHelper from 'hr.formhelper';
-import { JsonProperty, JsonLabel, JsonSchema, resolveRef, RefNode, isRefNode } from 'hr.schema';
+import { JsonProperty, JsonLabel, JsonSchema, resolveRef, RefNode, isRefNode, getOneOfSchema } from 'hr.schema';
 import { FormErrors } from 'hr.error';
 import * as typeIds from 'hr.typeidentifiers';
 import * as expression from 'hr.expressiontree';
@@ -387,6 +387,116 @@ class ArrayEditor implements formHelper.IFormValue {
         for (; i < this.rows.length;) { //Does not increment, removing rows will de index for us
             this.rows[i].remove();
         }
+    }
+
+    public getBuildName(): string {
+        return this.buildName;
+    }
+
+    public getDataName(): string {
+        return this.name;
+    }
+
+    public delete(): boolean {
+        if (this.generated) {
+            this.bindings.remove();
+        }
+        return this.generated;
+    }
+
+    public get isChangeTrigger(): boolean {
+        return false;
+    }
+
+    public get onChanged() {
+        return null;
+    }
+
+    public get respondsToChanges() {
+        return this.displayExpression !== undefined;
+    }
+
+    public handleChange(values: expression.IValueSource): void {
+        if (this.displayExpression) {
+            if (this.displayExpression.isTrue(values)) {
+                this.hideToggle.off();
+            }
+            else {
+                this.hideToggle.on();
+            }
+        }
+    }
+}
+
+class ObjectEditor implements formHelper.IFormValue {
+    private itemsView: view.IView<JsonSchema>;
+
+    private errorToggle: toggle.OnOffToggle;
+    private errorMessage: view.IView<string>;
+
+    private row: ArrayEditorRow;
+    private name: string;
+    private buildName: string;
+    private bindings: BindingCollection;
+    private generated: boolean;
+    protected displayExpression: expression.ExpressionTree;
+    private hideToggle: toggle.OnOffToggle;
+
+    constructor(args: IFormValueBuilderArgs, private schema: JsonSchema) {
+        var baseTitle: string = args.item.title;
+        var bindings = args.bindings;
+        this.name = args.item.name;
+        this.buildName = args.item.buildName;
+        this.bindings = args.bindings;
+        this.generated = args.generated;
+        this.displayExpression = args.item.displayExpression;
+
+        this.itemsView = bindings.getView<JsonSchema>("items");
+        bindings.setListener(this);
+
+        if (this.schema.title === undefined) {
+            this.schema = Object.create(this.schema);
+            if (baseTitle !== undefined) {
+                this.schema.title = baseTitle + " Item";
+            }
+            else {
+                this.schema.title = "Item";
+            }
+        }
+
+        this.errorToggle = this.bindings.getToggle(this.buildName + "Error");
+        this.errorMessage = this.bindings.getView(this.buildName + "ErrorMessage");
+        this.hideToggle = this.bindings.getToggle(this.buildName + "Hide");
+
+        this.itemsView.appendData(this.schema, (bindings, data) => {
+            this.row = new ArrayEditorRow(bindings, data, this.buildName + '-0');
+        });
+    }
+
+    public setError(err: FormErrors, baseName: string) {
+        var rowName = err.addIndex(baseName, this.name, 0);
+        this.row.setError(err, rowName);
+
+        var errorName = err.addKey(baseName, this.name);
+        if (err.hasValidationError(errorName)) {
+            this.errorToggle.on();
+            this.errorMessage.setData(err.getValidationError(errorName));
+        }
+        else {
+            this.errorToggle.off();
+            this.errorMessage.setData("");
+        }
+    }
+
+    public getData(): any {
+        return this.row.getData();
+    }
+
+    public setData(data: any) {
+        if (data === undefined) {
+            data = null;
+        }
+        this.row.setData(data);
     }
 
     public getBuildName(): string {
@@ -1379,14 +1489,24 @@ function createBindings(args: IFormValueBuilderArgs): formHelper.IFormValue {
     }
 
     if (args.item.buildType === "arrayEditor") {
-        var resolvedItems: JsonSchema = resolveRef(<RefNode>args.item.items, args.schema);
+        let itemSchema: JsonSchema = resolveRef(<RefNode>args.item.items, args.schema);
         //This will treat the schema as a root schema, so setup parent if needed
-        if (resolvedItems !== args.schema) { //Make sure we didnt just get the original schema back
+        if (itemSchema !== args.schema) { //Make sure we didnt just get the original schema back
             //If so, set the parent 
-            resolvedItems = Object.create(resolvedItems);
-            resolvedItems.parent = args.schema;
+            itemSchema = Object.create(itemSchema);
+            itemSchema.parent = args.schema;
         }
-        return new ArrayEditor(args, resolvedItems);
+        return new ArrayEditor(args, itemSchema);
+    }
+    else if (args.item.buildType === "objectEditor") {
+        let objectSchema: JsonSchema = getOneOfSchema(args.item, args.schema);
+        //This will treat the schema as a root schema, so setup parent if needed
+        if (objectSchema !== args.schema) { //Make sure we didnt just get the original schema back
+            //If so, set the parent 
+            objectSchema = Object.create(objectSchema);
+            objectSchema.parent = args.schema;
+        }
+        return new ObjectEditor(args, objectSchema);
     }
     else if (args.item.buildType === "multicheckbox") {
         return new MultiCheckBoxEditor(args);

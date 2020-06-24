@@ -77,11 +77,27 @@ export function resolveRef(node: RefNode, schema: JsonSchema): any{
                 if (schema.parent) {
                     return resolveRef(node, schema.parent);
                 }
-                throw new Error("Cannot find ref '" + node.$ref + "' in schema.")
+                throw new Error("Cannot find ref '" + node.$ref + "' in schema.");
             }
         }
 
         return walker;
     }
     return node;
+}
+
+export function getOneOfSchema(prop: JsonProperty, schema: JsonSchema) {
+    //Look for oneof property with ref
+    if (!Array.isArray(prop.oneOf)) {
+        throw new Error("Cannot find a oneOf array on the passed in property.");
+    }
+
+    for (var j = 0; j < prop.oneOf.length; ++j) {
+        var item = prop.oneOf[j];
+        if (isRefNode(item)) {
+            return resolveRef(item, schema);
+        }
+    }
+
+    throw new Error("Cannot find OneOf node with $ref element.");
 }

@@ -38,7 +38,7 @@ export function processProperty(prop: JsonProperty, schema: JsonSchema, uniqueId
     }
 
     //Set this build type to what has been passed in, this will be processed further below
-    processed.buildType = getPropertyType(prop).toLowerCase();
+    processed.buildType = getBuildType(prop).toLowerCase();
 
     //Look for collections, anything defined as an array or that has x-values defined
     if (processed.buildType === 'array') {
@@ -101,6 +101,10 @@ export function processProperty(prop: JsonProperty, schema: JsonSchema, uniqueId
                                 processed.buildType = 'text';
                                 break;
                         }
+                        break;
+                    case 'object':
+                        processed.buildType = "objectEditor";
+                        break;
                 }
             }
         }
@@ -172,9 +176,9 @@ function extractPropValues(prop: JsonProperty, processed: ProcessedJsonProperty,
     }
 }
 
-function getPropertyType(prop: JsonProperty): string {
+function getBuildType(prop: JsonProperty): string {
     if (Array.isArray(prop.type)) {
-        for (var j = 0; j < prop.type.length; ++j) {
+        for (let j = 0; j < prop.type.length; ++j) {
             if (prop.type[j] !== "null") {
                 return prop.type[j];
             }
@@ -182,6 +186,13 @@ function getPropertyType(prop: JsonProperty): string {
     }
     else if (prop.type) { //If the property type is set, return it
         return prop.type;
+    }
+    else if (Array.isArray(prop.oneOf)) { //Check to see if we have any ref oneOf properties, if so consider this an object
+        for (let j = 0; j < prop.oneOf.length; ++j) {
+            if (isRefNode(prop.oneOf[j])) {
+                return "object";
+            }
+        }
     }
     return "string"; //Otherwise fallback to string
 }
