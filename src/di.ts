@@ -336,9 +336,8 @@ export class ServiceCollection {
                     args[i] = s.getRequiredService(<DiFunction<any>>injectType);
                 }
             }
-            var controllerObj = Object.create((<any>constructor).prototype);
-            (<any>constructor).apply(controllerObj, args);
-            return <T>controllerObj;
+
+            return new (<any>constructor)(...args) as T;
         };
     }
 
