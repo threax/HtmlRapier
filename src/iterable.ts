@@ -104,7 +104,7 @@ function _forEach(items, query, cb) {
     var i;
     if (typeId.isArray(items)) {
         for (i = 0; i < items.length; ++i) {
-            var item = items[i];
+            let item = items[i];
             var transformed = query.derive(item);
             if (transformed !== undefined) {
                 cb(transformed);
@@ -112,7 +112,7 @@ function _forEach(items, query, cb) {
         }
     }
     else if (typeId.isFunction(items)) {
-        var item = items();
+        let item = items();
         while (item !== undefined) {
             item = query.derive(item);
             cb(item);
@@ -166,12 +166,12 @@ class Conditional<T> extends IteratorBase<T> {
         super();
     }
 
-    build(query: Query) {
-        query.push((i) => this.get(i));
+    public build(query: Query) {
+        query.push((i) => this.getItem(i));
         return this.previous.build(query);
     }
 
-    get(item) {
+    private getItem(item) {
         if (this.whereCb(item)) {
             return item;
         }
