@@ -280,10 +280,17 @@ class EscapeVariableNode implements IStreamNode {
     }
 }
 
-var noData: ITextStreamData = {
-    getFormatted(val, address) { return val; },
-    getRawData(address) { return undefined; }
-};
+class NoDataStream implements ITextStreamData {
+    public getFormatted(val, address) {
+        return val;
+    }
+
+    public getRawData(address) {
+        return undefined;
+    }
+}
+
+const noData: ITextStreamData = new NoDataStream();
 
 function format(data: ITextStreamData, streamNodes: IStreamNode[]) {
     if (data === null || data === undefined) {
