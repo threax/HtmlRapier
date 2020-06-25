@@ -228,7 +228,7 @@ class ArrayEditorRow {
         if (itemHandle !== null) {
             this.root = itemHandle;
         }
-        this.formValues = buildForm('hr.forms.default', schema, this.root, this.name, true);
+        this.formValues = buildForm('hr.forms.default', schema, this.root, this.name);
 
         bindings.setListener(this);
     }
@@ -1401,12 +1401,12 @@ function buildForm(componentName: string, schema: JsonSchema, parentElement: HTM
 
     for (var i = 0; i < propArray.length; ++i) {
         var item = propArray[i];
-        var existing = <HTMLElement>domquery.first('[name=' + item.buildName + ']', parentElement);
+        var existing = <HTMLElement>domquery.first('[name=' + item.name + ']', parentElement);
         var bindings: BindingCollection = null;
         var generated = false;
         if (ignoreExisting || existing === null) {
 
-            var placeholder = <HTMLElement>domquery.first('[data-hr-form-place=' + item.buildName + ']', parentElement);
+            var placeholder = <HTMLElement>domquery.first('[data-hr-form-place=' + item.name + ']', parentElement);
             var insertElement = dynamicInsertElement;
             var insertParent = dynamicInsertParent;
             if(placeholder !== null){
