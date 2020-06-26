@@ -474,7 +474,7 @@ class ObjectEditor implements formHelper.IFormValue {
     }
 
     public setError(err: FormErrors, baseName: string) {
-        var rowName = err.addIndex(baseName, this.name, 0);
+        var rowName = err.addKey(baseName, this.name);
         this.row.setError(err, rowName);
 
         var errorName = err.addKey(baseName, this.name);
