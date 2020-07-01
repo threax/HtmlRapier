@@ -24,7 +24,7 @@
   "include": [
     "src/*",
     "test\\**\\*.ts",
-    "hr.ts"
+    "main.ts"
   ],
   "exclude": [
     "node_modules",
