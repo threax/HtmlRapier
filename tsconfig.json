@@ -6,7 +6,7 @@
     "sourceMap": true,
     "noEmitHelpers": true,
     "allowJs": true,
-    "target": "es5",
+    "target": "es2015",
     "outDir": "obj/tsc",
     "outFile": "obj/tsbin.js",
     "module": "amd",
