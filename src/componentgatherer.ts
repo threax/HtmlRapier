@@ -133,3 +133,8 @@ function extractTemplate(elementPair: ElementPair, currentBuilder: ComponentBuil
         return currentBuilder;
     }
 }
+
+export function setup() {
+    //Doesn't do anything, but makes module load correctly.
+    return true;
+}

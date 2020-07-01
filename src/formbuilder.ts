@@ -1561,3 +1561,8 @@ class FormComponentTextStream implements ITextStreamData {
         return "";
     }
 }
+
+export function setup() {
+    //Doesn't actually do anything, but makes module work.
+    return true;    
+}
