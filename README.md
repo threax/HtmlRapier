@@ -6,8 +6,9 @@ Visit https://threax.github.io/HtmlRapierDocs/ for more information.
 # Testing
 To run the tests npm link this library into a hypermedia project.
 
+### Add the following to artifacts.json:
+
 ```
-Add the following to artifacts.json:
 
   {
     "pathBase": "./node_modules/htmlrapier/testPages",
@@ -18,7 +19,7 @@ Add the following to artifacts.json:
   }
 ```
 
-And the following to tsconfig.json:
+### And the following to tsconfig.json:
 
 under "paths"
 
