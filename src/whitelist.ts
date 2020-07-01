@@ -1,5 +1,5 @@
-import { RequestInfo, RequestInit, Request } from 'hr.fetcher';
-import * as uri from 'hr.uri';
+import { RequestInfo, RequestInit, Request } from './fetcher';
+import * as uri from './uri';
 
 export interface IWhitelist {
     isWhitelisted(url: RequestInfo): boolean;

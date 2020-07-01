@@ -1,8 +1,8 @@
-﻿///<amd-module name="hr.xsrftoken"/>
+﻿///<amd-module-off name="hr.xsrftoken"/>
 
-import { Fetcher, RequestInfo, RequestInit, Response, fetch } from 'hr.fetcher';
-import { IWhitelist } from 'hr.whitelist';
-import { CookieStorageDriver } from 'hr.storage';
+import { Fetcher, RequestInfo, RequestInit, Response, fetch } from './fetcher';
+import { IWhitelist } from './whitelist';
+import { CookieStorageDriver } from './storage';
 
 export interface XsrfOptions{
     /**

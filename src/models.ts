@@ -1,14 +1,14 @@
-///<amd-module name="hr.models"/>
+///<amd-module-off name="hr.models"/>
 
 "use strict";
 
-import * as forms from 'hr.form';
-import * as views from 'hr.view';
-import { TextStream } from 'hr.textstream';
-import * as components from 'hr.components';
-import * as typeId from 'hr.typeidentifiers';
-import * as domQuery from 'hr.domquery';
-import * as iter from 'hr.iterable';
+import * as forms from './form';
+import * as views from './view';
+import { TextStream } from './textstream';
+import * as components from './components';
+import * as typeId from './typeidentifiers';
+import * as domQuery from './domquery';
+import * as iter from './iterable';
 
 export function build<T>(element) : Model<T> {
     var src = element.getAttribute('data-hr-model-src');

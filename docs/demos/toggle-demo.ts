@@ -1,4 +1,4 @@
-﻿///<amd-module name="toggle-demo"/>
+﻿///<amd-module-off name="toggle-demo"/>
 
 "use strict";
 import * as controller from "hr.controller";

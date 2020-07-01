@@ -1,4 +1,4 @@
-﻿///<amd-module name="hr.externalpromise"/>
+﻿///<amd-module-off name="hr.externalpromise"/>
 
 "use strict";
 

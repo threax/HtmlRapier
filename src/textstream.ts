@@ -1,13 +1,13 @@
-﻿///<amd-module name="hr.textstream"/>
+﻿///<amd-module-off name="hr.textstream"/>
 
 "use strict";
 
-import {escape} from 'hr.escape';
-import * as typeId from 'hr.typeidentifiers';
-import * as exprTree from 'hr.expressiontree';
-import * as jsep from 'hr.jsep';
-import { Iterable } from 'hr.iterable';
-import { IDataAddress, AddressStack } from 'hr.expressiontree';
+import {escape} from './escape';
+import * as typeId from './typeidentifiers';
+import * as exprTree from './expressiontree';
+import * as jsep from './jsep';
+import { Iterable } from './iterable';
+import { IDataAddress, AddressStack } from './expressiontree';
 
 export interface ITextStreamData {
     getRawData(address: exprTree.IDataAddress): any;

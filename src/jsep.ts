@@ -1,4 +1,4 @@
-///<amd-module name="hr.jsep"/>
+///<amd-module-off name="hr.jsep"/>
 //     JavaScript Expression Parser (JSEP) 0.3.4
 //     JSEP may be freely distributed under the MIT License
 //     http://jsep.from.so/

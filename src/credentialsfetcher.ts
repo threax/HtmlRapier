@@ -1,7 +1,7 @@
-///<amd-module name="hr.credentialsfetcher"/>
+///<amd-module-off name="hr.credentialsfetcher"/>
 
-import { Fetcher, RequestInfo, RequestInit, Response } from 'hr.fetcher';
-import {IWhitelist} from 'hr.whitelist';
+import { Fetcher, RequestInfo, RequestInit, Response } from './fetcher';
+import {IWhitelist} from './whitelist';
 
 /**
  * A fetcher that adds credentials to whitelisted urls.

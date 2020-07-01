@@ -1,9 +1,9 @@
-///<amd-module name="hr.componentbuilder"/>
+///<amd-module-off name="hr.componentbuilder"/>
 
-import { BindingCollection } from 'hr.bindingcollection';
-import { TextStream } from 'hr.textstream';
-import { IComponentBuilder } from 'hr.components';
-import * as textstream from 'hr.textstream';
+import { BindingCollection } from './bindingcollection';
+import { TextStream } from './textstream';
+import { IComponentBuilder } from './components';
+import * as textstream from './textstream';
 
 export class VariantBuilder{
     private tokenizedString: TextStream = null;

@@ -1,11 +1,11 @@
-///<amd-module name="hr.formhelper"/>
+///<amd-module-off name="hr.formhelper"/>
 
-import * as domQuery from 'hr.domquery';
-import * as typeIds from 'hr.typeidentifiers';
-import { JsonSchema } from 'hr.schema';
-import { FormErrors } from 'hr.error';
-import * as event from 'hr.eventdispatcher';
-import * as expression from 'hr.expressiontree';
+import * as domQuery from './domquery';
+import * as typeIds from './typeidentifiers';
+import { JsonSchema } from './schema';
+import { FormErrors } from './error';
+import * as event from './eventdispatcher';
+import * as expression from './expressiontree';
 
 export function IsFormElement(element: Node): element is HTMLFormElement{
     return element && (element.nodeName === 'FORM' || element.nodeName == 'INPUT' || element.nodeName == 'TEXTAREA');

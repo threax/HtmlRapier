@@ -1,8 +1,8 @@
-﻿///<amd-module name="hr.iterable"/>
+﻿///<amd-module-off name="hr.iterable"/>
 
 "use strict";
 
-import * as typeId from 'hr.typeidentifiers';
+import * as typeId from './typeidentifiers';
 
 export interface IteratorInterface<T> {
     next(): IterateResult<T>;

@@ -1,8 +1,8 @@
-﻿///<amd-module name="hr.domquery"/>
+﻿///<amd-module-off name="hr.domquery"/>
 
 "use strict";
 
-import * as typeId from 'hr.typeidentifiers';
+import * as typeId from './typeidentifiers';
 
 export type NodeIteratorCallback = (node: Node) => void;
 export type ElementIteratorCallback = (element: Element) => void;

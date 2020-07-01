@@ -1,4 +1,4 @@
-﻿///<amd-module name="todo-demo"/>
+﻿///<amd-module-off name="todo-demo"/>
 
 "use strict";
 import * as controller from "hr.controller";

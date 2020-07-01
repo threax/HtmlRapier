@@ -1,4 +1,4 @@
-﻿///<amd-module name="hr.fetcher"/>
+﻿///<amd-module-off name="hr.fetcher"/>
 
 // Type definitions for Fetch API
 // Altered to fit htmlrapier by Andrew Piper

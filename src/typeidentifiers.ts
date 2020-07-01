@@ -1,4 +1,4 @@
-﻿///<amd-module name="hr.typeidentifiers"/>
+﻿///<amd-module-off name="hr.typeidentifiers"/>
 
 /**
  * Determine if a variable is an array.

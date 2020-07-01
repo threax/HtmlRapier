@@ -1,15 +1,15 @@
-﻿///<amd-module name="hr.bindingcollection"/>
+﻿///<amd-module-off name="hr.bindingcollection"/>
 
 "use strict";
 
-import * as escape from 'hr.escape';
-import * as typeId from 'hr.typeidentifiers';
-import * as domQuery from 'hr.domquery';
-import * as TextStream from 'hr.textstream';
-import * as toggles from 'hr.toggles';
-import * as models from 'hr.models';
-import * as form from 'hr.form';
-import * as view from 'hr.view';
+import * as escape from './escape';
+import * as typeId from './typeidentifiers';
+import * as domQuery from './domquery';
+import * as TextStream from './textstream';
+import * as toggles from './toggles';
+import * as models from './models';
+import * as form from './form';
+import * as view from './view';
 
 function EventRunner(name: string, listener: any) {
     this.execute = function (evt: Event) {

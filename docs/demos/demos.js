@@ -1,4 +1,4 @@
-///<amd-module name="hr.escape"/>
+///<amd-module-off name="hr.escape"/>
 define("hr.escape", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -47,7 +47,7 @@ define("hr.escape", ["require", "exports"], function (require, exports) {
         status.textStart = i + 1;
     }
 });
-///<amd-module name="hr.typeidentifiers"/>
+///<amd-module-off name="hr.typeidentifiers"/>
 define("hr.typeidentifiers", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -92,7 +92,7 @@ define("hr.typeidentifiers", ["require", "exports"], function (require, exports)
     }
     exports.isForEachable = isForEachable;
 });
-///<amd-module name="hr.domquery"/>
+///<amd-module-off name="hr.domquery"/>
 define("hr.domquery", ["require", "exports", "hr.typeidentifiers"], function (require, exports, typeId) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -237,7 +237,7 @@ define("hr.domquery", ["require", "exports", "hr.typeidentifiers"], function (re
         }
     }
 });
-///<amd-module name="hr.textstream"/>
+///<amd-module-off name="hr.textstream"/>
 define("hr.textstream", ["require", "exports", "hr.escape", "hr.typeidentifiers"], function (require, exports, hr_escape_1, typeId) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -380,7 +380,7 @@ define("hr.textstream", ["require", "exports", "hr.escape", "hr.typeidentifiers"
     }());
     exports.TextStream = TextStream;
 });
-///<amd-module name="hr.eventdispatcher"/>
+///<amd-module-off name="hr.eventdispatcher"/>
 define("hr.eventdispatcher", ["require", "exports", "hr.typeidentifiers"], function (require, exports, typeId) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -523,7 +523,7 @@ define("hr.eventdispatcher", ["require", "exports", "hr.typeidentifiers"], funct
     }());
     exports.PromiseEventDispatcher = PromiseEventDispatcher;
 });
-///<amd-module name="hr.toggles"/>
+///<amd-module-off name="hr.toggles"/>
 define("hr.toggles", ["require", "exports", "tslib", "hr.typeidentifiers", "hr.eventdispatcher"], function (require, exports, tslib_1, typeId, evts) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -894,7 +894,7 @@ define("hr.toggles", ["require", "exports", "tslib", "hr.typeidentifiers", "hr.e
     }
     exports.build = build;
 });
-///<amd-module name="hr.schema"/>
+///<amd-module-off name="hr.schema"/>
 define("hr.schema", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -918,7 +918,7 @@ define("hr.schema", ["require", "exports"], function (require, exports) {
     }
     exports.resolveRef = resolveRef;
 });
-///<amd-module name="hr.error"/>
+///<amd-module-off name="hr.error"/>
 define("hr.error", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -937,7 +937,7 @@ define("hr.error", ["require", "exports"], function (require, exports) {
     }
     exports.isFormErrors = isFormErrors;
 });
-///<amd-module name="hr.formhelper"/>
+///<amd-module-off name="hr.formhelper"/>
 define("hr.formhelper", ["require", "exports", "hr.domquery", "hr.typeidentifiers"], function (require, exports, domQuery, typeIds) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -1171,7 +1171,7 @@ define("hr.formhelper", ["require", "exports", "hr.domquery", "hr.typeidentifier
     }
     exports.getSharedClearingValidator = getSharedClearingValidator;
 });
-///<amd-module name="hr.form"/>
+///<amd-module-off name="hr.form"/>
 define("hr.form", ["require", "exports", "hr.formhelper"], function (require, exports, formHelper) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -1335,7 +1335,7 @@ define("hr.form", ["require", "exports", "hr.formhelper"], function (require, ex
         return "";
     }
 });
-///<amd-module name="hr.components"/>
+///<amd-module-off name="hr.components"/>
 define("hr.components", ["require", "exports", "hr.typeidentifiers", "hr.domquery"], function (require, exports, typeId, domquery) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -1443,7 +1443,7 @@ define("hr.components", ["require", "exports", "hr.typeidentifiers", "hr.domquer
         }
     }
 });
-///<amd-module name="hr.iterable"/>
+///<amd-module-off name="hr.iterable"/>
 define("hr.iterable", ["require", "exports", "tslib", "hr.typeidentifiers"], function (require, exports, tslib_2, typeId) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -1619,7 +1619,7 @@ define("hr.iterable", ["require", "exports", "tslib", "hr.typeidentifiers"], fun
         return BuiltQuery;
     }());
 });
-///<amd-module name="hr.view"/>
+///<amd-module-off name="hr.view"/>
 define("hr.view", ["require", "exports", "hr.textstream", "hr.components", "hr.typeidentifiers", "hr.domquery"], function (require, exports, hr_textstream_1, components, typeId, domQuery) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -1730,7 +1730,7 @@ define("hr.view", ["require", "exports", "hr.textstream", "hr.components", "hr.t
         return "";
     }
 });
-///<amd-module name="hr.models"/>
+///<amd-module-off name="hr.models"/>
 define("hr.models", ["require", "exports", "hr.form", "hr.view"], function (require, exports, forms, views) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -1807,7 +1807,7 @@ define("hr.models", ["require", "exports", "hr.form", "hr.view"], function (requ
     }());
     exports.StrongTypedModel = StrongTypedModel;
 });
-///<amd-module name="hr.bindingcollection"/>
+///<amd-module-off name="hr.bindingcollection"/>
 define("hr.bindingcollection", ["require", "exports", "hr.domquery", "hr.toggles", "hr.models", "hr.form", "hr.view"], function (require, exports, domQuery, toggles, models, form, view) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -2077,7 +2077,7 @@ define("hr.bindingcollection", ["require", "exports", "hr.domquery", "hr.toggles
     exports.BindingCollection = BindingCollection;
     ;
 });
-///<amd-module name="hr.ignored"/>
+///<amd-module-off name="hr.ignored"/>
 define("hr.ignored", ["require", "exports", "hr.domquery"], function (require, exports, domQuery) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -2094,7 +2094,7 @@ define("hr.ignored", ["require", "exports", "hr.domquery"], function (require, e
     }
     exports.isIgnored = isIgnored;
 });
-///<amd-module name="hr.di"/>
+///<amd-module-off name="hr.di"/>
 define("hr.di", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -2390,7 +2390,7 @@ define("hr.di", ["require", "exports"], function (require, exports) {
     }());
     exports.Scope = Scope;
 });
-///<amd-module name="hr.controller"/>
+///<amd-module-off name="hr.controller"/>
 define("hr.controller", ["require", "exports", "hr.bindingcollection", "hr.bindingcollection", "hr.toggles", "hr.domquery", "hr.ignored", "hr.eventdispatcher", "hr.di", "hr.di"], function (require, exports, hr_bindingcollection_1, hr_bindingcollection_2, hr_toggles_1, domQuery, ignoredNodes, hr_eventdispatcher_1, di, hr_di_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -2551,7 +2551,7 @@ define("hr.controller", ["require", "exports", "hr.bindingcollection", "hr.bindi
     exports.InjectedControllerBuilder = InjectedControllerBuilder;
 });
 /// This line gives our module a predictable name
-///<amd-module name="form-demo"/>
+///<amd-module-off name="form-demo"/>
 define("form-demo", ["require", "exports", "hr.controller"], function (require, exports, controller) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -2858,7 +2858,7 @@ define("form-demo", ["require", "exports", "hr.controller"], function (require, 
     }
 });
 /// This line gives our module a predictable name
-///<amd-module name="hello-world-demo"/>
+///<amd-module-off name="hello-world-demo"/>
 define("hello-world-demo", ["require", "exports", "hr.controller"], function (require, exports, controller) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -2892,7 +2892,7 @@ define("hello-world-demo", ["require", "exports", "hr.controller"], function (re
     //data-hr-controller attribute on an element with the value "helloWorldDemo"
     builder.create("helloWorldDemo", HelloWorldController);
 });
-///<amd-module name="simple-form-input-demo"/>
+///<amd-module-off name="simple-form-input-demo"/>
 define("simple-form-input-demo", ["require", "exports", "hr.controller"], function (require, exports, controller) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -2923,7 +2923,7 @@ define("simple-form-input-demo", ["require", "exports", "hr.controller"], functi
     builder.Services.addTransient(FormDemoController, FormDemoController);
     builder.create("inputDemo", FormDemoController);
 });
-///<amd-module name="todo-demo"/>
+///<amd-module-off name="todo-demo"/>
 define("todo-demo", ["require", "exports", "hr.controller"], function (require, exports, controller) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -3005,7 +3005,7 @@ define("todo-demo", ["require", "exports", "hr.controller"], function (require, 
     builder.Services.addTransient(TodoItemController, TodoItemController);
     builder.create("todo", TodoDemoController);
 });
-///<amd-module name="toggle-demo"/>
+///<amd-module-off name="toggle-demo"/>
 define("toggle-demo", ["require", "exports", "hr.controller"], function (require, exports, controller) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });

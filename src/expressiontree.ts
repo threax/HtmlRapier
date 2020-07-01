@@ -1,6 +1,6 @@
-///<amd-module name="hr.expressiontree"/>
-import * as jsep from 'hr.jsep';
-import * as typeId from 'hr.typeidentifiers';
+///<amd-module-off name="hr.expressiontree"/>
+import * as jsep from './jsep';
+import * as typeId from './typeidentifiers';
 
 export enum OperationType {
     And = <any>"And",

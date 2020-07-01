@@ -1,4 +1,4 @@
-///<amd-module name="hr.runattributes"/>
+///<amd-module-off name="hr.runattributes"/>
 
 "use strict";
 

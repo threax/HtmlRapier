@@ -1,23 +1,23 @@
-///<amd-module name="hr.formbuilder"/>
+///<amd-module-off name="hr.formbuilder"/>
 
 "use strict";
 
-import * as component from 'hr.components';
-import * as domquery from 'hr.domquery';
-import { BindingCollection, PooledBindings } from 'hr.bindingcollection';
-import * as view from 'hr.view';
-import * as toggle from 'hr.toggles';
-import * as event from 'hr.eventdispatcher';
-import * as formHelper from 'hr.formhelper';
-import { JsonProperty, JsonLabel, JsonSchema, resolveRef, RefNode, isRefNode, getOneOfSchema } from 'hr.schema';
-import { FormErrors } from 'hr.error';
-import * as typeIds from 'hr.typeidentifiers';
-import * as expression from 'hr.expressiontree';
-export { IFormValue, GetParentData } from 'hr.formhelper';
-import * as iterable from 'hr.iterable';
-import { TimedTrigger } from 'hr.timedtrigger';
-import { ITextStreamData } from 'hr.textstream';
-import * as schemaprocessor from 'hr.schemaprocessor';
+import * as component from './components';
+import * as domquery from './domquery';
+import { BindingCollection, PooledBindings } from './bindingcollection';
+import * as view from './view';
+import * as toggle from './toggles';
+import * as event from './eventdispatcher';
+import * as formHelper from './formhelper';
+import { JsonProperty, JsonLabel, JsonSchema, resolveRef, RefNode, isRefNode, getOneOfSchema } from './schema';
+import { FormErrors } from './error';
+import * as typeIds from './typeidentifiers';
+import * as expression from './expressiontree';
+export { IFormValue, GetParentData } from './formhelper';
+import * as iterable from './iterable';
+import { TimedTrigger } from './timedtrigger';
+import { ITextStreamData } from './textstream';
+import * as schemaprocessor from './schemaprocessor';
 
 class FormValuesSource implements expression.IValueSource {
     constructor(private formValues: FormValues) {
@@ -228,7 +228,7 @@ class ArrayEditorRow {
         if (itemHandle !== null) {
             this.root = itemHandle;
         }
-        this.formValues = buildForm('hr.forms.default', schema, this.root, this.name);
+        this.formValues = buildForm('./forms.default', schema, this.root, this.name);
 
         bindings.setListener(this);
     }

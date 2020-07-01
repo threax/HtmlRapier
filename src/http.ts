@@ -1,9 +1,9 @@
-﻿///<amd-module name="hr.http"/>
+﻿///<amd-module-off name="hr.http"/>
 
 "use strict";
 
-import {Fetcher, Response} from 'hr.fetcher';
-import {WindowFetch} from 'hr.windowfetch';
+import {Fetcher, Response} from './fetcher';
+import {WindowFetch} from './windowfetch';
 
 var defaultFetcher:Fetcher = new WindowFetch();
 

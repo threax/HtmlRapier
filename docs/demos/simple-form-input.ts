@@ -1,4 +1,4 @@
-﻿///<amd-module name="simple-form-input-demo"/>
+﻿///<amd-module-off name="simple-form-input-demo"/>
 
 "use strict";
 import * as controller from "hr.controller";

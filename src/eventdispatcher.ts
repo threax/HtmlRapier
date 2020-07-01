@@ -1,8 +1,8 @@
-///<amd-module name="hr.eventdispatcher"/>
+///<amd-module-off name="hr.eventdispatcher"/>
 
 "use strict";
 
-import * as typeId from 'hr.typeidentifiers';
+import * as typeId from './typeidentifiers';
 
 export type ActionEventListener<T> = (arg:T) => void;
 export type FuncEventListener<TRet, TArg> = (arg:TArg) => TRet;

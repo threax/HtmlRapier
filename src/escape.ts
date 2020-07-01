@@ -1,4 +1,4 @@
-﻿///<amd-module name="hr.escape"/>
+﻿///<amd-module-off name="hr.escape"/>
 
 "use strict";
 

@@ -1,10 +1,10 @@
-﻿///<amd-module name="hr.accesstokens"/>
+﻿///<amd-module-off name="hr.accesstokens"/>
 
-import * as http from 'hr.http';
-import { Fetcher, RequestInfo, RequestInit, Response, Request } from 'hr.fetcher';
-import * as events from 'hr.eventdispatcher';
-import * as ep from 'hr.externalpromise';
-import {IWhitelist} from 'hr.whitelist';
+import * as http from './http';
+import { Fetcher, RequestInfo, RequestInit, Response, Request } from './fetcher';
+import * as events from './eventdispatcher';
+import * as ep from './externalpromise';
+import {IWhitelist} from './whitelist';
 
 //From https://github.com/auth0/jwt-decode/blob/master/lib/base64_url_decode.js
 function b64DecodeUnicode(str: string) {

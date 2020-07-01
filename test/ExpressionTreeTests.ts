@@ -1,11 +1,11 @@
-///<amd-module name="hr.test.expressionTree"/>
+///<amd-module-off name="hr.test.expressionTree"/>
 
-import * as exprTree from 'hr.expressionTree';
-import * as textstream from 'hr.textstream';
-import { TestContext, setupTests } from 'hr.test.UnitTests';
-import * as controller from 'hr.controller';
-import { IViewDataFormatter, Extractor } from 'hr.view';
-import { Iterable } from 'hr.iterable';
+import * as exprTree from '../src/expressionTree';
+import * as textstream from '../src/textstream';
+import { TestContext, setupTests } from './UnitTests';
+import * as controller from '../src/controller';
+import { IViewDataFormatter, Extractor } from '../src/view';
+import { Iterable } from '../src/iterable';
 
 var runner = setupTests();
 runner.beginTestSection("ExpressionTree");

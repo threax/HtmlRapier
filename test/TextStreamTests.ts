@@ -1,8 +1,8 @@
-///<amd-module name="hr.test.textstream"/>
+///<amd-module-off name="hr.test.textstream"/>
 
-import * as exprTree from 'hr.expressionTree';
-import * as textstream from 'hr.textstream';
-import { TestContext, setupTests } from 'hr.test.UnitTests';
+import * as exprTree from '../src/expressionTree';
+import * as textstream from '../src/textstream';
+import { TestContext, setupTests } from './UnitTests';
 
 var runner = setupTests();
 runner.beginTestSection("Text Stream");

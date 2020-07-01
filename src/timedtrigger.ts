@@ -1,8 +1,8 @@
-﻿///<amd-module name="hr.timedtrigger"/>
+﻿///<amd-module-off name="hr.timedtrigger"/>
 
 "use strict";
 
-import {ActionEventDispatcher, ActionEventListener} from 'hr.eventdispatcher';
+import {ActionEventDispatcher, ActionEventListener} from './eventdispatcher';
 
 export class TimedTrigger<TArg> {
 

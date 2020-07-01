@@ -1,5 +1,5 @@
 ﻿/// This line gives our module a predictable name
-///<amd-module name="hello-world-demo"/>
+///<amd-module-off name="hello-world-demo"/>
 
 "use strict";
 import * as controller from "hr.controller";

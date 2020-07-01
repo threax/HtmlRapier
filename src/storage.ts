@@ -1,4 +1,4 @@
-﻿///<amd-module name="hr.storage"/>
+﻿///<amd-module-off name="hr.storage"/>
 
 "use strict";
 

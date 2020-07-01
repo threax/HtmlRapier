@@ -1,4 +1,4 @@
-///<amd-module name="hr.di"/>
+///<amd-module-off name="hr.di"/>
 
 export type ResolverFunction<T> = (scope: Scope) => T;
 

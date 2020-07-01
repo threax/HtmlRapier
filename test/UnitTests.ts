@@ -1,5 +1,5 @@
-///<amd-module name="hr.test.UnitTests"/>
-import * as controller from 'hr.controller';
+///<amd-module-off name="hr.test.UnitTests"/>
+import * as controller from '../src/controller';
 
 export type TestFunc = (ctx: TestContext) => void;
 

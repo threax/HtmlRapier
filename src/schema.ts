@@ -1,6 +1,6 @@
-///<amd-module name="hr.schema"/>
+///<amd-module-off name="hr.schema"/>
 
-import * as expression from 'hr.expressiontree';
+import * as expression from './expressiontree';
 
 export type JsonPropertyMap = { [key: string]: JsonProperty };
 

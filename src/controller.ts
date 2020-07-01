@@ -1,22 +1,22 @@
-﻿///<amd-module name="hr.controller"/>
+﻿///<amd-module-off name="hr.controller"/>
 
 "use strict";
 
-import { BindingCollection } from 'hr.bindingcollection';
-export { BindingCollection } from 'hr.bindingcollection';
-export { Model } from 'hr.models';
-export { OnOffToggle, TypedToggle } from 'hr.toggles';
-import * as domQuery from 'hr.domquery';
-import * as ignoredNodes from 'hr.ignored';
-import { ActionEventDispatcher } from 'hr.eventdispatcher';
-import * as di from 'hr.di';
-export { DiFunction, ServiceCollection, InjectableArgs } from 'hr.di';
-export { IForm } from 'hr.form';
-export { IView } from 'hr.view';
+import { BindingCollection } from './bindingcollection';
+export { BindingCollection } from './bindingcollection';
+export { Model } from './models';
+export { OnOffToggle, TypedToggle } from './toggles';
+import * as domQuery from './domquery';
+import * as ignoredNodes from './ignored';
+import { ActionEventDispatcher } from './eventdispatcher';
+import * as di from './di';
+export { DiFunction, ServiceCollection, InjectableArgs } from './di';
+export { IForm } from './form';
+export { IView } from './view';
 
 // This block will import a polyfill to use if the code is compiled as es5
 // This will enable the web components to call our constructors.
-import * as es5component from 'hr.es5component';
+import * as es5component from './es5component';
 es5component.setupPolyfill();
 // End polyfill block
 

@@ -1,4 +1,4 @@
-///<amd-module name="hr.pageconfig"/>
+///<amd-module-off name="hr.pageconfig"/>
 
 /**
  * The config function on the page, this is reserved in order to use the pageconfig system.

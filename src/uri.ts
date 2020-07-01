@@ -1,4 +1,4 @@
-﻿///<amd-module name="hr.uri"/>
+﻿///<amd-module-off name="hr.uri"/>
 
 "use strict";
 
