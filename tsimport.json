@@ -7,7 +7,8 @@
     }
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "hr.ts"
   ],
   "exclude": [
 

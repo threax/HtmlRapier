@@ -23,7 +23,8 @@
   },
   "include": [
     "src/*",
-    "test\\**\\*.ts"
+    "test\\**\\*.ts",
+    "hr.ts"
   ],
   "exclude": [
     "node_modules",

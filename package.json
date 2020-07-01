@@ -9,6 +9,7 @@
     "jsns": ">=4.2.0"
   },
   "files": [
+    "hr.ts",
     "src/**/*",
     "tsimport.json",
     "artifacts.json"
