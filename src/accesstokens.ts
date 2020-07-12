@@ -63,6 +63,7 @@ class TokenManager {
     private expirationTick: number;
     private needLoginEvent: events.PromiseEventDispatcher<boolean, TokenManager> = new events.PromiseEventDispatcher<boolean, TokenManager>();
     private queuePromise: ep.ExternalPromise<string> = null;
+    private _alwaysRequestLogin: boolean = false;
 
     constructor(private tokenPath: string, private fetcher: Fetcher) {
 
@@ -95,7 +96,7 @@ class TokenManager {
             //This error happens only if we can't get the access token
             //If we did not yet have a token, allow the request to finish, the user is not logged in
             //Otherwise try to get the login
-            if (this.currentToken === undefined) {
+            if (!this._alwaysRequestLogin && this.currentToken === undefined) {
                 this.resolveQueue();
             }
             else if (await this.fireNeedLogin()) {
@@ -150,6 +151,14 @@ class TokenManager {
 
     public get headerName() {
         return this._headerName;
+    }
+
+    public get alwaysRequestLogin(): boolean {
+        return this._alwaysRequestLogin;
+    }
+
+    public set alwaysRequestLogin(value: boolean) {
+        this._alwaysRequestLogin = value;
     }
 
     private async fireNeedLogin(): Promise<boolean> {
@@ -257,6 +266,14 @@ export class AccessTokenFetcher extends Fetcher {
 
     public set disableOnNoToken(value: boolean) {
         this._disableOnNoToken = value;
+    }
+
+    public get alwaysRequestLogin(): boolean {
+        return this.tokenManager.alwaysRequestLogin;
+    }
+
+    public set alwaysRequestLogin(value: boolean) {
+        this.tokenManager.alwaysRequestLogin = value;
     }
 
     private async fireNeedLogin(): Promise<boolean> {
