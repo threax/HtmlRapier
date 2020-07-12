@@ -4,11 +4,12 @@ import * as http from 'hr.http';
 import { Fetcher, RequestInfo, RequestInit, Response, Request } from 'hr.fetcher';
 import * as events from 'hr.eventdispatcher';
 import * as ep from 'hr.externalpromise';
-import {IWhitelist} from 'hr.whitelist';
+import { IWhitelist } from 'hr.whitelist';
+import * as storage from 'hr.storage';
 
 //From https://github.com/auth0/jwt-decode/blob/master/lib/base64_url_decode.js
 function b64DecodeUnicode(str: string) {
-    return decodeURIComponent(atob(str).replace(/(.)/g, function(m, p) {
+    return decodeURIComponent(atob(str).replace(/(.)/g, function (m, p) {
         var code = p.charCodeAt(0).toString(16).toUpperCase();
         if (code.length < 2) {
             code = '0' + code;
@@ -57,13 +58,14 @@ interface IServerTokenResult {
 
 class TokenManager {
     private currentToken: string;
-    private _headerName: string;
+    private _headerName: string = "bearer";
     private startTime: number;
     private currentSub: string;
     private expirationTick: number;
     private needLoginEvent: events.PromiseEventDispatcher<boolean, TokenManager> = new events.PromiseEventDispatcher<boolean, TokenManager>();
     private queuePromise: ep.ExternalPromise<string> = null;
     private _alwaysRequestLogin: boolean = false;
+    private _bearerCookieName: string = null;
 
     constructor(private tokenPath: string, private fetcher: Fetcher) {
 
@@ -76,7 +78,7 @@ class TokenManager {
         }
 
         //Do we need to refresh?
-        if (this.startTime === undefined || Date.now() / 1000 - this.startTime > this.expirationTick) {
+        if (this.needsRefresh()) {
             //If we need to refresh, create the queue and fire the refresh
             this.queuePromise = new ep.ExternalPromise<string>();
             this.doRefreshToken(); //Do NOT await this, we want execution to continue.
@@ -87,9 +89,13 @@ class TokenManager {
         return Promise.resolve(this.currentToken);
     }
 
+    private needsRefresh(): boolean {
+        return this.startTime === undefined || Date.now() / 1000 - this.startTime > this.expirationTick;
+    }
+
     private async doRefreshToken(): Promise<void> {
         try {
-            await this.readServerToken();
+            await this.readToken();
             this.resolveQueue();
         }
         catch (err) {
@@ -101,7 +107,7 @@ class TokenManager {
             }
             else if (await this.fireNeedLogin()) {
                 //After login read the server token again and resolve the queue
-                await this.readServerToken();
+                await this.readToken();
                 this.resolveQueue();
             }
             else { //Got false from fireNeedLogin, which means no login was performed, return an error
@@ -111,10 +117,26 @@ class TokenManager {
         }
     }
 
-    private async readServerToken(): Promise<void> {
-        var data = await http.post<IServerTokenResult>(this.tokenPath, undefined, this.fetcher);
-        this.currentToken = data.accessToken;
-        this._headerName = data.headerName;
+    private async readToken(): Promise<void> {
+        if (this._bearerCookieName) {
+            //Using bearer cookie mode
+            if (this.startTime === undefined) {
+                //If no cookie has been found yet, keep looking for it
+                this.readCookieAccessToken();
+            }
+            else if (this.needsRefresh()) {
+                //If the token needs a refresh load it from the server
+                await this.readServerAccessToken();
+            }
+            else {
+                //If no refresh is needed, read from the cookie
+                this.readCookieAccessToken();
+            }
+        }
+        else {
+            //Using server access token mode, just keep reading it
+            await this.readServerAccessToken();
+        }
 
         var tokenObj = parseJwt(this.currentToken);
 
@@ -131,6 +153,19 @@ class TokenManager {
 
         this.startTime = tokenObj.nbf;
         this.expirationTick = (tokenObj.exp - this.startTime) / 2; //After half the token time has expired we will turn it in for another one.
+    }
+
+    private readCookieAccessToken() {
+        this.currentToken = storage.CookieStorageDriver.readRaw(this._bearerCookieName);
+        if (this.currentToken === null) {
+            this.currentToken = undefined; //Keeps with undefined everywhere else.
+        }
+    }
+
+    private async readServerAccessToken() {
+        var data = await http.post<IServerTokenResult>(this.tokenPath, undefined, this.fetcher);
+        this.currentToken = data.accessToken;
+        this._headerName = data.headerName;
     }
 
     private clearToken(): void {
@@ -159,6 +194,14 @@ class TokenManager {
 
     public set alwaysRequestLogin(value: boolean) {
         this._alwaysRequestLogin = value;
+    }
+
+    public get bearerCookieName(): string {
+        return this._bearerCookieName;
+    }
+
+    public set bearerCookieName(value: string) {
+        this._bearerCookieName = value;
     }
 
     private async fireNeedLogin(): Promise<boolean> {
@@ -274,6 +317,14 @@ export class AccessTokenFetcher extends Fetcher {
 
     public set alwaysRequestLogin(value: boolean) {
         this.tokenManager.alwaysRequestLogin = value;
+    }
+
+    public get bearerCookieName(): string {
+        return this.tokenManager.bearerCookieName;
+    }
+
+    public set bearerCookieName(value: string) {
+        this.tokenManager.bearerCookieName = value;
     }
 
     private async fireNeedLogin(): Promise<boolean> {
