@@ -93,12 +93,8 @@ class TokenManager {
         }
         catch (err) {
             //This error happens only if we can't get the access token
-            //If we did not yet have a token, allow the request to finish, the user is not logged in
-            //Otherwise try to get the login
-            if (this.currentToken === undefined) {
-                this.resolveQueue();
-            }
-            else if (await this.fireNeedLogin()) {
+            //If we did not yet have a token, try to get one.
+            if (await this.fireNeedLogin()) {
                 //After login read the server token again and resolve the queue
                 await this.readServerToken();
                 this.resolveQueue();
