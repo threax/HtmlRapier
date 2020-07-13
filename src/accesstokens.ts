@@ -100,45 +100,50 @@ class TokenManager {
             this.resolveQueue();
         }
         catch (err) {
-            //This error happens only if we can't get the access token
-            //If we did not yet have a token, allow the request to finish, the user is not logged in
-            //Otherwise try to get the login
-            if (!this._alwaysRequestLogin && this.currentToken === undefined) {
-                this.resolveQueue();
-            }
-            else if (await this.fireNeedLogin()) {
-                //After login read the server token again and resolve the queue
-                await this.readToken();
-                this.resolveQueue();
-            }
-            else { //Got false from fireNeedLogin, which means no login was performed, return an error
-                this.startTime = undefined;
-                this.rejectQueue("Could not refresh access token or log back in.");
-            }
+            this.rejectQueue(err);
         }
     }
 
     private async readToken(): Promise<void> {
-        if (this._bearerCookieName) {
-            //Using bearer cookie mode
-            if (this.startTime === undefined) {
-                //If no cookie has been found yet, keep looking for it
-                this.readCookieAccessToken();
-            }
-            else if (this.needsRefresh()) {
-                //If the token needs a refresh load it from the server
-                await this.readServerAccessToken();
-            }
-            else {
-                //If no refresh is needed, read from the cookie
-                this.readCookieAccessToken();
-            }
-        }
-        else {
-            //Using server access token mode, just keep reading it
-            await this.readServerAccessToken();
+        if (!this._bearerCookieName) {
+            throw new Error("You must specify the bearer cookie name to use access token authentication.");
         }
 
+        if (!this.currentToken) {
+            //Read the cookie
+            this.readCookieAccessToken();
+        }
+
+        //Make sure we managed to get a token, not getting one is valid
+        if (this.currentToken) {
+            this.processCurrentToken();
+        }
+
+        //Double check expiration times and refresh if needed
+        const allowTokenRefresh = this.currentToken || this.alwaysRequestLogin; //If we have a token or login is forced a token lookup is allowed
+        if (allowTokenRefresh && this.needsRefresh()) { //If token lookup is allowed and a refresh is needed
+            try {
+                await this.readServerAccessToken();
+            }
+            catch (err) {
+                //If there was an error, attempt to relogin
+                if (!await this.fireNeedLogin()) { //Got false from fireNeedLogin, which means no login was performed, throw an error
+                    this.startTime = undefined;
+                    throw new Error("Could not refresh access token or log back in.");
+                }
+            }
+
+            //The way this is structured no matter what happens on the server we read the current cookie state
+            //Its possible no refresh was performed if the user turned that off, but if we had a cookie with a
+            //token, go ahead and return that.
+            this.readCookieAccessToken();
+            if (this.currentToken) {
+                this.processCurrentToken();
+            }
+        }
+    }
+
+    private processCurrentToken() {
         var tokenObj = parseJwt(this.currentToken);
 
         if (this.currentSub !== undefined) {
@@ -165,13 +170,7 @@ class TokenManager {
 
     private async readServerAccessToken() {
         if (this._allowServerTokenRefresh) {
-            var data = await http.post<IServerTokenResult>(this.tokenPath, undefined, this.fetcher);
-            this.currentToken = data.accessToken;
-            this._headerName = data.headerName;
-        }
-        else {
-            //If we don't load from the server, supply the cookie token
-            return this.readCookieAccessToken();
+            await http.post<IServerTokenResult>(this.tokenPath, undefined, this.fetcher);
         }
     }
 
