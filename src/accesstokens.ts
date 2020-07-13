@@ -66,6 +66,7 @@ class TokenManager {
     private queuePromise: ep.ExternalPromise<string> = null;
     private _alwaysRequestLogin: boolean = false;
     private _bearerCookieName: string = null;
+    private _allowServerTokenRefresh: boolean = true;
 
     constructor(private tokenPath: string, private fetcher: Fetcher) {
 
@@ -163,9 +164,15 @@ class TokenManager {
     }
 
     private async readServerAccessToken() {
-        var data = await http.post<IServerTokenResult>(this.tokenPath, undefined, this.fetcher);
-        this.currentToken = data.accessToken;
-        this._headerName = data.headerName;
+        if (this._allowServerTokenRefresh) {
+            var data = await http.post<IServerTokenResult>(this.tokenPath, undefined, this.fetcher);
+            this.currentToken = data.accessToken;
+            this._headerName = data.headerName;
+        }
+        else {
+            //If we don't load from the server, supply the cookie token
+            return this.readCookieAccessToken();
+        }
     }
 
     private clearToken(): void {
@@ -202,6 +209,14 @@ class TokenManager {
 
     public set bearerCookieName(value: string) {
         this._bearerCookieName = value;
+    }
+
+    public get allowServerTokenRefresh(): boolean {
+        return this._allowServerTokenRefresh;
+    }
+
+    public set allowServerTokenRefresh(value: boolean) {
+        this._allowServerTokenRefresh = value;
     }
 
     private async fireNeedLogin(): Promise<boolean> {
@@ -325,6 +340,14 @@ export class AccessTokenFetcher extends Fetcher {
 
     public set bearerCookieName(value: string) {
         this.tokenManager.bearerCookieName = value;
+    }
+
+    public get allowServerTokenRefresh(): boolean {
+        return this.tokenManager.allowServerTokenRefresh;
+    }
+
+    public set allowServerTokenRefresh(value: boolean) {
+        this.tokenManager.allowServerTokenRefresh = value;
     }
 
     private async fireNeedLogin(): Promise<boolean> {
