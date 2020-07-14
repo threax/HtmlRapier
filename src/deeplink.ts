@@ -50,7 +50,7 @@ export abstract class IDeepLinkManager {
      * @param inPagePath The path on the page, will be under the base path set, can be null to have only the base path.
      * @param query An object to set as the query, can be null to clear the query.
      */
-    public abstract pushState<T extends {}>(handler: string, inPagePath: string | null, query: {} | null): void;
+    public abstract pushStateAsync<T extends {}>(handler: string, inPagePath: string | null, query: {} | null): Promise<void>;
 
     /**
      * Replace a new state using history.pushstate.
@@ -58,13 +58,13 @@ export abstract class IDeepLinkManager {
      * @param inPagePath The path on the page, will be under the base path set, can be null to have only the base path.
      * @param query An object to set as the query, can be null to clear the query.
      */
-    public abstract replaceState<T extends {}>(handler: string, inPagePath: string | null, query: {} | null): void;
+    public abstract replaceStateAsync<T extends {}>(handler: string, inPagePath: string | null, query: {} | null): Promise<void>;
 
     /**
      * Get the current link state as a DeepLinkArgs. This will be the same as if a history event had fired, but for the current page url.
      * Can also be null if there is no valid state to get.
      */
-    public abstract getCurrentState<T>(proto?: {} | null): DeepLinkArgs | null;
+    public abstract getCurrentStateAsync<T>(proto?: {} | null): Promise<DeepLinkArgs | null>;
 }
 
 interface IDeepLinkEntry {
@@ -92,14 +92,14 @@ export class DeepLinkManager implements IDeepLinkManager {
         }
     }
 
-    public registerHandler<T>(name: string, handler: IDeepLinkHandler) {
+    public registerHandler<T>(name: string, handler: IDeepLinkHandler): void {
         if(this.handlers[name] !== undefined){
             throw new Error("Attempted to register an IHistoryHandler named '" + name + "' multiple times, only one is allowed.");
         }
         this.handlers[name] = handler;
     }
 
-    public pushState<T extends {}>(handler: string, inPagePath: string | null, query: {} | null, title?: string): void {
+    public async pushStateAsync<T extends {}>(handler: string, inPagePath: string | null, query: {} | null, title?: string): Promise<void> {
         var uri = new Uri();
         var state = this.createState(handler, inPagePath, query, uri);
         if(title === undefined){
@@ -108,7 +108,7 @@ export class DeepLinkManager implements IDeepLinkManager {
         history.pushState(state, title, uri.build());
     }
 
-    public replaceState<T extends {}>(handler: string, inPagePath: string | null, query: {} | null, title?: string): void {
+    public async replaceStateAsync<T extends {}>(handler: string, inPagePath: string | null, query: {} | null, title?: string): Promise<void> {
         var uri = new Uri();
         var state = this.createState(handler, inPagePath, query, uri);
         if(title === undefined){
@@ -117,7 +117,7 @@ export class DeepLinkManager implements IDeepLinkManager {
         history.replaceState(state, title, uri.build());
     }
 
-    public getCurrentState<T>(proto?: {} | null): DeepLinkArgs | null {
+    public async getCurrentStateAsync<T>(proto?: {} | null): Promise<DeepLinkArgs | null> {
         if (proto === undefined) {
             proto = null;
         }
@@ -158,16 +158,16 @@ export class NullDeepLinkManager implements IDeepLinkManager {
         
     }
 
-    public pushState<T extends {}>(handler: string, inPagePath: string | null, query: {} | null): void {
-        
+    public pushStateAsync<T extends {}>(handler: string, inPagePath: string | null, query: {} | null) {
+        return Promise.resolve();
     }
 
-    public replaceState<T extends {}>(handler: string, inPagePath: string | null, query: {} | null): void {
-        
+    public replaceStateAsync<T extends {}>(handler: string, inPagePath: string | null, query: {} | null) {
+        return Promise.resolve();
     }
 
-    public getCurrentState<T>(proto?: {} | null): DeepLinkArgs | null {
-        return null;
+    public getCurrentStateAsync<T>(proto?: {} | null): Promise<DeepLinkArgs | null> {
+        return Promise.resolve(null);
     }
 }
 
