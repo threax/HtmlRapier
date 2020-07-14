@@ -3,8 +3,14 @@
 import { Uri } from 'hr.uri';
 import * as di from 'hr.di';
 
-export class DeepLinkArgs {
-    constructor(private _uri: Uri, private basePath: string, private proto: {} | null){
+export interface IDeepLinkArgs {
+    query: any;
+    inPagePath: string;
+    handler: string;
+}
+
+class DeepLinkArgs implements IDeepLinkArgs {
+    constructor(private _uri: Uri, private basePath: string, private proto: {} | null, private _handler: string){
 
     }
 
@@ -24,10 +30,14 @@ export class DeepLinkArgs {
     public get inPagePath(){
         return this._uri.path.substring(this.basePath.length);
     }
+
+    public get handler() {
+        return this._handler;
+    }
 }
 
 export interface IDeepLinkHandler {
-    onPopState(args: DeepLinkArgs);
+    onPopState(args: IDeepLinkArgs);
 }
 
 /**
@@ -64,7 +74,7 @@ export abstract class IDeepLinkManager {
      * Get the current link state as a DeepLinkArgs. This will be the same as if a history event had fired, but for the current page url.
      * Can also be null if there is no valid state to get.
      */
-    public abstract getCurrentStateAsync<T>(proto?: {} | null): Promise<DeepLinkArgs | null>;
+    public abstract getCurrentStateAsync<T>(proto?: {} | null): Promise<IDeepLinkArgs | null>;
 }
 
 interface IDeepLinkEntry {
@@ -87,7 +97,7 @@ export class DeepLinkManager implements IDeepLinkManager {
         if (state) {
             var handler = this.handlers[state.handler];
             if (handler !== undefined) {
-                handler.onPopState(new DeepLinkArgs(new Uri(), this.pageBaseUrl, null));
+                handler.onPopState(new DeepLinkArgs(new Uri(), this.pageBaseUrl, null, state.handler));
             }
         }
     }
@@ -117,11 +127,11 @@ export class DeepLinkManager implements IDeepLinkManager {
         history.replaceState(state, title, uri.build());
     }
 
-    public async getCurrentStateAsync<T>(proto?: {} | null): Promise<DeepLinkArgs | null> {
+    public async getCurrentStateAsync<T>(proto?: {} | null): Promise<IDeepLinkArgs | null> {
         if (proto === undefined) {
             proto = null;
         }
-        return new DeepLinkArgs(new Uri(), this.pageBaseUrl, proto);
+        return new DeepLinkArgs(new Uri(), this.pageBaseUrl, proto, null);
     }
 
     private createState<T extends {}>(handler: string, inPagePath: string | null, query: {} | null, uri: Uri): IDeepLinkEntry {
@@ -166,7 +176,7 @@ export class NullDeepLinkManager implements IDeepLinkManager {
         return Promise.resolve();
     }
 
-    public getCurrentStateAsync<T>(proto?: {} | null): Promise<DeepLinkArgs | null> {
+    public getCurrentStateAsync<T>(proto?: {} | null): Promise<IDeepLinkArgs | null> {
         return Promise.resolve(null);
     }
 }
