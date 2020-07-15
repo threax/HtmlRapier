@@ -43,3 +43,7 @@ export interface ForEachable<T>{
 export function isForEachable<T>(test): test is ForEachable<T> {
     return test && isFunction(test['forEach']);
 }
+
+export function isGenerator<T>(test): test is Generator<T> {
+    return test && isFunction(test['next']) && isFunction(test['return']) && isFunction(test['throw']);
+}

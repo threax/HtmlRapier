@@ -122,10 +122,18 @@ function _forEach(items, query, cb) {
     else if (typeId.isForEachable(items)) {
         items.forEach(item => {
             item = query.derive(item);
-            if(item !== undefined){
+            if (item !== undefined) {
                 cb(item);
             }
         });
+    }
+    else if (typeId.isGenerator(items)) {
+        let item = items.next();
+        while (!item.done) {
+            item = query.derive(item);
+            cb(item.value);
+            item = items.next();
+        }
     }
 }
 
@@ -181,7 +189,7 @@ class Conditional<T> extends IteratorBase<T> {
 export type IteratorSource<T> = () => T;
 
 export class Iterable<T> extends IteratorBase<T> {
-    constructor(private items: T[] | IteratorSource<T> | IteratorBase<T>) {
+    constructor(private items: T[] | IteratorSource<T> | IteratorBase<T> | Generator<T>) {
         super();
     }
 
