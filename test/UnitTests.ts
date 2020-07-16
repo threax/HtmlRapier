@@ -1,5 +1,8 @@
 ///<amd-module name="hr.test.UnitTests"/>
+import * as hr from 'hr.main';
 import * as controller from 'hr.controller';
+
+hr.setup();
 
 export type TestFunc = (ctx: TestContext) => void;
 
