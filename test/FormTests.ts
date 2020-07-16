@@ -10,6 +10,7 @@ import { JsonSchema } from 'hr.schema';
 var runner = setupTests();
 runner.beginTestSection("Form");
 
+//This test won't work until a form builder is loaded. It was relying on runners.
 runner.runTest("Simple Form", c => {
     class TestController {
         private form: IForm<any>;
