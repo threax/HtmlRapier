@@ -1,7 +1,6 @@
 ﻿///<amd-module name="hr.accesstokens"/>
 
-import * as http from 'hr.http';
-import { Fetcher, RequestInfo, RequestInit, Response, Request } from 'hr.fetcher';
+import { Fetcher } from 'hr.fetcher';
 import * as events from 'hr.eventdispatcher';
 import * as ep from 'hr.externalpromise';
 import { IWhitelist } from 'hr.whitelist';
@@ -56,7 +55,7 @@ interface IServerTokenResult {
     accessToken: string;
 }
 
-class TokenManager {
+export class TokenManager {
     private currentToken: string;
     private _headerName: string = "bearer";
     private startTime: number;
@@ -170,7 +169,18 @@ class TokenManager {
 
     private async readServerAccessToken() {
         if (this._allowServerTokenRefresh) {
-            await http.post<IServerTokenResult>(this.tokenPath, undefined, this.fetcher);
+            let request: RequestInit = {
+                method: "POST",
+                cache: "no-cache",
+                headers: {
+                    "Content-Type": "application/json; charset=UTF-8"
+                },
+                credentials: "include"
+            };
+            var response = await this.fetcher.fetch(this.tokenPath, request);
+            if (response.status < 200 && response.status > 299) {
+                throw new Error("Error feteching token from server.")
+            }
         }
     }
 

@@ -1,4 +1,3 @@
-import { RequestInfo, RequestInit, Request } from 'hr.fetcher';
 import * as uri from 'hr.uri';
 
 export interface IWhitelist {
