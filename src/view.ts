@@ -161,14 +161,20 @@ class TextNodeView<T> implements IView<T> {
     }
 
     private bindData(data: any): void {
-        var callback: ITextStreamData;
-        if (typeId.isFunction(data)) {
-            callback = new FuncTextStreamData(data);
+        if (data === null || data === undefined) {
+            //If the incoming data is null or undefined, don't try to read it just clear the view
+            this.bindData(sharedClearer);
         }
         else {
-            callback = new ObjectTextStreamData(data);
+            var callback: ITextStreamData;
+            if (typeId.isFunction(data)) {
+                callback = new FuncTextStreamData(data);
+            }
+            else {
+                callback = new ObjectTextStreamData(data);
+            }
+            this.writeTextStream(callback);
         }
-        this.writeTextStream(callback);
     }
 
     private writeTextStream(textStream: ITextStreamData): void {
