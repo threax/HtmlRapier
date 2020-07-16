@@ -14,12 +14,6 @@ export { DiFunction, ServiceCollection, InjectableArgs } from 'hr.di';
 export { IForm } from 'hr.form';
 export { IView } from 'hr.view';
 
-// This block will import a polyfill to use if the code is compiled as es5
-// This will enable the web components to call our constructors.
-import * as es5component from 'hr.es5component';
-es5component.setupPolyfill();
-// End polyfill block
-
 /**
  * This class provides a way to get a handle to the data provided by the
  * createOnCallback data argument. Return this type from your InjectorArgs
