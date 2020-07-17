@@ -502,15 +502,7 @@ export class Scope {
     }
 
     private getTypeName<T, TId>(typeHandle: DiFunction<T>, id: TId) {
-        let funcNameRegex = /^function\s+([\w\$]+)\s*\(/;
-        let typeResult = funcNameRegex.exec(typeHandle.prototype.constructor.toString());
-        let typeName: string;
-        if (typeResult && typeResult.length > 1) {
-            typeName = typeResult[1];
-        }
-        else {
-            typeName = typeHandle.name || "anonymous";
-        }
+        let typeName = typeHandle.name;
         let withId = "";
         if (id !== undefined) {
             withId = " with id " + id + " ";
