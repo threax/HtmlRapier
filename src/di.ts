@@ -467,19 +467,56 @@ export class Scope {
      * @returns
      */
     public getRequiredServiceId<T, TId>(id: TId, typeHandle: DiFunction<T>): T {
-        var instance = this.getServiceId(id, typeHandle);
-        if (instance === undefined) {
-            var funcNameRegex = /^function\s+([\w\$]+)\s*\(/;
-            var typeResult = funcNameRegex.exec(typeHandle.prototype.constructor.toString());
-            var typeName = typeResult ? typeResult[1] : "anonymous";
-            var withId = "";
-            if(id !== undefined){
-                withId = " with id " + id + " ";
+        let rethrowError = false;
+        try {
+            let instance = this.getServiceId(id, typeHandle);
+            if (instance === undefined) {
+                let fullTypeName = this.getTypeName<T, TId>(typeHandle, id);
+
+                rethrowError = true;
+                throw new Error(`Cannot find required service for function ${fullTypeName}. Did you forget to inject it?`);
             }
-            
-            throw new Error("Cannot find required service for function " + typeName + withId + ". Did you forget to inject it?");
+            return instance;
         }
-        return instance;
+        catch (err) {
+            if (rethrowError) {
+                throw err; //The original error travels through here too. This way we don't show it twice.
+            }
+
+            let fullTypeName = this.getTypeName<T, TId>(typeHandle, id);
+            let innerError: string;
+            if (err instanceof Error) {
+                innerError = err.stack;
+            }
+            else {
+                try {
+                    innerError = `Unknown Error Json: ${JSON.stringify(err)}`;
+                }
+                catch (err) {
+                    innerError = "Totally unknown error. Could not parse to json.";
+                }
+            }
+            throw new Error(`Error creating required services for ${fullTypeName}
+---${innerError}`)
+        }
+    }
+
+    private getTypeName<T, TId>(typeHandle: DiFunction<T>, id: TId) {
+        let funcNameRegex = /^function\s+([\w\$]+)\s*\(/;
+        let typeResult = funcNameRegex.exec(typeHandle.prototype.constructor.toString());
+        let typeName: string;
+        if (typeResult && typeResult.length > 1) {
+            typeName = typeResult[1];
+        }
+        else {
+            typeName = typeHandle.name || "anonymous";
+        }
+        let withId = "";
+        if (id !== undefined) {
+            withId = " with id " + id + " ";
+        }
+        var fullTypeName = typeName + withId;
+        return fullTypeName;
     }
 
     /**
