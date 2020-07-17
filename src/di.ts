@@ -486,17 +486,20 @@ export class Scope {
             let fullTypeName = this.getTypeName<T, TId>(typeHandle, id);
             let innerError: string;
             if (err instanceof Error) {
-                innerError = err.stack;
+                //Update the error message and rethrow
+                err.message = `Error creating required services for ${fullTypeName}
+---${err.message}`;
+                throw err;
             }
             else {
                 try {
-                    innerError = `Unknown Error Json: ${JSON.stringify(err)}`;
+                    innerError = JSON.stringify(err);
                 }
                 catch (err) {
                     innerError = "Totally unknown error. Could not parse to json.";
                 }
             }
-            throw new Error(`Error creating required services for ${fullTypeName}
+            throw new Error(`Unknown Error creating required services for ${fullTypeName}
 ---${innerError}`)
         }
     }
