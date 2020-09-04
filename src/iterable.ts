@@ -11,7 +11,7 @@ export interface IteratorInterface<T> {
 export interface IterableInterface<T> {
     select<NewType>(s: (i: T) => NewType): IterableInterface<NewType>;
 
-    where(w): IterableInterface<T>;
+    where(w: (i: T) => boolean): IterableInterface<T>;
 
     forEach(cb: (i: T) => void);
 
@@ -47,13 +47,13 @@ class Query {
 var defaultQuery = new Query(); //Empty query to use as default
 
 class IterateResult<T> {
-    constructor(done: boolean, value?: any) {
+    constructor(done: boolean, value?: T) {
         this.done = done;
         this.value = value;
     }
 
     done: boolean;
-    value: any;
+    value: T;
 }
 
 function _iterate<T>(items, query) {
@@ -142,7 +142,7 @@ abstract class IteratorBase<T> implements IterableInterface<T>{
         return new Selector<NewType>(s, this);
     }
 
-    where(w): IterableInterface<T> {
+    where(w: (i: T) => boolean): IterableInterface<T> {
         return new Conditional(w, this);
     }
 
