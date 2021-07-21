@@ -1,12 +1,5 @@
 [
   {
-    "pathBase": "src",
-    "outDir": "lib",
-    "copy": [
-      "src/hr-run.js"
-    ]
-  },
-  {
     "pathBase": "../tslib",
     "outDir": "lib",
     "copy": [
