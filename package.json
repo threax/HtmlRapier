@@ -1,6 +1,6 @@
 {
   "name": "htmlrapier",
-  "version": "24.0.2",
+  "version": "25.0.0-pre.0",
   "private": false,
   "dependencies": {
     "tslib": ">=1.6.1"
