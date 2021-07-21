@@ -1,12 +1,9 @@
 {
   "name": "htmlrapier",
-  "version": "25.0.0-pre.2",
+  "version": "25.0.0-pre.3",
   "private": false,
   "dependencies": {
     "tslib": ">=1.6.1"
-  },
-  "devDependencies": {
-    "jsns": ">=4.2.0"
   },
   "files": [
     "src/**/*",
