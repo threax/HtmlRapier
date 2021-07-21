@@ -1,5 +1,5 @@
-import * as jsep from 'hr.jsep';
-import * as typeId from 'hr.typeidentifiers';
+import * as jsep from './jsep';
+import * as typeId from './typeidentifiers';
 
 export enum OperationType {
     And = <any>"And",

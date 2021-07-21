@@ -1,7 +1,7 @@
 "use strict";
 
-import * as typeId from 'hr.typeidentifiers';
-import * as evts from 'hr.eventdispatcher';
+import * as typeId from './typeidentifiers';
+import * as evts from './eventdispatcher';
 
 /**
  * An interface for toggles.

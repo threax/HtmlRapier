@@ -1,5 +1,5 @@
-import { JsonProperty, JsonLabel, JsonSchema, resolveRef, RefNode, isRefNode } from 'hr.schema';
-import * as expression from 'hr.expressiontree';
+import { JsonProperty, JsonLabel, JsonSchema, resolveRef, RefNode, isRefNode } from './schema';
+import * as expression from './expressiontree';
 
 export interface ProcessedJsonProperty extends JsonProperty {
     name: string;

@@ -1,4 +1,4 @@
-import * as uri from 'hr.uri';
+import * as uri from './uri';
 
 export class PostMessageValidator {
     constructor(private validOrigin: string, private checkSource: boolean = true) {

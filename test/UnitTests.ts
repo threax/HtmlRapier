@@ -1,6 +1,5 @@
-///<amd-module name="hr.test.UnitTests"/>
-import * as hr from 'hr.main';
-import * as controller from 'hr.controller';
+import * as hr from 'src/main';
+import * as controller from 'src/controller';
 
 hr.setup();
 

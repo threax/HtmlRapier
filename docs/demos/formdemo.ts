@@ -2,8 +2,8 @@
 ///<amd-module name="form-demo"/>
 
 "use strict";
-import * as controller from 'hr.controller';
-import { ValidationError, ErrorMap } from 'hr.error';
+import * as controller from './controller';
+import { ValidationError, ErrorMap } from './error';
 
 class FakeErrors implements ValidationError {
     public name;

@@ -1,8 +1,8 @@
-import * as schema from 'hr.schema';
-import * as typeId from 'hr.typeidentifiers';
-import * as exprTree from 'hr.expressiontree';
-import { ITextStreamData } from 'hr.textstream';
-import * as schemaprocessor from 'hr.schemaprocessor';
+import * as schema from './schema';
+import * as typeId from './typeidentifiers';
+import * as exprTree from './expressiontree';
+import { ITextStreamData } from './textstream';
+import * as schemaprocessor from './schemaprocessor';
 
 declare var moment;
 

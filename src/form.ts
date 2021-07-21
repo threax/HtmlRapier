@@ -1,9 +1,9 @@
 ﻿"use strict";
 
-import * as formHelper from 'hr.formhelper';
-import { JsonSchema } from 'hr.schema';
-import { FormErrors } from 'hr.error';
-import * as events from 'hr.eventdispatcher';
+import * as formHelper from './formhelper';
+import { JsonSchema } from './schema';
+import { FormErrors } from './error';
+import * as events from './eventdispatcher';
 
 export interface IFormArgs<T> {
     source: IForm<T>;

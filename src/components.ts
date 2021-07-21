@@ -1,9 +1,9 @@
 ﻿"use strict";
 
-import * as typeId from 'hr.typeidentifiers';
-import * as domquery from 'hr.domquery';
-import { BindingCollection } from 'hr.bindingcollection';
-import * as textstream from 'hr.textstream';
+import * as typeId from './typeidentifiers';
+import * as domquery from './domquery';
+import { BindingCollection } from './bindingcollection';
+import * as textstream from './textstream';
 
 export interface IComponentBuilder {
     create(data: textstream.ITextStreamData, parentComponent: Node, insertBeforeSibling: Node, variant: string): BindingCollection;

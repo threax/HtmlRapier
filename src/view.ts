@@ -1,11 +1,11 @@
-import { TextStream, ITextStreamData } from 'hr.textstream';
-import * as components from 'hr.components';
-import * as typeId from 'hr.typeidentifiers';
-import * as domQuery from 'hr.domquery';
-import * as iter from 'hr.iterable';
-import { Extractor, IViewDataFormatter } from 'hr.viewformatter';
-import { IDataAddress } from 'hr.expressiontree';
-export { SchemaViewFormatter as SchemaViewDataFormatter, Extractor, IViewDataFormatter } from 'hr.viewformatter';
+import { TextStream, ITextStreamData } from './textstream';
+import * as components from './components';
+import * as typeId from './typeidentifiers';
+import * as domQuery from './domquery';
+import * as iter from './iterable';
+import { Extractor, IViewDataFormatter } from './viewformatter';
+import { IDataAddress } from './expressiontree';
+export { SchemaViewFormatter as SchemaViewDataFormatter, Extractor, IViewDataFormatter } from './viewformatter';
 
 /**
  * The basic interface for view instances.

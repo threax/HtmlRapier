@@ -1,11 +1,9 @@
-///<amd-module name="hr.test.form"/>
-
-import * as exprTree from 'hr.expressionTree';
-import * as textstream from 'hr.textstream';
-import { TestContext, setupTests } from 'hr.test.UnitTests';
-import { IForm, DiFunction, BindingCollection, InjectedControllerBuilder } from 'hr.controller';
-import { IViewDataFormatter, Extractor } from 'hr.view';
-import { JsonSchema } from 'hr.schema';
+import * as exprTree from 'src/expressionTree';
+import * as textstream from 'src/textstream';
+import { TestContext, setupTests } from './UnitTests';
+import { IForm, DiFunction, BindingCollection, InjectedControllerBuilder } from 'src/controller';
+import { IViewDataFormatter, Extractor } from 'src/view';
+import { JsonSchema } from 'src/schema';
 
 var runner = setupTests();
 runner.beginTestSection("Form");

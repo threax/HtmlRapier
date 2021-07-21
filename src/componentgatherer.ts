@@ -1,9 +1,9 @@
 ﻿"use strict";
 
-import * as components from 'hr.components';
-import * as ignoredNodes from 'hr.ignored';
-import {Iterable, IteratorInterface} from 'hr.iterable';
-import {ComponentBuilder, VariantBuilder} from 'hr.componentbuilder';
+import * as components from './components';
+import * as ignoredNodes from './ignored';
+import {Iterable, IteratorInterface} from './iterable';
+import {ComponentBuilder, VariantBuilder} from './componentbuilder';
 
 var browserSupportsTemplates = 'content' in document.createElement('template');
 var anonTemplateIndex = 0;

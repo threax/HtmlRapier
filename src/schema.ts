@@ -1,4 +1,4 @@
-import * as expression from 'hr.expressiontree';
+import * as expression from './expressiontree';
 
 export type JsonPropertyMap = { [key: string]: JsonProperty };
 

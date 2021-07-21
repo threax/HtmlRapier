@@ -1,5 +1,5 @@
-import { Uri } from 'hr.uri';
-import * as di from 'hr.di';
+import { Uri } from './uri';
+import * as di from './di';
 
 export class DeepLinkArgs {
     constructor(private _uri: Uri, private basePath: string, private proto: {} | null){

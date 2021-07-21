@@ -1,5 +1,5 @@
-import * as formbuilder from 'hr.formbuilder';
-import * as componentgatherer from 'hr.componentgatherer';
+import * as formbuilder from './formbuilder';
+import * as componentgatherer from './componentgatherer';
 
 formbuilder.setup();
 componentgatherer.setup();

@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-import {ActionEventDispatcher, ActionEventListener} from 'hr.eventdispatcher';
+import {ActionEventDispatcher, ActionEventListener} from './eventdispatcher';
 
 export class TimedTrigger<TArg> {
 

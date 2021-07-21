@@ -1,5 +1,5 @@
-import * as EventDispatcher from 'hr.eventdispatcher';
-import * as Iterable from 'hr.iterable';
+import * as EventDispatcher from './eventdispatcher';
+import * as Iterable from './iterable';
 
 /**
  * This class provides a list of items with events when they are added and removed.
