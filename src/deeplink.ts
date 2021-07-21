@@ -1,5 +1,3 @@
-///<amd-module name="hr.deeplink"/>
-
 import { Uri } from 'hr.uri';
 import * as di from 'hr.di';
 

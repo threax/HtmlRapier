@@ -1,6 +1,4 @@
-﻿///<amd-module name="hr.componentgatherer"/>
-
-"use strict";
+﻿"use strict";
 
 import * as components from 'hr.components';
 import * as ignoredNodes from 'hr.ignored';

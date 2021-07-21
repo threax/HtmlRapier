@@ -1,5 +1,3 @@
-///<amd-module name="hr.formbuilder"/>
-
 "use strict";
 
 import * as component from 'hr.components';

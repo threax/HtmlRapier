@@ -1,6 +1,4 @@
-﻿///<amd-module name="hr.ignored"/>
-
-"use strict";
+﻿"use strict";
 
 import * as domQuery from 'hr.domquery';
 

@@ -1,6 +1,4 @@
-﻿///<amd-module name="hr.escape"/>
-
-"use strict";
+﻿"use strict";
 
 /**
  * Escape text to prevent html characters from being output. Helps prevent xss, called automatically

@@ -1,5 +1,3 @@
-///<amd-module name="hr.runattributes"/>
-
 "use strict";
 
 declare var jsns;

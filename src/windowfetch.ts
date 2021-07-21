@@ -1,6 +1,4 @@
-﻿///<amd-module name="hr.windowfetch"/>
-
-import { Fetcher } from 'hr.fetcher';
+﻿import { Fetcher } from 'hr.fetcher';
 
 /**
  * A fetcher implementation that calls the global window fetch function.

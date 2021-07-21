@@ -1,5 +1,3 @@
-///<amd-module name="hr.eventdispatcher"/>
-
 "use strict";
 
 import * as typeId from 'hr.typeidentifiers';

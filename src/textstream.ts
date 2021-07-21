@@ -1,6 +1,4 @@
-﻿///<amd-module name="hr.textstream"/>
-
-"use strict";
+﻿"use strict";
 
 import {escape} from 'hr.escape';
 import * as typeId from 'hr.typeidentifiers';

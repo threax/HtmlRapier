@@ -1,5 +1,3 @@
-///<amd-module name="hr.formhelper"/>
-
 import * as domQuery from 'hr.domquery';
 import * as typeIds from 'hr.typeidentifiers';
 import { JsonSchema } from 'hr.schema';

@@ -1,6 +1,4 @@
-﻿///<amd-module name="hr.form"/>
-
-"use strict";
+﻿"use strict";
 
 import * as formHelper from 'hr.formhelper';
 import { JsonSchema } from 'hr.schema';

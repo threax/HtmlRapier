@@ -1,6 +1,4 @@
-﻿///<amd-module name="hr.storage"/>
-
-"use strict";
+﻿"use strict";
 
 /**
  * This interface abstracts the type of storage we are using.

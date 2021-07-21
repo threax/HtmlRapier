@@ -1,4 +1,3 @@
-///<amd-module name="hr.viewformatter"/>
 import * as schema from 'hr.schema';
 import * as typeId from 'hr.typeidentifiers';
 import * as exprTree from 'hr.expressiontree';

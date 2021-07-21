@@ -1,6 +1,4 @@
-﻿///<amd-module name="hr.domquery"/>
-
-"use strict";
+﻿"use strict";
 
 import * as typeId from 'hr.typeidentifiers';
 

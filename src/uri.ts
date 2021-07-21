@@ -1,6 +1,4 @@
-﻿///<amd-module name="hr.uri"/>
-
-"use strict";
+﻿"use strict";
 
 // based on parseUri 1.2.2
 // (c) Steven Levithan <stevenlevithan.com>

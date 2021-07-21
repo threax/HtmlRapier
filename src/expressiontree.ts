@@ -1,4 +1,3 @@
-///<amd-module name="hr.expressiontree"/>
 import * as jsep from 'hr.jsep';
 import * as typeId from 'hr.typeidentifiers';
 

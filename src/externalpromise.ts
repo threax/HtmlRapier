@@ -1,6 +1,4 @@
-﻿///<amd-module name="hr.externalpromise"/>
-
-"use strict";
+﻿"use strict";
 
 /**
  * This is a wrapper for a promise that exposes the resolve

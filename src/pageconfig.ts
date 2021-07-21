@@ -1,5 +1,3 @@
-///<amd-module name="hr.pageconfig"/>
-
 /**
  * The config function on the page, this is reserved in order to use the pageconfig system.
  * Each function should be called hr_config and should take call any previously existing

@@ -1,5 +1,3 @@
-///<amd-module name="hr.models"/>
-
 "use strict";
 
 import * as forms from 'hr.form';

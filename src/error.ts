@@ -1,5 +1,3 @@
-///<amd-module name="hr.error"/>
-
 export interface ErrorMap {[key: string]: string};
 
 /**

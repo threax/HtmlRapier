@@ -1,5 +1,3 @@
-///<amd-module name="hr.componentbuilder"/>
-
 import { BindingCollection } from 'hr.bindingcollection';
 import { TextStream } from 'hr.textstream';
 import { IComponentBuilder } from 'hr.components';

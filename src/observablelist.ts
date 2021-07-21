@@ -1,5 +1,3 @@
-///<amd-module name="hr.observablelist"/>
-
 import * as EventDispatcher from 'hr.eventdispatcher';
 import * as Iterable from 'hr.iterable';
 
