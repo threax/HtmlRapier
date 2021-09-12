@@ -95,6 +95,13 @@ class SchemaViewExtractor<T> implements Extractor<T> {
             //Check for dates, come in a couple ways
             if (rawData !== null) {
                 switch (prop.buildType) {
+                    case 'currency':
+                        var xUi = <any>prop.xUi;
+                        var formatter = new Intl.NumberFormat(xUi.locale, {
+                            style: 'currency',
+                            currency: xUi.currency
+                        });
+                        return formatter.format(rawData);
                     case 'date':
                         var date = new Date(rawData);
                         return date.toLocaleDateString();
