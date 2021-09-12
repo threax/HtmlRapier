@@ -23,7 +23,7 @@ class FormValuesSource implements expression.IValueSource {
     }
 
     getValue(address: expression.IDataAddress): any {
-        var value = this.formValues.getFormValue(<string>address.address[0].key); //for now assume strings, this only supports the current level object
+        var value = this.formValues.getFormValueByDataName(<string>address.address[0].key); //for now assume strings, this only supports the current level object
         if (value !== undefined) {
             var data = value.getData();
             //Only return the data if it would be included in the form data
@@ -269,6 +269,7 @@ class ArrayEditorRow {
 
     public setData(data: any) {
         this.formValues.setData(data);
+        this.formValues.fireDataChanged();
         this.setError(formHelper.getSharedClearingValidator(), "");
     }
 }
