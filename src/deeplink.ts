@@ -40,7 +40,7 @@ export abstract class IDeepLinkManager {
      * @param name The name of the handler, must be unique.
      * @param handler The handler to call when firing the event.
      */
-    public abstract registerHandler<T>(name: string, handler: IDeepLinkHandler);
+    public abstract registerHandler(name: string, handler: IDeepLinkHandler);
 
     /**
      * Push a new state using history.pushstate.
@@ -48,7 +48,7 @@ export abstract class IDeepLinkManager {
      * @param inPagePath The path on the page, will be under the base path set, can be null to have only the base path.
      * @param query An object to set as the query, can be null to clear the query.
      */
-    public abstract pushState<T extends {}>(handler: string, inPagePath: string | null, query: {} | null): void;
+    public abstract pushState(handler: string, inPagePath: string | null, query: {} | null): void;
 
     /**
      * Replace a new state using history.pushstate.
@@ -56,13 +56,13 @@ export abstract class IDeepLinkManager {
      * @param inPagePath The path on the page, will be under the base path set, can be null to have only the base path.
      * @param query An object to set as the query, can be null to clear the query.
      */
-    public abstract replaceState<T extends {}>(handler: string, inPagePath: string | null, query: {} | null): void;
+    public abstract replaceState(handler: string, inPagePath: string | null, query: {} | null): void;
 
     /**
      * Get the current link state as a DeepLinkArgs. This will be the same as if a history event had fired, but for the current page url.
      * Can also be null if there is no valid state to get.
      */
-    public abstract getCurrentState<T>(proto?: {} | null): DeepLinkArgs | null;
+    public abstract getCurrentState(proto?: {} | null): DeepLinkArgs | null;
 }
 
 interface IDeepLinkEntry {
@@ -90,14 +90,14 @@ export class DeepLinkManager implements IDeepLinkManager {
         }
     }
 
-    public registerHandler<T>(name: string, handler: IDeepLinkHandler) {
+    public registerHandler(name: string, handler: IDeepLinkHandler) {
         if(this.handlers[name] !== undefined){
             throw new Error("Attempted to register an IHistoryHandler named '" + name + "' multiple times, only one is allowed.");
         }
         this.handlers[name] = handler;
     }
 
-    public pushState<T extends {}>(handler: string, inPagePath: string | null, query: {} | null, title?: string): void {
+    public pushState(handler: string, inPagePath: string | null, query: {} | null, title?: string): void {
         var uri = new Uri();
         var state = this.createState(handler, inPagePath, query, uri);
         if(title === undefined){
@@ -106,7 +106,7 @@ export class DeepLinkManager implements IDeepLinkManager {
         history.pushState(state, title, uri.build());
     }
 
-    public replaceState<T extends {}>(handler: string, inPagePath: string | null, query: {} | null, title?: string): void {
+    public replaceState(handler: string, inPagePath: string | null, query: {} | null, title?: string): void {
         var uri = new Uri();
         var state = this.createState(handler, inPagePath, query, uri);
         if(title === undefined){
@@ -115,14 +115,14 @@ export class DeepLinkManager implements IDeepLinkManager {
         history.replaceState(state, title, uri.build());
     }
 
-    public getCurrentState<T>(proto?: {} | null): DeepLinkArgs | null {
+    public getCurrentState(proto?: {} | null): DeepLinkArgs | null {
         if (proto === undefined) {
             proto = null;
         }
         return new DeepLinkArgs(new Uri(), this.pageBaseUrl, proto);
     }
 
-    private createState<T extends {}>(handler: string, inPagePath: string | null, query: {} | null, uri: Uri): IDeepLinkEntry {
+    private createState(handler: string, inPagePath: string | null, query: {} | null, uri: Uri): IDeepLinkEntry {
         uri.directory = this.pageBaseUrl;
         if(inPagePath){
             uri.directory += this.normalizePath(inPagePath);
@@ -149,22 +149,22 @@ export class DeepLinkManager implements IDeepLinkManager {
 
 export class NullDeepLinkManager implements IDeepLinkManager {
     constructor() {
-        
+
     }
 
-    public registerHandler<T>(name: string, handler: IDeepLinkHandler) {
-        
+    public registerHandler(name: string, handler: IDeepLinkHandler) {
+
     }
 
-    public pushState<T extends {}>(handler: string, inPagePath: string | null, query: {} | null): void {
-        
+    public pushState(handler: string, inPagePath: string | null, query: {} | null): void {
+
     }
 
-    public replaceState<T extends {}>(handler: string, inPagePath: string | null, query: {} | null): void {
-        
+    public replaceState(handler: string, inPagePath: string | null, query: {} | null): void {
+
     }
 
-    public getCurrentState<T>(proto?: {} | null): DeepLinkArgs | null {
+    public getCurrentState(proto?: {} | null): DeepLinkArgs | null {
         return null;
     }
 }
