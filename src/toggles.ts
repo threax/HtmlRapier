@@ -387,7 +387,7 @@ class ClassStates extends ToggleStates {
             for(let i = 0; i < items.length; ++i){
                 var item = items[i];
                 if(item.startsWith('!')) {
-                    finalClasses.replace(new RegExp(`(^|\s+)${item.substring(1)}(\s+|$)`), ' ');
+                    finalClasses = finalClasses.replace(new RegExp(`(^|\\s+)${item.substring(1)}(\\s+|$)`, 'g'), ' ');
                 }
                 else {
                     finalClasses += ' ' + item;
