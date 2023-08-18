@@ -229,7 +229,7 @@ export abstract class ToggleStates implements IToggleStates {
      * indicate that the subsystem will fire the event itself at the appropriate time.
      * @param value The state to activate
      */
-    protected abstract activateState(value: any): boolean;
+    protected abstract activateState(value: string): boolean;
 
     public setToggle(toggle: TypedToggle): void {
         this.toggle = toggle;
@@ -363,9 +363,9 @@ class StyleStates extends ToggleStates {
 * applied to the element when any animations have completed.
 */
 class ClassStates extends ToggleStates {
-    private element;
-    private originalClasses;
-    private idleClass;
+    private element: Element;
+    private originalClasses: string;
+    private idleClass: string;
     private stopAnimationCb; //Callback retains this context.
 
     constructor(element, next: ToggleStates) {
@@ -376,13 +376,25 @@ class ClassStates extends ToggleStates {
         this.stopAnimationCb = () => { this.stopAnimation() };
     }
 
-    public activateState(classes): boolean {
+    public activateState(classes: string): boolean {
+        let finalClasses = this.originalClasses;
+
         if (classes) {
-            this.element.setAttribute("class", this.originalClasses + ' ' + classes);
+            //This is not efficient, but it might not really matter, could cache these results instead of doing it every toggle
+            //Could also try a version using class list instead of manipulating strings
+            const whitespaceRegex = /\s+/;
+            const items = classes.trim().split(whitespaceRegex);
+            for(let i = 0; i < items.length; ++i){
+                var item = items[i];
+                if(item.startsWith('!')) {
+                    finalClasses.replace(new RegExp(`(^|\s+)${item.substring(1)}(\s+|$)`), ' ');
+                }
+                else {
+                    finalClasses += ' ' + item;
+                }
+            }
         }
-        else {
-            this.element.setAttribute("class", this.originalClasses);
-        }
+        this.element.setAttribute("class", finalClasses);
         this.startAnimation();
         return true;
     }
