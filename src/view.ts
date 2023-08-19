@@ -225,13 +225,77 @@ class NullView<T> implements IView<T> {
     }
 }
 
+export type CreateElementFunc<TData> = (data: TData) => Element;
+
+// Binding collection uses view, so this overcomes the circular import.
+interface BindingCollectionShimConstructor {
+    new (element: Element): BindingCollectionShim;
+}
+interface BindingCollectionShim {}
+
+let BindingCollection: BindingCollectionShimConstructor;
+
+export function setBindingCollectionShimConstructor(bindingCollectionMaker: BindingCollectionShimConstructor){
+    BindingCollection = bindingCollectionMaker;
+}
+
+class ElementView<T> implements IView<T> {
+    constructor(private element: HTMLElement, private createElement: CreateElementFunc<T>){
+
+    }
+
+    public setData(data: T, createdCallback?: components.CreatedCallback<T>): void {
+        components.empty(this.element);
+        this.insertData(data, null, createdCallback);
+    }
+
+    public appendData(data: T, createdCallback?: components.CreatedCallback<T>): void {
+        this.insertData(data, null, createdCallback);
+    }
+
+    public insertData(data: T | T[] | iter.IterableInterface<T>, insertBeforeSibling: Node, createdCallback?: components.CreatedCallback<T>): void{
+        this.bindData(data, insertBeforeSibling, createdCallback);
+    }
+
+    public clear(): void {
+        components.empty(this.element);
+    }
+
+    public setFormatter(formatter: IViewDataFormatter<T>): void {
+        
+    }
+
+    private bindData(data: T | T[] | iter.IterableInterface<T>, insertBeforeSibling: Node, createdCallback: components.CreatedCallback<T>): void {
+        if (Array.isArray(data) || typeId.isForEachable(data)) {
+            data.forEach(i => {
+                this.createItemElement(i, insertBeforeSibling, createdCallback);
+            });
+        }
+        else if (data !== undefined && data !== null) {
+            this.createItemElement(data, insertBeforeSibling, createdCallback);
+        }
+    }
+
+    private createItemElement(item: T, insertBeforeSibling: Node, createdCallback: components.CreatedCallback<T>){
+        const element = this.createElement(item);
+        this.element.insertBefore(element, insertBeforeSibling);
+        const bindingCollection = new BindingCollection(element);
+        if (createdCallback) {
+            createdCallback(bindingCollection, item);
+        }
+    }
+}
+
 function IsHTMLElement(element: Node): element is HTMLElement{
     //Just check a couple functions, no need to go overboard, only comparing to node anyway
     return element && element.nodeType == 1;
 }
 
-export function build<T>(element: Node) : IView<T> {
+export function build<T>(element: Node, createElement?: CreateElementFunc<T>) : IView<T> {
     if(IsHTMLElement(element)){
+        if(createElement) {
+            return new ElementView(element, createElement);
+        }
 
         var component: string;
         if(element.hasAttribute('data-hr-view-component')){
