@@ -109,12 +109,12 @@ export function many(name: string, data: textstream.ITextStreamData[] | typeId.F
 export function empty(parentComponent: Node | string) {
 
     var parent: Node = domquery.first(parentComponent);
-    var currentNode = parent.firstChild;
+    var currentNode = parent.lastChild;
     var nextNode = null;
 
     //Walk the nodes and remove any non keepers
     while (currentNode != null) {
-        nextNode = currentNode.nextSibling;
+        nextNode = currentNode.previousSibling;
         if (currentNode.nodeType !== 1 || !(currentNode instanceof HTMLElement && currentNode.hasAttribute('data-hr-keep'))) {
             parent.removeChild(currentNode);
         }
@@ -125,7 +125,7 @@ export function empty(parentComponent: Node | string) {
 function doCreateComponent(name: string, data: textstream.ITextStreamData, parentComponent: Node | string, insertBeforeSibling: Node, variant: string, createdCallback: CreatedCallback<textstream.ITextStreamData>) {
     parentComponent = domquery.first(parentComponent);
     if (factory.hasOwnProperty(name)) {
-        var created = factory[name].create(data, parentComponent, insertBeforeSibling, variant);
+        const created = factory[name].create(data, parentComponent, insertBeforeSibling, variant);
         if (createdCallback !== undefined && createdCallback !== null) {
             createdCallback(created, data);
         }
