@@ -25,7 +25,7 @@ es5component.setupPolyfill();
  * will be returned. There is only a need for one of these, since controllers
  * can only accept one piece of callback data.
  */
-export abstract class InjectControllerData{
+export abstract class InjectControllerData {
     //This is useless on its own, just provides a function based handle to data.
 }
 
@@ -60,7 +60,7 @@ export class InjectedControllerBuilder {
      */
     constructor(scope?: di.Scope) {
         this.serviceCollection = new di.ServiceCollection();
-        if(scope) {
+        if (scope) {
             this.baseScope = scope.createChildScope(this.serviceCollection);
         }
         else {
@@ -115,9 +115,53 @@ export class InjectedControllerBuilder {
             if (!ignoredNodes.isIgnored(element)) {
                 const services = new di.ServiceCollection();
                 const scope = this.baseScope.createChildScope(services);
-                const bindings =  new BindingCollection(element);
+                const bindings = new BindingCollection(element);
                 services.addTransient(BindingCollection, s => bindings);
                 element.removeAttribute('data-hr-controller');
+                const controller = this.createController(id, controllerConstructor, services, scope, bindings);
+                createdControllers.push(controller);
+            }
+        }
+
+        if (parentBindings) {
+            parentBindings.iterateControllers(name, foundElement);
+        }
+        else {
+            domQuery.iterate('[data-hr-controller="' + name + '"]', null, foundElement);
+        }
+
+        return createdControllers;
+    }
+
+    /**
+     * Create a new controller instance on the named nodes in the document.This will replace the elements it finds with the element provided
+     * by the callback function.
+     * @param name The name of the data-hr-controller nodes to lookup.
+     * @param controllerConstructor The controller to create when a node is found.
+     * @param parentBindings The parent bindings to restrict the controller search.
+     */
+    public createElement<T, TId>(name: string, controllerConstructor: di.DiFunction<T>, elementCreator: () => Element, parentBindings?: BindingCollection): T[] {
+        return this.createElementId(undefined, name, controllerConstructor, elementCreator, parentBindings);
+    }
+
+    /**
+     * Create a new controller instance on the named nodes in the document using an id based service. This will replace the elements it finds with the element provided
+     * by the callback function.
+     * @param name The name of the data-hr-controller nodes to lookup.
+     * @param controllerConstructor The controller to create when a node is found.
+     * @param parentBindings The parent bindings to restrict the controller search.
+     */
+    public createElementId<T, TId>(id: TId, name: string, controllerConstructor: di.DiFunction<T>, elementCreator: () => Element, parentBindings?: BindingCollection): T[] {
+        const createdControllers: T[] = [];
+
+        const foundElement = (element) => {
+            if (!ignoredNodes.isIgnored(element)) {
+                const replacementElement = elementCreator();
+                const services = new di.ServiceCollection();
+                const scope = this.baseScope.createChildScope(services);
+                const bindings =  new BindingCollection(replacementElement);
+                services.addTransient(BindingCollection, s => bindings);
+                element.replaceWith(replacementElement);//.removeAttribute('data-hr-controller');
                 const controller = this.createController(id, controllerConstructor, services, scope, bindings);
                 createdControllers.push(controller);
             }
@@ -176,19 +220,27 @@ export class InjectedControllerBuilder {
      * @returns
      */
     public createOnCallbackId<T, TId>(id: TId, controllerConstructor: di.DiFunction<T>): CreateCallback<T> {
-        return (bindings: BindingCollection, data: any) => {
-            const services = new di.ServiceCollection();
-            const scope = this.baseScope.createChildScope(services);
-            services.addTransient(BindingCollection, s => bindings);
+        return (bindings: BindingCollection, data: any) => 
+            this.createFromBindingsId(id, controllerConstructor, bindings, data);
+        
+    }
 
-            //If some data was provided, use it as our InjectControllerData service
-            //for the newly created scope.
-            if (data !== undefined) {
-                services.addTransient(InjectControllerData, s => data);
-            }
+    public createFromBindings<T>(controllerConstructor: di.DiFunction<T>, bindings: BindingCollection, data: any): T {
+        return this.createFromBindingsId(undefined, controllerConstructor, bindings, data);
+    }
 
-            return this.createController(id, controllerConstructor, services, scope, bindings);
+    public createFromBindingsId<T, TId>(id: TId, controllerConstructor: di.DiFunction<T>, bindings: BindingCollection, data: any): T {
+        const services = new di.ServiceCollection();
+        const scope = this.baseScope.createChildScope(services);
+        services.addTransient(BindingCollection, s => bindings);
+
+        //If some data was provided, use it as our InjectControllerData service
+        //for the newly created scope.
+        if (data !== undefined) {
+            services.addTransient(InjectControllerData, s => data);
         }
+
+        return this.createController(id, controllerConstructor, services, scope, bindings);
     }
 
     /**
@@ -214,7 +266,7 @@ export class InjectedControllerBuilder {
             private controller: any;
 
             connectedCallback() {
-                if(!this.controller) {
+                if (!this.controller) {
                     const services = new di.ServiceCollection();
                     const scope = self.baseScope.createChildScope(services);
                     const bindings = new BindingCollection(this);
