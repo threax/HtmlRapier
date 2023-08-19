@@ -5,7 +5,6 @@ import * as typeId from './typeidentifiers';
 import * as domQuery from './domquery';
 import * as TextStream from './textstream';
 import * as toggles from './toggles';
-import * as models from './models';
 import * as form from './form';
 import * as view from './view';
 
@@ -67,28 +66,6 @@ function getToggle(name: string, elements: HTMLElement[], typedToggle: toggles.T
     if (startState != null) {
         typedToggle.applyState(startState);
     }
-}
-
-function getModel<T>(name: string, elements: HTMLElement[]): models.Model<T> {
-    var model: models.Model<T>;
-    var query = '[data-hr-model=' + name + ']';
-    for (var eIx = 0; eIx < elements.length; ++eIx) {
-        var element = elements[eIx];
-        var targetElement = domQuery.first(query, element);
-        if (targetElement) {
-            model = models.build<T>(targetElement);
-            return model; //Found it, need to break element loop, done here if found
-        }
-        else {
-            model = null;
-        }
-    }
-
-    if (model === null) {
-        model = <models.Model<T>>(new models.NullModel());
-    }
-
-    return model;
 }
 
 function getHandle(name: string, elements: HTMLElement[]): HTMLElement {
@@ -176,21 +153,6 @@ export class BindingCollection {
     public getCustomToggle<T extends toggles.TypedToggle>(name: string, toggle: T): T {
         getToggle(name, this.elements, toggle);
         return toggle;
-    }
-
-    /**
-     * @deprecated
-     * THIS IS DEPRECATED use getForm and getView instead.
-     * Get a named model. Can also provide a StrongTypeConstructor that will be called with new to create
-     * the instance of the data pulled from the model. If you don't provide this the objects will be plain
-     * javascript objects.
-     */
-    public getModel<T>(name: string, strongConstructor?: models.StrongTypeConstructor<T>): models.Model<T> {
-        var model = getModel<T>(name, this.elements);
-        if (strongConstructor !== undefined) {
-            model = new models.StrongTypedModel<T>(model, strongConstructor);
-        }
-        return model;
     }
 
     /**

@@ -2,7 +2,6 @@
 
 import { BindingCollection } from './bindingcollection';
 export { BindingCollection } from './bindingcollection';
-export { Model } from './models';
 export { OnOffToggle, TypedToggle } from './toggles';
 import * as domQuery from './domquery';
 import * as ignoredNodes from './ignored';
