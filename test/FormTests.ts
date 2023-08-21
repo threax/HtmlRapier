@@ -1,4 +1,4 @@
-import * as exprTree from 'src/expressionTree';
+import * as exprTree from 'src/expressiontree';
 import * as textstream from 'src/textstream';
 import { TestContext, setupTests } from './UnitTests';
 import { IForm, DiFunction, BindingCollection, InjectedControllerBuilder } from 'src/controller';
