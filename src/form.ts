@@ -68,11 +68,9 @@ export interface IForm<T> {
     clear(): void;
 
     /**
-     * Get the data on the form. If you set a prototype
-     * it will be used as the prototype of the returned
-     * object.
+     * Get the data on the form. You can pass existing data that will be extended.
      */
-    getData(): T;
+    getData(exising?: T): T;
 
     /**
      * Get a single value from the form, useful in change events
@@ -80,13 +78,6 @@ export interface IForm<T> {
      * just to lookup 1 value.
      */
     getValue(name: string);
-
-    /**
-     * Set the prototype object to use when getting the
-     * form data with getData.
-     * @param proto The prototype object.
-     */
-    setPrototype(proto: T): void;
 
     /**
      * Set the schema for this form. This will add any properties found in the
@@ -144,21 +135,12 @@ export class NeedsSchemaForm<T> implements IForm<T> {
      * it will be used as the prototype of the returned
      * object.
      */
-    public getData(): T {
-        return this.wrapped.getData();
+    public getData(exising?: T): T {
+        return this.wrapped.getData(exising);
     }
 
     public getValue(name: string) {
         return this.wrapped.getValue(name);
-    }
-
-    /**
-     * Set the prototype object to use when getting the
-     * form data with getData.
-     * @param proto The prototype object.
-     */
-    public setPrototype(proto: T): void {
-        this.wrapped.setPrototype(proto);
     }
 
     /**
@@ -198,7 +180,6 @@ export class NeedsSchemaForm<T> implements IForm<T> {
 }
 
 class Form<T> implements IForm<T> {
-    private proto: T;
     private baseLevel: string = undefined;
     private formValues: formHelper.IFormValues;
     private beforeSetDataEvent = new events.ActionEventDispatcher<IFormArgs<T>>();
@@ -253,16 +234,16 @@ class Form<T> implements IForm<T> {
         }
     }
 
-    public getData(): T {
+    public getData(exising?: T): T {
         this.beforeGetDataEvent.fire({
             source: this
         });
         var data: T;
         if (this.formValues) { //If there are form values, use them to read the data.
-            data = <T>this.formValues.recoverData(this.proto);
+            data = this.formValues.recoverData(exising);
         }
         else { //Otherwise read the form raw
-            data = <T>formHelper.serialize(this.form, this.proto, this.baseLevel);
+            data = formHelper.serialize(this.form, this.baseLevel, exising);
         }
 
         this.afterGetDataEvent.fire({
@@ -285,15 +266,11 @@ class Form<T> implements IForm<T> {
         }
         else {
             //Since there is no formvalues, we must serialize the entire form and return the result.
-            var data = <T>formHelper.serialize(this.form, this.proto, this.baseLevel);
+            var data = formHelper.serialize<T>(this.form, this.baseLevel);
             return data[name];
         }
 
         return undefined;
-    }
-
-    public setPrototype(proto: T): void { 
-        this.proto = proto;
     }
 
     public setSchema(schema: JsonSchema, componentName?: string): void{
@@ -371,12 +348,8 @@ class NullForm<T> implements IForm<T> {
         
     }
 
-    public getData() {
+    public getData(exising?: T) {
         return <T>null;
-    }
-
-    public setPrototype(proto: T): void { 
-
     }
 
     public setSchema(schema: JsonSchema, componentName?: string): void{

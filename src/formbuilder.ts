@@ -95,9 +95,9 @@ class FormValues implements formHelper.IFormValues {
         }
     }
 
-    public recoverData(proto: {} | null): any {
+    public recoverData<T>(existing?: T): T {
         if (this.complexValues) {
-            var data = Object.create(proto || null);
+            var data = existing ?? Object.create(null);
 
             for (var i = 0; i < this.values.length; ++i) {
                 var item = this.values[i];
@@ -255,13 +255,13 @@ class ArrayEditorRow {
         this.formValues.setError(err, baseName);
     }
 
-    public getData(): any {
-        var data = this.formValues.recoverData(null);
+    public getData<T>(existing?: T): T {
+        var data = this.formValues.recoverData(existing);
         if (typeIds.isObject(data)) {
             for (var key in data) { //This will pass if there is a key in data
                 return data;
             }
-            return null; //Return null if the data returned has no keys in it, which means it is empty.
+            return existing ?? null; //Return the original input or null if the data returned has no keys in it, which means it is empty.
         }
 
         return data; //Not an object, just return the data

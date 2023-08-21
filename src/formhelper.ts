@@ -45,7 +45,7 @@ function allowWrite(element: HTMLElement, level: string): boolean{
  * @param form - A selector or form element for the form to serialize.
  * @returns - The object that represents the form contents as an object.
  */
-export function serialize(form: HTMLElement, proto?: any, level?: string): any {
+export function serialize<T>(form: HTMLElement, level?: string, existing?: T): T {
     //This is from https://code.google.com/archive/p/form-serialize/downloads
     //Modified to return an object instead of a query string
 
@@ -56,7 +56,7 @@ export function serialize(form: HTMLElement, proto?: any, level?: string): any {
     else{
         formElements = domQuery.all("[name]", form); //All elements with a name, they will be filtered by what is supported below
     }
-    var i, j, q = Object.create(proto || null);
+    var i, j, q = existing ?? Object.create(null);
     var elementsLength = formElements.length;
     for (i = 0; i < elementsLength; ++i) {
         var element: any = formElements[i];
@@ -252,7 +252,7 @@ export interface IFormValues{
 
     setData(data: any): void;
 
-    recoverData(proto: {} | null): any;
+    recoverData<T>(existing?: T): T;
 
     getFormValue(buildName: string): IFormValue;
 
