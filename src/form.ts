@@ -110,10 +110,6 @@ export class NeedsSchemaForm<T> implements IForm<T> {
         this.wrapped.clearError();
     }
 
-    /**
-      * Set the data on the form.
-      * @param data The data to set.
-      */
     public setData(data: T): void {
         if(this.loadedSchema){
             this.wrapped.setData(data);
@@ -123,18 +119,10 @@ export class NeedsSchemaForm<T> implements IForm<T> {
         }
     }
 
-    /**
-     * Remove all data from the form.
-     */
     public clear(): void {
         this.wrapped.clear();
     }
 
-    /**
-     * Get the data on the form. If you set a prototype
-     * it will be used as the prototype of the returned
-     * object.
-     */
     public getData(exising?: T): T {
         return this.wrapped.getData(exising);
     }
@@ -143,12 +131,6 @@ export class NeedsSchemaForm<T> implements IForm<T> {
         return this.wrapped.getValue(name);
     }
 
-    /**
-     * Set the schema for this form. This will add any properties found in the
-     * schema that you did not already define on the form. It will match the form
-     * property names to the name attribute on the elements. If you had a blank form
-     * this would generate the whole thing for you from the schema.
-     */
     public setSchema(schema: JsonSchema, componentName?: string): void {
         this.wrapped.setSchema(schema, componentName);
         if(this.waitingData !== undefined){
