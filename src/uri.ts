@@ -151,36 +151,38 @@ export class Uri {
     getQueryObject() {
         var cleanQuery = this.query;
         if (cleanQuery.charAt(0) === '?') {
-            cleanQuery = cleanQuery.substr(1);
+            cleanQuery = cleanQuery.substring(1);
         }
-        var qs = cleanQuery.split('&');
         var val = {};
-        for (var i = 0; i < qs.length; ++i) {
-            var pair = qs[i].split('=', 2);
-            if(pair.length > 0){
-                var name = pair[0].toLowerCase();
-                var pairValue = "";
-                if (pair.length > 1) {
-                    var raw = pair[1].replace(/\+/g, ' ');
-                    if ((<any>raw).startsWith(jsonPrefix)) {
-                        raw = raw.substr(jsonPrefix.length);
-                        pairValue = JSON.parse(decodeURIComponent(raw));
+        if(cleanQuery !== "") {
+            var qs = cleanQuery.split('&');
+            for (var i = 0; i < qs.length; ++i) {
+                var pair = qs[i].split('=', 2);
+                if(pair.length > 0){
+                    var name = pair[0].toLowerCase();
+                    var pairValue = "";
+                    if (pair.length > 1) {
+                        var raw = pair[1].replace(/\+/g, ' ');
+                        if ((<any>raw).startsWith(jsonPrefix)) {
+                            raw = raw.substr(jsonPrefix.length);
+                            pairValue = JSON.parse(decodeURIComponent(raw));
+                        }
+                        else {
+                            pairValue = decodeURIComponent(raw);
+                        }
                     }
-                    else {
-                        pairValue = decodeURIComponent(raw);
+                    if(val[name] === undefined){
+                        //Undefined, set value directly
+                        val[name] = pairValue;
                     }
-                }
-                if(val[name] === undefined){
-                    //Undefined, set value directly
-                    val[name] = pairValue;
-                }
-                else if(Array.isArray(val[name])){
-                    //Already an array, add the value
-                    val[name].push(pairValue);
-                }
-                else{
-                    //One value set, add 2nd into array
-                    val[name] = [val[name], pairValue];
+                    else if(Array.isArray(val[name])){
+                        //Already an array, add the value
+                        val[name].push(pairValue);
+                    }
+                    else{
+                        //One value set, add 2nd into array
+                        val[name] = [val[name], pairValue];
+                    }
                 }
             }
         }
