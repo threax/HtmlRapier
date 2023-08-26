@@ -298,7 +298,7 @@ class NoDataStream implements ITextStreamData {
     }
 }
 
-const noData: ITextStreamData = new NoDataStream();
+export const noData: ITextStreamData = new NoDataStream();
 
 function format(data: ITextStreamData, streamNodes: IStreamNode[]) {
     if (data === null || data === undefined) {

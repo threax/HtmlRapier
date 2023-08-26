@@ -10,6 +10,8 @@ import * as di from './di';
 export { DiFunction, ServiceCollection, InjectableArgs } from './di';
 export { IForm } from './form';
 export { IView } from './view';
+import * as components from './components';
+import { noData } from './textstream';
 
 // This block will import a polyfill to use if the code is compiled as es5
 // This will enable the web components to call our constructors.
@@ -110,57 +112,24 @@ export class InjectedControllerBuilder {
     public createId<T, TId>(id: TId, name: string, controllerConstructor: di.DiFunction<T>, parentBindings?: BindingCollection): T[] {
         const createdControllers: T[] = [];
 
-        const foundElement = (element) => {
+        const foundElement = (element: HTMLElement) => {
             if (!ignoredNodes.isIgnored(element)) {
+                const controllerComponent = element.getAttribute('data-hr-controller-component');
+                let bindings: BindingCollection;
+                if(controllerComponent) {
+                    //Replace element with the component that is created.
+                    var parent = element.parentNode;
+                    bindings = components.one(controllerComponent, noData, parent, element);
+                    parent.removeChild(element);
+                }
+                else {
+                    bindings = new BindingCollection(element);
+                }
+                
                 const services = new di.ServiceCollection();
                 const scope = this.baseScope.createChildScope(services);
-                const bindings = new BindingCollection(element);
                 services.addTransient(BindingCollection, s => bindings);
                 element.removeAttribute('data-hr-controller');
-                const controller = this.createController(id, controllerConstructor, services, scope, bindings);
-                createdControllers.push(controller);
-            }
-        }
-
-        if (parentBindings) {
-            parentBindings.iterateControllers(name, foundElement);
-        }
-        else {
-            domQuery.iterate('[data-hr-controller="' + name + '"]', null, foundElement);
-        }
-
-        return createdControllers;
-    }
-
-    /**
-     * Create a new controller instance on the named nodes in the document.This will replace the elements it finds with the element provided
-     * by the callback function.
-     * @param name The name of the data-hr-controller nodes to lookup.
-     * @param controllerConstructor The controller to create when a node is found.
-     * @param parentBindings The parent bindings to restrict the controller search.
-     */
-    public createElement<T, TId>(name: string, controllerConstructor: di.DiFunction<T>, elementCreator: () => Element, parentBindings?: BindingCollection): T[] {
-        return this.createElementId(undefined, name, controllerConstructor, elementCreator, parentBindings);
-    }
-
-    /**
-     * Create a new controller instance on the named nodes in the document using an id based service. This will replace the elements it finds with the element provided
-     * by the callback function.
-     * @param name The name of the data-hr-controller nodes to lookup.
-     * @param controllerConstructor The controller to create when a node is found.
-     * @param parentBindings The parent bindings to restrict the controller search.
-     */
-    public createElementId<T, TId>(id: TId, name: string, controllerConstructor: di.DiFunction<T>, elementCreator: () => Element, parentBindings?: BindingCollection): T[] {
-        const createdControllers: T[] = [];
-
-        const foundElement = (element) => {
-            if (!ignoredNodes.isIgnored(element)) {
-                const replacementElement = elementCreator();
-                const services = new di.ServiceCollection();
-                const scope = this.baseScope.createChildScope(services);
-                const bindings =  new BindingCollection(replacementElement);
-                services.addTransient(BindingCollection, s => bindings);
-                element.replaceWith(replacementElement);//.removeAttribute('data-hr-controller');
                 const controller = this.createController(id, controllerConstructor, services, scope, bindings);
                 createdControllers.push(controller);
             }
