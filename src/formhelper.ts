@@ -332,13 +332,6 @@ class ClearingValidator implements FormErrors{
     }
 
     /**
-     * Get all validation errors.
-     */
-    getValidationErrors() {
-        return {};
-    }
-
-    /**
      * Determine if there are any validation errors.
      */
     hasValidationErrors() : boolean{

@@ -15,11 +15,6 @@ export interface ValidationError extends Error{
     hasValidationError(name: string): boolean;
 
     /**
-     * Get the raw error object.
-     */
-    getValidationErrors() : ErrorMap;
-
-    /**
      * Determine if there are any validation errors.
      */
     hasValidationErrors() : boolean;
@@ -27,7 +22,6 @@ export interface ValidationError extends Error{
 
 export function isValidationError(test: any): test is ValidationError {
     return (<ValidationError>test).getValidationError !== undefined
-        && (<ValidationError>test).getValidationErrors !== undefined
         && (<ValidationError>test).hasValidationError !== undefined
         && (<ValidationError>test).hasValidationErrors !== undefined;
 }

@@ -36,13 +36,6 @@ class FakeErrors implements ValidationError {
     }
 
     /**
-     * Get all validation errors.
-     */
-    getValidationErrors(): ErrorMap {
-        return this.errors;
-    }
-
-    /**
      * Determine if there are any validation errors.
      */
     hasValidationErrors() : boolean{
