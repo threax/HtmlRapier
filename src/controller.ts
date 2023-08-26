@@ -13,12 +13,6 @@ export { IView } from './view';
 import * as components from './components';
 import { noData } from './textstream';
 
-// This block will import a polyfill to use if the code is compiled as es5
-// This will enable the web components to call our constructors.
-import * as es5component from './es5component';
-es5component.setupPolyfill();
-// End polyfill block
-
 /**
  * This class provides a way to get a handle to the data provided by the
  * createOnCallback data argument. Return this type from your InjectorArgs
@@ -209,63 +203,6 @@ export class InjectedControllerBuilder {
         }
 
         return this.createController(id, controllerConstructor, services, scope, bindings);
-    }
-
-    /**
-     * Register a controller to be created when the custom elements are found. Note that your class is not a HTMLElement like a normal
-     * web component class. Instead a web component is created that forwards the events to your class. Your class's constructor is called
-     * after the component is fully formed with the dependencies injected from DI. This happens during the web component connectedCallback.
-     * Before then nothing is created. This also alters the expected lifecycle. Normally you would expect 
-     * constructed -> attributeChangedCallback -> connectedCallback for a new component, but now it will be constructor -> connectedCallback. The
-     * component is not fully formed enough on the first attributeChangedCallback to respond usefully.
-     * @param elementName
-     * @param controllerConstructor
-     * @param options
-     */
-    public registerWebComponent<T>(elementName: string, controllerConstructor: di.DiFunction<T>, options?: any): void {
-        this.registerWebComponentId(undefined, elementName, controllerConstructor, options);
-    }
-
-    public registerWebComponentId<T, TId>(id: TId, elementName: string, controllerConstructor: di.DiFunction<T>, options?: ElementDefinitionOptions): void {
-        //Stuff we need to pass into the class defined below.
-        var self = this;
-
-        class ControllerElement extends HTMLElement {
-            private controller: any;
-
-            connectedCallback() {
-                if (!this.controller) {
-                    const services = new di.ServiceCollection();
-                    const scope = self.baseScope.createChildScope(services);
-                    const bindings = new BindingCollection(this);
-                    services.addTransient(BindingCollection, s => bindings);
-                    this.removeAttribute('data-hr-controller');
-                    this.controller = self.createController(id, controllerConstructor, services, scope, bindings);
-                }
-                if (this.controller.connectedCallback) {
-                    this.controller.connectedCallback();
-                }
-            }
-
-            disconnectedCallback() {
-                if (this.controller.disconnectedCallback) {
-                    this.controller.disconnectedCallback();
-                }
-            }
-
-            adoptedCallback() {
-                if (this.controller.adoptedCallback) {
-                    this.controller.adoptedCallback();
-                }
-            }
-
-            attributeChangedCallback() {
-                if (this.controller.attributeChangedCallback) {
-                    this.controller.attributeChangedCallback();
-                }
-            }
-        }
-        window.customElements.define(elementName, ControllerElement, options)
     }
 
     private createController(id: any, controllerConstructor: di.DiFunction<any>, services: di.ServiceCollection, scope: di.Scope, bindings: BindingCollection) {
