@@ -51,6 +51,10 @@ export class SchemaViewFormatter<T> implements IViewDataFormatter<T> {
 class SchemaViewExtractor<T> implements Extractor<T> {
     constructor(private dataFormatter: IViewDataFormatter<T>, public original: T, private schema: schema.JsonSchema, private cachedProperties) { }
 
+    getDataObject() {
+        return this.original;
+    }
+
     getRawData(address: exprTree.IDataAddress) {
         return address.read(this.original);
     }

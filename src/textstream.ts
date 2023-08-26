@@ -8,6 +8,7 @@ import { Iterable } from './iterable';
 import { IDataAddress, AddressStack } from './expressiontree';
 
 export interface ITextStreamData {
+    getDataObject(): any;
     getRawData(address: exprTree.IDataAddress): any;
     getFormatted(data: any, address: exprTree.IDataAddress): any;
 }
@@ -15,6 +16,10 @@ export interface ITextStreamData {
 class NodeScope {
     constructor(private parent: NodeScope, private scopeName: string, private data: ITextStreamData, private address: IDataAddress | null) {
         parent = parent || null;
+    }
+
+    getDataObject(): any {
+        this.data.getDataObject();    
     }
 
     getRawData(address: exprTree.IDataAddress) {
@@ -234,6 +239,7 @@ class ForInNode implements IBlockNode {
         var localScopeName = this.scopeName;
         iter.forEach(item => {
             var itemScope = new NodeScope(data, this.scopeName, {
+                getDataObject: () => item,
                 getRawData: a => a.readScoped(item),
                 getFormatted: (d, a) => d //Doesn't really do anything, won't get called
             }, this.address);
@@ -279,6 +285,10 @@ class EscapeVariableNode implements IStreamNode {
 }
 
 class NoDataStream implements ITextStreamData {
+    getDataObject() {
+        return undefined;
+    }
+
     public getFormatted(val, address) {
         return val;
     }

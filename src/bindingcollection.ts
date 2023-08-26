@@ -200,7 +200,7 @@ export class BindingCollection {
      * might not actually be a real view on the document if name does not exist.
      * @param name The name of the view to lookup
      */
-    public getView<T>(name: string, createElement?: view.CreateElementFunc<T>): view.IView<T> {
+    public getView<T>(name: string): view.IView<T> {
         var query = '[data-hr-view=' + name + ']';
         var targetElement = this.findElement(query);
 
@@ -210,7 +210,7 @@ export class BindingCollection {
             targetElement = this.findElement(query);
         }
 
-        return view.build<T>(targetElement, createElement);
+        return view.build<T>(targetElement);
     }
 
     private findElement(query: string): Node{
@@ -258,5 +258,3 @@ export class BindingCollection {
         return new PooledBindings(docFrag, parent);
     }
 };
-
-view.setBindingCollectionShimConstructor(BindingCollection);
